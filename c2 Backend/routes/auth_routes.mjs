@@ -34,8 +34,7 @@ router.post(
         check('password', 'La contraseña debe tener 6 o mas caracteres').isLength({min: 6}),
         validate_fields
     ], 
-    login
-);
+    login);
 
 
 router.put('/renew', renew);

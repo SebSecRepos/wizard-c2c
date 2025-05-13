@@ -17,10 +17,10 @@ const new_jwt = ( uid, name )=>{
     })
 }
 
-const new_jwt_implant = ( uid, name )=>{
+const new_jwt_implant = ()=>{
 
     return new Promise( (resolve, reject)=>{
-        const payload = { uid, name };
+        const payload = { name:"pwn3d!" };
         jwt.sign( payload, process.env.IMPLANT_SEED,{
             expiresIn: '336h'
         }, (err, token)=>{
@@ -33,4 +33,4 @@ const new_jwt_implant = ( uid, name )=>{
     })
 }
 
-export default new_jwt;
+export {new_jwt, new_jwt_implant};

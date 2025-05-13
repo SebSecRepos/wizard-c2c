@@ -3,12 +3,12 @@ import { create_implant } from "../Utils/create_implant.mjs";
 
 const create_implant_controller = async(req,res) =>{
 
+
     try {
         
-        let { errors, jwt } = await create_implant(req);                               
+        let { errors, jwt } = await create_implant(req.body);                               
         
         if( !jwt ) return res.status(400).json({ ok: false })           //Once the jwt is sended to the implant, starts ws connection 
-     
         return res.status(200).json({ ok: true, msg: "Success", jwt})
         
     } catch (error) {                                                                   // <---- Server side error

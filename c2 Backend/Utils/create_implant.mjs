@@ -1,7 +1,5 @@
 import { response } from 'express'
-import User from '../models/User_model.mjs';
-import encrypt_passwd from './encrypt_passwd.mjs';
-import new_jwt from './jwt.mjs';
+import {new_jwt, new_jwt_implant} from './jwt.mjs';
 import Implant from '../models/Implant_model.mjs';
 
 
@@ -13,7 +11,6 @@ const create_implant = async( body ) => {
         group,
         public_ip,
         local_ip,
-        keep_alive,
         operating_system,
         token
     } = body;
@@ -26,9 +23,9 @@ const create_implant = async( body ) => {
 
     if(errors.length > 0) return { errors, jwt:false };
 
-    const implant = new Implant({ ...req.body });                                          //Create model
+    const implant = new Implant({ ...body });                                          //Create model
     await implant.save();                                                               // <--- Save user in database
-    const jwt = await new_jwt( user.id, user.user_name );
+    const jwt = await new_jwt_implant();
 
     return {errors, jwt};
         

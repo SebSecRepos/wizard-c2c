@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 const ImplantSchema = Schema({
     impl_mac:{
-        type: String,
+        type: Array,
         require: true,
         unique: true
     },
@@ -20,7 +20,7 @@ const ImplantSchema = Schema({
         require: true
     },
     local_ip:{
-        type: String,
+        type: Array,
         require: true
     },
     operating_system:{

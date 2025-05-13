@@ -7,6 +7,7 @@ import db_connection from './database/config.mjs';
 import { WebSocketServer } from 'ws';
 import http from 'http'
 import cmd_router from './routes/cmd_routes.mjs';
+import implant_router from './routes/implant_routes.mjs';
 
 
 
@@ -95,7 +96,7 @@ const main = async () =>{
     
     app.use('/api/auth', authRouter)
     app.use('/api/rcv', cmd_router(clients))
-    
+    app.use('/api/impl', implant_router())
     //------Type errors-----
     app.use(type_errors);
     app.use(syntax_errors);

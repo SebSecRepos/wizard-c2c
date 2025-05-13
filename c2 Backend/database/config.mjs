@@ -7,7 +7,7 @@ const connections = {};
 export const db_connection = async () => {
   try {
     // Conexión a cada base de datos
-    connections.IPV6_PORT1 = await mongoose.connect(process.env.USER);
+    connections.IPV6_PORT1 = await mongoose.connect(process.env.IPV6_PORT1);
     
     console.log('✅ Todas las bases de datos conectadas');
   } catch (error) {

@@ -1,7 +1,7 @@
 import { response } from 'express'
 import User from '../models/User_model.mjs';
 import encrypt_passwd from './encrypt_passwd.mjs';
-import new_jwt from './jwt.mjs';
+import {new_jwt} from './jwt.mjs';
 
 const register_user = async( req ) => {
     
