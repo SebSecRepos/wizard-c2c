@@ -8,10 +8,11 @@ import { WebSocketServer } from 'ws';
 import http from 'http'
 import cmd_router from './routes/cmd_routes.mjs';
 import implant_router from './routes/implant_routes.mjs';
+import mongoose from 'mongoose';
+import Implant from './models/Implant_model.mjs';
 
 
-
-const webSocketsServer = (httpServer)=>{
+const webSocketsServer = async(httpServer)=>{
 
     try {
         const server = new WebSocketServer({ server: httpServer });
@@ -42,29 +43,37 @@ const webSocketsServer = (httpServer)=>{
     
             socket.on('close', () => {
                 console.log(`Cliente ${clientId} desconectado`);
-                //if (clients.get(clientId) === socket) {
-                //    clients.delete(clientId);
-                //}
+                clients.get(clientId).isAlive=false;
             });
         });
     
-        const interval = setInterval(() => {
-            if (clients.size === 0) {
-                //console.log("No hay clientes conectados");
-                return;
-            }
-    
-            for (const [id, ws] of clients.entries()) {
-                if (!ws.isAlive) {
-                    console.log(`Cliente ${id} inactivo`);
-                    //ws.terminate();
-                    //clients.delete(id);
-                    continue;
+        const interval = setInterval(async() => {
+  
+            const db_clients = await Implant.find();
+            const client_db_list = db_clients.map((x)=>x.impl_id);
+            let status_connections = []
+
+
+            client_db_list.forEach(db_id => {
+                // Verificar si el ID está en el Map de WebSockets
+                const ws = clients.get(db_id);
+                
+                if (ws) {
+                    // Si la conexión existe, verificar si está activa
+                    if (ws.isAlive) {
+                        status_connections.push({ id: db_id, status: 'active' });
+                    } else {
+                        status_connections.push({ id: db_id, status: 'inactive' });
+                    }
+                } else {
+                    // Si el ID no existe en el Map, marcar como inactive
+                    status_connections.push({ id: db_id, status: 'inactive' });
                 }
+            });
+
+            console.log(status_connections);
     
-                ws.isAlive = false;
-                ws.ping();
-            }
+
         }, 10000);
     
         server.on("close", () => clearInterval(interval));
@@ -92,7 +101,7 @@ const main = async () =>{
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
     app.use(express.static('public'));
     const server = http.createServer(app);
-    const clients = webSocketsServer(server)
+    const clients = await webSocketsServer(server)
     
     app.use('/api/auth', authRouter)
     app.use('/api/rcv', cmd_router(clients))
@@ -104,5 +113,4 @@ const main = async () =>{
     server.listen(process.env.PORT, ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
 
 }
-
 main()

@@ -6,11 +6,6 @@ const ImplantSchema = Schema({
         require: true,
         unique: true
     },
-    impl_number:{
-        type: Number,
-        require: true,
-        unique: true
-    },
     group:{
         type: String,
         require: true,
@@ -27,7 +22,7 @@ const ImplantSchema = Schema({
         type: String,
         require: true
     },
-    token:{
+    impl_id:{
         type: String,
         require: true
     },

