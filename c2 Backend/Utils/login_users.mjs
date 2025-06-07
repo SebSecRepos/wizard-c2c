@@ -1,6 +1,6 @@
 import User from '../models/User_model.mjs';
 import bcrypt from 'bcryptjs';
-import {new_jwt, new_jwt_implant} from './jwt.mjs';
+import {new_jwt} from './jwt.mjs';
 
 const login_user = async( body ) => {
     

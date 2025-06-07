@@ -1,0 +1,112 @@
+/* Reset básico */
+body, html, #root {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f2f2f2;
+    color: #222;
+  }
+  
+  .header {
+    background: #005f99;
+    color: white;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+  
+  .header h1 {
+    margin: 0;
+    font-size: 2.8rem;
+  }
+  
+  .subtitle {
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    opacity: 0.85;
+  }
+  
+  .main-content {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  
+  .main-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: none; /* Sin sombra */
+    margin-bottom: 2rem;
+  }
+  
+  .info-section, .desc-section, .social-section {
+    margin-bottom: 2rem;
+  }
+  
+  .info-section h2,
+  .desc-section h2,
+  .social-section h2 {
+    color: #005f99;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #005f99;
+    padding-bottom: 0.3rem;
+  }
+  
+  .info-section p,
+  .desc-section p,
+  .social-section ul {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin: 0.4rem 0;
+  }
+  
+  .social-section ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .social-section li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .social-section a {
+    color: #005f99;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  .social-section a:hover {
+    text-decoration: underline;
+  }
+  
+  .status {
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: capitalize;
+  }
+  
+  .status.active {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .footer {
+    text-align: center;
+    color: #555;
+    font-size: 0.9rem;
+    padding: 1rem 0;
+    background: #eaeaea;
+  }
+  .centered {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 1.2rem;
+  }
+  
+  .error {
+    color: #b00020;
+  }
+  

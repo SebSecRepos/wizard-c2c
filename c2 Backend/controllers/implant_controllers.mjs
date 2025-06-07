@@ -2,6 +2,7 @@ import { create_implant } from "../Utils/create_implant.mjs";
 
 
 const create_implant_controller = async(req,res) =>{
+
     try {
         
         let { errors, jwt } = await create_implant(req.body);                               

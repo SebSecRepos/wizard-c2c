@@ -3,8 +3,7 @@ import { Schema, model } from "mongoose";
 const ImplantSchema = Schema({
     impl_mac:{
         type: Array,
-        require: true,
-        unique: true
+        require: true
     },
     group:{
         type: String,

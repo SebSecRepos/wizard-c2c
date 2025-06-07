@@ -1,0 +1,138 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    background-color: black;
+  }
+  
+  .card-container {
+    font-family: 'Helvetica Neue', sans-serif;
+    background-color: #212121;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items:center;
+    width: 100%;
+    font-size: 12px;
+  }
+
+
+
+/* Actvie implants */
+  
+  .card {
+    background-color: #212121;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 20px 0;
+    border: 2px solid rgb(26, 255, 0);
+    cursor: pointer;
+    width: 95%;
+    overflow: scroll;
+    padding-top: 20px;
+    max-height: 200px;
+    padding: 10px;
+  }
+  
+  .card p{
+    background-color: #212121;
+    color: black;
+    font-weight: bold;
+    margin: 1px;
+  }
+  .card p span{
+    background-color: #212121;
+    color: #00ff00;
+  }
+  .card ul {
+    background-color: #212121;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: start;
+  }
+  
+  .card ul li {
+    background-color: #212121;
+    color: #ff3300;
+    list-style: none;
+  }
+  
+
+/* Inactvie implants */
+  
+ 
+  .card-in {
+    background-color: #212121;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 20px 0;
+    border: 2px solid rgb(81, 81, 81);
+    cursor: pointer;
+    width: 95%;
+    overflow: scroll;
+    padding-top: 20px;
+    max-height: 200px;
+    padding: 10px;
+  }
+  
+  .card-in p{
+    background-color: #212121;
+    color: black;
+    font-weight: bold;
+    margin: 1px;
+  }
+  .card-in p span{
+    background-color: #212121;
+    color: grey;
+  }
+  .card-in ul {
+    background-color: #212121;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: start;
+  }
+  
+  .card-in ul li {
+    background-color: #212121;
+    color: #ff3300;
+    list-style: none;
+  }
+  
+  
+
+  
+  .modify-service {
+    padding: 10px 20px;
+    background-color: green;
+    color: #00ff00;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.3s ease;
+  }
+  
+  .delete-service {
+    padding: 10px 20px;
+    background-color: red;
+    color: #00ff00;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.3s ease;
+  }
+  
+  .card-content button:hover {
+    background-color: #374151;
+  }
+  
