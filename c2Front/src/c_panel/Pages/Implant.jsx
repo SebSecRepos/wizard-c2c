@@ -6,6 +6,7 @@ import './implant.css'
 import { TopBar } from '../Components/TopBar';
 import { UploadFile } from '../Components/UploadFile';
 import { BottomBar } from '../Components/BottomBar';
+import FileExplorer from '../Components/FileExplorer';
 
 export const Implant = () => {
 
@@ -57,6 +58,7 @@ export const Implant = () => {
     <div className="middle_panel">
       <div className="left_panel">
         <UploadFile id={id}/>
+        <FileExplorer id={id}/>
       </div>
       <Terminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
       <div className="right_panel">

