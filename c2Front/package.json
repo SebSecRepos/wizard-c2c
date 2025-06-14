@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@reduxjs/toolkit": "^2.8.2",
+    "axios": "^1.10.0",
     "c2Front": "file:",
     "index": "file:",
     "js-cookie": "^3.0.5",

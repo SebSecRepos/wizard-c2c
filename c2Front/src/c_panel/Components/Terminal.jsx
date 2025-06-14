@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Terminal.css';
 
-export const Terminal = ({ id = "" }) => {
+export const Terminal = ({ id = "", externalCmd = "", setExternalCmd }) => {
   const [input, setInput] = useState('');
   const [visibleHistory, setVisibleHistory] = useState([]);
   const [fullHistory, setFullHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(null);
+  const [currentDir, setCurrentDir] = useState('C:\\');
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -20,7 +21,10 @@ export const Terminal = ({ id = "" }) => {
         e.preventDefault();
         if (fullHistory.length === 0) return;
 
-        const newIndex = historyIndex === null ? fullHistory.length - 1 : Math.max(0, historyIndex - 1);
+        const newIndex = historyIndex === null
+          ? fullHistory.length - 1
+          : Math.max(0, historyIndex - 1);
+
         setInput(fullHistory[newIndex]?.command || '');
         setHistoryIndex(newIndex);
       }
@@ -29,7 +33,10 @@ export const Terminal = ({ id = "" }) => {
         e.preventDefault();
         if (fullHistory.length === 0) return;
 
-        const newIndex = historyIndex === null ? 0 : Math.min(fullHistory.length - 1, historyIndex + 1);
+        const newIndex = historyIndex === null
+          ? 0
+          : Math.min(fullHistory.length - 1, historyIndex + 1);
+
         setInput(fullHistory[newIndex]?.command || '');
         setHistoryIndex(newIndex);
       }
@@ -52,7 +59,6 @@ export const Terminal = ({ id = "" }) => {
       });
 
       if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
-
       const data = await response.json();
       return data;
     } catch (error) {
@@ -61,12 +67,11 @@ export const Terminal = ({ id = "" }) => {
     }
   };
 
-  const handleCommand = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const executeCommand = async (command) => {
+    if (!command.trim()) return;
 
-    const command = input.trim();
     let response = '';
+    let newDir = currentDir;
 
     switch (command) {
       case 'help':
@@ -84,7 +89,9 @@ export const Terminal = ({ id = "" }) => {
         break;
       default: {
         const data = await customCommand(command);
-        response = `${data.result}`;
+        response = data.result;
+        if (data.cwd) newDir = data.cwd;
+        break;
       }
     }
 
@@ -93,7 +100,22 @@ export const Terminal = ({ id = "" }) => {
     setVisibleHistory([...visibleHistory, newEntry]);
     setInput('');
     setHistoryIndex(null);
+    setCurrentDir(newDir);
+    setExternalCmd('');
+    inputRef.current?.focus();
   };
+
+  const handleCommand = async (e) => {
+    e.preventDefault();
+    await executeCommand(input);
+  };
+
+  useEffect(() => {
+    if (externalCmd.trim()) {
+      setInput(externalCmd);      // Opcional, solo para mostrar en input
+      executeCommand(externalCmd);
+    }
+  }, [externalCmd]);
 
   return (
     <div className="terminal-container" onClick={handleClick}>
@@ -106,14 +128,15 @@ export const Terminal = ({ id = "" }) => {
         {visibleHistory.map((entry, idx) => (
           <div key={idx}>
             <div className="terminal-line">
-              <span className="prompt">$</span> {entry.command}
+              <span className="prompt">PS {currentDir}&gt;</span>
+              <span>{entry.command}</span>
             </div>
             <div className="terminal-response">{entry.response}</div>
           </div>
         ))}
         <form onSubmit={handleCommand}>
           <div className="terminal-line">
-            <span className="prompt">$</span>
+            <span className="prompt">PS {currentDir}&gt;</span>
             <input
               type="text"
               ref={inputRef}

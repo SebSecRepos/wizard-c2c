@@ -4,10 +4,13 @@ import '../../Styles/visualization.css'
 import { Terminal } from '../Components/Terminal';
 import './implant.css'
 import { TopBar } from '../Components/TopBar';
+import { UploadFile } from '../Components/UploadFile';
+import { BottomBar } from '../Components/BottomBar';
 
 export const Implant = () => {
 
   const [implant, setImplant] = useState(undefined);
+  const [externalCmd, setExternalCmd] = useState("");
 
   const { id } = useParams(); // obtiene el parámetro 'id' de la URL
   const navigate = useNavigate()
@@ -53,14 +56,15 @@ export const Implant = () => {
 
     <div className="middle_panel">
       <div className="left_panel">
+        <UploadFile id={id}/>
       </div>
-      <Terminal id={implant.id}/>
+      <Terminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
       <div className="right_panel">
       </div>
     </div>
 
    <div className="bottom_panel">
-
+    <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd}/>
    </div>
    </div>
    

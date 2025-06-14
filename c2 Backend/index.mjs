@@ -128,7 +128,7 @@ const main = async () =>{
     
     app.use(express.json())
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
-    app.use(express.static('public'));
+    app.use(express.static('public/arts/'));
     const server = http.createServer(app);
     const {agents} = await webSocketsServer(server)
     

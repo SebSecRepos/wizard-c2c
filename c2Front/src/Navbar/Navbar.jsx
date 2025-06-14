@@ -12,6 +12,7 @@ const Navbar = () => {
     <>
       <ul className="navbar">
         <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes</li></Link>
+        <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Botnet</li></Link>
         <button onClick={startLogOut}>►</button>
       </ul>
     </>

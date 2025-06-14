@@ -3,7 +3,8 @@
     flex-direction: column;
     justify-content: center;
     background-color: black;
-    height: 100%;
+    height: auto;
+    margin-top: 10px;
 }
 
 
@@ -25,18 +26,19 @@
 .middle_panel{   
     display: flex;
     flex-direction: row;
-    height: 90vh;
+    height: 450px;
+    justify-content: center;
 }
 
 .left_panel{
-        background-color: rgb(53, 53, 53);
+    background-color: rgb(53, 53, 53);
     border: 5px solid rgb(24, 24, 24);
     border-radius: 10px;
-    width: 10%;
+    width: 15%;
     
 }
 .right_panel{
-        background-color: rgb(53, 53, 53);
+    background-color: rgb(53, 53, 53);
     border: 5px solid rgb(24, 24, 24);
     border-radius: 10px;
     width: 10%;
