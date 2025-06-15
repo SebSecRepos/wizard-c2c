@@ -1,0 +1,49 @@
+
+/*Navbar de implantes*/
+
+
+.filter-container {
+  color: white;
+  max-width: 900px;
+  border: 2px solid rgb(48, 48, 48);
+  border-radius: 10px;
+  background-color: #1d1d1d;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+.filter-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.filter-select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  color: white;
+  border-radius: 6px;
+  font-size: 1rem;
+  min-width: 200px;
+}
+
+
+
+.client-empty {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}

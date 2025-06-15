@@ -20,19 +20,18 @@ const create_implant = async( body ) => {
             impl_id
         } = body;
 
-        let implan_by_model = await Implant.findOne({ impl_id });
 
+        const implan_by_model = await Implant.findOneAndUpdate(
+            { impl_id },         // criterio para buscar el documento existente
+            { $set: {...body} }, // datos nuevos para actualizar o crear
+            {
+                new: true,    // devolver el documento actualizado
+                upsert: true, // si no existe, lo crea
+            }
+        );
 
-        if( implan_by_model ){
-            errors.push("El equipo ya esta infectado");
-            console.log("El equipo ya esta infectado");
-        }
-            
 
         if(errors.length > 0) return { errors, jwt:undefined };
-
-        const implant = new Implant({ ...body });                                          //Create model
-        await implant.save();                                                               // <--- Save user in database
         const jwt = await new_jwt_implant();
 
         return {errors, jwt};
@@ -40,7 +39,6 @@ const create_implant = async( body ) => {
         
         if (error.code === 11000) {
             // Error de clave duplicada
-            errors.push("El equipo ya esta infectado");
             errors.push("El equipo ya esta infectado");
             console.log("El equipo ya esta infectado");
             return {errors, jwt:""};

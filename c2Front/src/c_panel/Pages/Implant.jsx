@@ -12,6 +12,8 @@ export const Implant = () => {
 
   const [implant, setImplant] = useState(undefined);
   const [externalCmd, setExternalCmd] = useState("");
+  const [openExplorer, setOpenExplorer] = useState(false);
+  const [openSideBar, setOpenSidebar] = useState(false);
 
   const { id } = useParams(); // obtiene el parámetro 'id' de la URL
   const navigate = useNavigate()
@@ -50,19 +52,30 @@ export const Implant = () => {
   return !implant ? <h1>cargando</h1>
    :
    <>
+   {
+    openExplorer && <FileExplorer id={id} openExplorer={openExplorer} setOpenExplorer={setOpenExplorer}/>
+   }
    <div className='implant_cpanel'>
     <div className="top_panel">
+      <button className="burger-button" onClick={() => setOpenSidebar(!openSideBar)}>
+        <span>
+        ☰
+        </span>
+      </button>
       <TopBar data={implant}/>
     </div>
 
     <div className="middle_panel">
-      <div className="left_panel">
+      {
+        openSideBar &&
+      <div className="left_panel" >
         <UploadFile id={id}/>
-        <FileExplorer id={id}/>
+        <button className='btn-filesystem' onClick={()=> setOpenExplorer(!openExplorer)}>Sistema de archivos</button>
       </div>
+      }
       <Terminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
-      <div className="right_panel">
-      </div>
+  {/*     <div className="right_panel">
+      </div> */}
     </div>
 
    <div className="bottom_panel">

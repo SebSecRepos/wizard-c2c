@@ -1,25 +1,31 @@
-.navbar {
+.BottomBar {
   display: flex;
   background-color: #1e1e1e;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
   padding: 12px;
   gap: 20px;
 }
 
 .dropdown {
   position: relative;
+  background-color: #1e1e1e;
+
 }
 
-.dropdown-button {
-  background-color: #333;
-  color: #fff;
+.dropdown-button-bottom-bar {
+  background-color: #000000;
+  color: #ff0000 !important;
   padding: 10px 14px;
-  border: none;
+  font-size: 13px;
+  border-radius: 10px;
+  border: 2px solid rgb(35, 35, 35);
   cursor: pointer;
   font-weight: bold;
-  border-radius: 4px;
 }
 
-.dropdown-button:hover {
+.dropdown-button-bottom-bar:hover {
   background-color: #444;
 }
 
@@ -28,8 +34,8 @@
   top: 100%;
   left: 0;
   width: 480px;
-  background-color: #fff;
-  color: #000;
+  background-color: #000000;
+  color: #6d6d6d;
   border: 1px solid #ccc;
   padding: 10px;
   z-index: 999;
@@ -42,19 +48,27 @@
   border-bottom: 1px solid #eee;
 }
 .dropdown-item .launch-btn{
-    font-size: 10px !important;
+    font-size: 13px !important;
     color: black;
     background-color: red;
-}
+    padding: 5px;
+    font-weight: bold;
+    border: 1px solid white ;
+    border-radius: 5px;
 
+}
+.dropdown-item .launch-btn:hover{
+  background-color: #9c0000;
+}
 .dropdown-item:last-child {
   border-bottom: none;
 }
 
 .command {
-  background-color: #f4f4f4;
+  background-color: #1c1c1c;
   padding: 6px;
   border-radius: 4px;
+  color: greenyellow;
   font-size: 12px;
   overflow-x: auto;
 }

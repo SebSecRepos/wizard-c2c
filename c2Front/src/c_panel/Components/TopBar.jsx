@@ -12,13 +12,16 @@ export const TopBar = ({ data }) => {
 
   const containerStyle = {
     height: '150px',
-    width: '100%',
+    width: '96%',
     backgroundColor: '#0f0f0f',
     color: '#e0e0e0',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
     padding: '20px',
     fontFamily: 'Arial, sans-serif',
+    overflowY: 'scroll',
     gap: '40px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
   };

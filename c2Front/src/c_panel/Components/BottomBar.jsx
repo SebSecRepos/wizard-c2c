@@ -94,19 +94,23 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd })=> {
 
 
    return (
-    <nav className="navbar">
+    <nav className="BottomBar">
       {categories.map((category) => (
         <div className="dropdown" key={category}>
-          <button className="dropdown-button" onClick={() => toggleDropdown(category)}>
+          <button className="dropdown-button-bottom-bar" onClick={() => toggleDropdown(category)}>
             {category}
           </button>
           {activeDropdown === category && (
-            <div className="dropdown-content">
+            <div className="dropdown-content floating-box">
+              <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
               {getOperationsByCategory(category).map(({ name, command, type }) => (
                 <div className="dropdown-item" key={name}>
                   <strong>{name}</strong>
                   <pre className="command">
-                    <button className="launch-btn" onClick={() => cmd(command, type)}>Run</button> {command}
+                    <button className="launch-btn" onClick={() =>{
+                      toggleDropdown(null);
+                      cmd(command, type);
+                    } }>Run</button> {command}
                   </pre>
                 </div>
               ))}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import './fileExplorer.css'
 
-export default function FileExplorer({id=""}) {
+export default function FileExplorer({id="", openExplorer=false, setOpenExplorer}) {
   const [currentPath, setCurrentPath] = useState("/");
   const [items, setItems] = useState([]);
 
@@ -23,10 +24,16 @@ export default function FileExplorer({id=""}) {
 
   // Ir a una carpeta
   const openFolder = (folderName) => {
-    const newPath = currentPath.endsWith("/")
-      ? currentPath + folderName
-      : currentPath + "/" + folderName;
-    listFiles(newPath);
+    const segments = currentPath.split("/").filter(Boolean);
+
+    if (folderName === "..") {
+      segments.pop(); // sube un nivel
+    } else {
+      segments.push(folderName); // entra a subcarpeta
+    }
+
+    const normalizedPath = "/" + segments.join("/");
+    listFiles(normalizedPath);
   };
 
   // Descargar archivo desde backend Node
@@ -40,11 +47,13 @@ export default function FileExplorer({id=""}) {
   }, []);
 
   return (
-    <div className="p-4">
+    <div className="floating-box-explorer">
+      <span className="close" onClick={()=>setOpenExplorer(!openExplorer)}>x</span>
       <h2 className="text-xl font-bold mb-3">Explorador de archivos: {currentPath}</h2>
-      <ul className="space-y-2">
+      <ul className="directory-list">
+        <li><span onClick={() => openFolder("..")}>📁 ..</span></li>
         {items.map((item, idx) => (
-          <li key={idx} className="cursor-pointer hover:text-blue-600">
+          <li key={idx} >
             {item.type === "directory" ? (
               <span onClick={() => openFolder(item.name)}>📁 {item.name}</span>
             ) : (
