@@ -8,6 +8,7 @@ import { Router } from "express";
 import { login, register, renew } from "../controllers/auth_controller.mjs";
 import { check } from "express-validator";
 import validate_fields from "../middlewares/validate_fields.mjs";
+import { validate_jwt } from "../middlewares/validate_jwt.mjs";
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.post(
         .matches(/[\W_]/).withMessage('Debe contener al menos un carácter especial'),
         validate_fields
     ], 
-    register
+    validate_jwt, register
 );
 router.post(
     '/', 
@@ -37,7 +38,7 @@ router.post(
     login);
 
 
-router.put('/renew', renew);
+router.put('/renew', validate_jwt, renew);
 
 
 

@@ -1,5 +1,4 @@
 import { response } from "express";
-import sendToPython from "../Utils/socket_file.mjs";
 
 const send_cmd = async (clients, req, res) => {
     const clientId = req.params.id;

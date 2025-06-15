@@ -136,3 +136,133 @@
     background-color: #374151;
   }
   
+
+
+
+
+  /*-------------------lista-------------------*/
+
+
+
+
+
+
+/* Actvie implants */
+  
+  .list {
+    background-color: #212121;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin: 10px 0;
+    border: 1px solid rgb(26, 255, 0);
+    cursor: pointer;
+    width: 95%;
+    overflow: scroll;
+    padding-top: 20px;
+    max-height: 30px;
+    padding: 5px;
+  }
+  
+  .list p{
+    background-color: #212121;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    font-size: 13px;
+    margin: 1px;
+  }
+  .list p span{
+    background-color: #212121;
+    color: white;
+  }
+  .list ul {
+    background-color: #212121;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: start;
+  }
+  
+  .list ul li {
+    background-color: #212121;
+    color: #ff3300;
+    list-style: none;
+  }
+  
+
+/* Inactvie implants */
+  
+ 
+  .list-in {
+
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin: 10px 0;
+    cursor: pointer;
+    width: 95%;
+    overflow: scroll;
+    padding-top: 20px;
+    max-height: 30px;
+    padding: 5px;
+    background-color: #212121;
+    border: 2px solid rgb(81, 81, 81);
+  }
+  
+  .list-in p{
+    background-color: #212121;
+    color: black;
+    font-weight: bold;
+    margin: 1px;
+  }
+  .list-in p span{
+    background-color: #212121;
+    color: grey;
+  }
+  .list-in ul {
+    background-color: #212121;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: start;
+  }
+  
+  .list-in ul li {
+    background-color: #212121;
+    color: #ff3300;
+    list-style: none;
+  }
+  
+  
+
+  
+  .modify-service {
+    padding: 10px 20px;
+    background-color: green;
+    color: #00ff00;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.3s ease;
+  }
+  
+  .delete-service {
+    padding: 10px 20px;
+    background-color: red;
+    color: #00ff00;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.3s ease;
+  }
+  
+  .card-content button:hover {
+    background-color: #374151;
+  }
+  

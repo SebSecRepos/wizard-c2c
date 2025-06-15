@@ -13,6 +13,8 @@ const AppRouter = () => {
   const { status, checkAuthToken } = useAuthStore();
 
   useEffect(()=>{
+    console.log("dfsd");
+    
     checkAuthToken();
   },[])
 

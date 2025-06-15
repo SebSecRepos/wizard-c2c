@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import './BottomBar.css'
-import { operationsArray } from '../../Utils/operations';
+import { useAuthStore } from '../../hooks';
 
 
 
 
+export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=> {
 
-export const BottomBar=({ id="", setExternalCmd, externalCmd })=> {
+  const {startLogOut} = useAuthStore()
 
     const [activeDropdown, setActiveDropdown] = useState(null);
-    const categories = [...new Set(operationsArray.map(op => op.category))];
+    const categories = [...new Set(operations.map(op => op.category))];
 
     const [file, setFile] = useState(null);
 
@@ -32,7 +33,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd })=> {
         URL.revokeObjectURL(url);
     }
 
-    const handleUpload = async () => {
+/*     const handleUpload = async () => {
         if (!file) return;
         
         let destination=`C:\\Temp\\${file.name}`
@@ -50,7 +51,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd })=> {
                 "x-token": `${Cookies.get('x-token')}`
             }
         });
-    };
+    }; */
 
 
   const cmd = async (input, type="") => {
@@ -64,13 +65,18 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd })=> {
     try {
       const response = await fetch(`http://localhost:4000/api/rcv/${id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-token':`${Cookies.get('x-token')}`},
         body: JSON.stringify({ cmd: input })
       });
 
       if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
 
       const data = await response.json();
+
+      if (data.msg === "Autenticación inválida") {
+        alert("Autenticación inválida");
+        startLogOut();
+      }
 
       if (type==="download" ) {
           download("creds.txt", data.result)
@@ -85,7 +91,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd })=> {
 
 
   const getOperationsByCategory = (category) =>
-    operationsArray.filter(op => op.category === category);
+    operations.filter(op => op.category === category);
 
   const toggleDropdown = (category) => {
     setActiveDropdown(activeDropdown === category ? null : category);

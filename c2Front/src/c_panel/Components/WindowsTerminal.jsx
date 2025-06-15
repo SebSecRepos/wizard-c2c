@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Terminal.css';
+import Cookies from 'js-cookie';
+import { useAuthStore } from '../../hooks';
 
-export const Terminal = ({ id = "", externalCmd = "", setExternalCmd }) => {
+export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => {
   const [input, setInput] = useState('');
   const [visibleHistory, setVisibleHistory] = useState([]);
   const [fullHistory, setFullHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(null);
   const [currentDir, setCurrentDir] = useState('C:\\');
   const inputRef = useRef(null);
+
+  const {startLogOut} = useAuthStore()
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -51,15 +56,24 @@ export const Terminal = ({ id = "", externalCmd = "", setExternalCmd }) => {
   };
 
   const customCommand = async (input) => {
+
+
     try {
       const response = await fetch(`http://localhost:4000/api/rcv/${id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-token':`${Cookies.get('x-token')}`},
         body: JSON.stringify({ cmd: input })
       });
 
+
       if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+      
       const data = await response.json();
+
+      if (data.msg === "Autenticación inválida") {
+        alert("Autenticación inválida");
+        startLogOut();
+      }
       return data;
     } catch (error) {
       console.error('Error en customCommand:', error);

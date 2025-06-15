@@ -6,7 +6,8 @@
 import {response} from "express";
 import { register_user } from "../Utils/register_user.mjs";
 import { login_user } from "../Utils/login_users.mjs";
-
+import {new_jwt} from '../Utils/jwt.mjs';
+import User from "../models/User_model.mjs";
 
 const register = async(req, res = response) => {
     
@@ -32,7 +33,7 @@ const login = async(req, res = response) => {
         const {errors, jwt} = await login_user(req.body);                //login_user component to login user
         if( !jwt ) return res.status(400).json({ ok:false, errors });
 
-        res.status(200).json({ ok:true, msg: "Success", jwt })
+        return res.status(200).json({ ok:true, msg: "Success", jwt })
         
     } catch (error) {
         console.log(error)
@@ -41,8 +42,27 @@ const login = async(req, res = response) => {
 
 }
 
-const renew = (req, res = express.response) => {
-    return res.json({ message: 'renew' });
+const renew = async(req, res = express.response) => {
+
+    try {
+        
+    
+        console.log("renew");
+        
+        
+        const { uid, name } = req;
+    
+    
+        const jwt = await new_jwt( uid, name );
+    
+        const user = await User.findById(uid);
+    
+        return res.status(200).json({ ok:true, message: 'Logged', jwt, data:user });
+    } catch (error) {
+        console.log(error);
+        return res.status(200).json({ ok:false, message: 'Error fatal' });
+    }
+
 }
 
 

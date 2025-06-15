@@ -74,12 +74,11 @@ export const useAuthStore = () =>{
         const token = Cookies.get('x-token');
 
         if(!token) return dispatch( onLogout() );
-        if(token) return dispatch( onLogin() );
 
         try {
 
-            console.log(user_name);
             const resp = await fetch("http://localhost:4000/api/auth/renew", {
+                method:'PUT',
                 headers:{
                     "Content-Type": "application/json",
                     "x-token": token

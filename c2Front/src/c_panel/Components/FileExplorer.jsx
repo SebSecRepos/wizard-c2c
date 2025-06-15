@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import './fileExplorer.css'
+import Cookies from "js-cookie";
 
 export default function FileExplorer({id="", openExplorer=false, setOpenExplorer}) {
   const [currentPath, setCurrentPath] = useState("/");
@@ -8,7 +9,8 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
   // Cargar archivos del path actual
   const listFiles = async (path) => {
     try {
-      const res = await fetch(`http://localhost:4000/api/rcv/get_files/${id}?path=${encodeURIComponent(path)}`);
+      const url = `http://localhost:4000/api/rcv/get_files/${id}?path=${encodeURIComponent(path)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.items) {
         setItems(data.items);
@@ -39,7 +41,9 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
   // Descargar archivo desde backend Node
   const downloadFile = (fileName) => {
     const fullPath = `${currentPath}/${fileName}`;
-    window.open(`http://localhost:4000/api/rcv/download/${id}?path=${encodeURIComponent(fullPath)}`);
+    const url = `http://localhost:4000/api/rcv/download/${id}?path=${encodeURIComponent(fullPath)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
+    console.log(url);
+    window.open(url)
   };
 
   useEffect(() => {

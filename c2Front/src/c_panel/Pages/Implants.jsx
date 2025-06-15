@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import ImplantCard from '../Components/ImplantCard';
-//import { useAuthStore } from '../../hooks';
+import Cookies from 'js-cookie';
+import { useAuthStore } from '../../hooks';
 //import Cookies from 'js-cookie';
 import './implants.css'
 
 
 export const Implants = () => {
+
+  const { startLogOut } = useAuthStore();
   
   const [ implants, setImplants ] = useState([]);
+  const [ style, setStyle ] = useState("list");
   const [ filteredImplants, setFilteredImplants ] = useState(implants);
   const [filters, setFilters] = useState({
     group: "",
@@ -18,28 +22,42 @@ export const Implants = () => {
 
 
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:4000?rol=usuario');
 
-    socket.onopen = () => {
-   /*    console.log('Conectado al servidor WebSocket'); */
-    };
+    try {
 
-    socket.onmessage = (event) => {
+      const socket = new WebSocket(`ws://localhost:4000?token=${Cookies.get('x-token')}&rol=usuario`);
+
+      socket.onopen = () => {
+        /*    console.log('Conectado al servidor WebSocket'); */
+      };
+
+      socket.onmessage = (event) => {
+
+        if (event.data === "invalid") {
+          alert("Sesión inválida");
+          startLogOut();
+          return;
+        }
+
+        const data = JSON.parse(event.data);
+        
+        setImplants(data);
+
+      };
+
+      socket.onclose = () => {
+        /* console.log('WebSocket cerrado'); */
+      };
+
+      return () => {
+        socket.close();
+      };
       
-      const data = JSON.parse(event.data);
-
-      setImplants(data);
-
-
-    };
-
-    socket.onclose = () => {
-      /* console.log('WebSocket cerrado'); */
-    };
-
-    return () => {
-      socket.close();
-    };
+    } catch (error) {
+      alert(error);
+      startLogOut();
+    }
+   
   }, []);
 
 
@@ -92,6 +110,22 @@ export const Implants = () => {
             <option key={val} value={val}>{val}</option>
           ))}
         </select>
+
+          <button className={style === 'list' ? 'card-button' : 'list-button'} onClick={()=>{
+            setStyle(style === 'list' ? 'card' : 'list')
+          }}>
+            {style === 'card' ? (
+              <ul>
+                <li>___</li>
+                <li>___</li>
+                <li>___</li>
+              </ul>
+            ) : (
+              <div className="card-btn-item">
+                {/* contenido opcional */}
+              </div>
+            )}
+          </button>
       </div>
     </div>
       {/* Resultado filtrado */}
@@ -100,6 +134,7 @@ export const Implants = () => {
 
           return(
                <ImplantCard
+                style={style}
                 impl_mac={implant.impl_mac}
                 group={implant.group}
                 public_ip={implant.public_ip}
@@ -113,7 +148,7 @@ export const Implants = () => {
         
         )}
         {filteredImplants.length === 0 && (
-          <li className="text-gray-500">No se encontraron coincidencias.</li>
+          <h1 >No se encontraron coincidencias.</h1>
         )}
       </ul>
     </div>

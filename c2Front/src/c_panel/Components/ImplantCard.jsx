@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ImplantCard.css'
 
-const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, id, status}) => {
+const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, id, status, style}) => {
   
   const navigate = useNavigate(); 
 
@@ -14,10 +14,14 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
     alert("Implante inactivo");
   };
   
+  console.log(  style === "card" );
 
 
-  return (
-    <div className={status === "active" ? "card" : "card-in"} onClick={status === "active" ? visit_service : inactive  }>
+
+   switch (style) {
+    case 'card':
+      return  <div className={status === "active" ? "card" : "card-in"} onClick={status === "active" ? visit_service : inactive  }>
+
       <p>Implant id: <span>{id}</span></p>
       <p>Implant mac: </p>
       <ul>{impl_mac.map(m=><><li>{m}</li>,</>)}</ul>
@@ -27,8 +31,23 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <p>public_ip: <span>{public_ip}</span></p>
       <p>operating_system: <span>{operating_system}</span></p>
       <p>status: <span>{status}</span></p>
-    </div>
-  );
+    </div>;
+    case 'list':
+      return    <div className={status === "active" ? "list" : "list-in"} onClick={status === "active" ? visit_service : inactive  }>
+      <p>Grupo: <span>{group}</span></p>
+      <p>operating_system: <span>{operating_system}</span></p>
+      <p>status: <span>{status}</span></p>
+    </div>;
+
+    default:
+      return    <div className={status === "active" ? "list" : "list-in"} onClick={status === "active" ? visit_service : inactive  }>
+      <p>Grupo: <span>{group}</span></p>
+      <p>operating_system: <span>{operating_system}</span></p>
+      <p>status: <span>{status}</span></p>
+    </div>;
+  }
+  
+
 };
 
 export default ImplantCard;
