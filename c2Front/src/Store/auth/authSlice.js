@@ -4,23 +4,23 @@ export const authSlice = createSlice({
     name: 'auth',
     initialState:{
         status: 'checking',   //auth, no-auth
-        user_name: {},
+        user: {},
         errorMessage: undefined
     },
     reducers: {
         onChecking: ( state ) => {
             state.status        = 'checking',
-            state.user_name          = {},
+            state.user          = {},
             state.errorMessage  = undefined
         },
         onLogin: ( state, {payload} ) => {
             state.status        = 'auth',
-            state.user_name          = payload,
+            state.user          = payload,
             state.errorMessage  = undefined
         },
         onLogout: ( state, {payload} ) => {
             state.status        = 'no-auth',
-            state.user_name          = '',
+            state.user          = '',
             state.errorMessage  = payload
         },
         clearErrorMessage: ( state )=>{

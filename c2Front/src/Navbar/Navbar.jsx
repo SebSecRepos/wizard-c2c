@@ -6,13 +6,17 @@ import './Navbar.css'
 
 const Navbar = () => {
 
-  const { startLogOut } = useAuthStore();
+  const { startLogOut, user } = useAuthStore();
 
   return (
     <>
       <ul className="navbar">
         <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes</li></Link>
-        <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Botnet</li></Link>
+        <Link to="/botnet/" style={{ textDecoration: 'none' }}><li>Botnet</li></Link>
+        {
+          user.role === "admin" &&  <Link to="/create_user/" style={{ textDecoration: 'none' }}><li>Crear usuario</li></Link>
+        }
+       
         <button onClick={startLogOut}>►</button>
       </ul>
     </>

@@ -1,50 +1,75 @@
-import React, { useState } from 'react';
-import { Login, Register } from '../Components'
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { useAuthStore } from '../../hooks/';
+
+export const schema = yup.object().shape({
+
+  user_name: yup
+    .string()
+    .required('El usuario es obligatorio'),
+  password: yup
+    .string()
+    .required('La contraseña es obligatoria')
+    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+});
 
 
 export const Auth =()=>{
-    const [auth, setAuth] = useState("login");
-    const [text, setText] = useState("Registrase usuario");
 
 
-    const change_panel=()=>{
+  const { startLogin } = useAuthStore();
 
-        if(auth === "login"){
-            setAuth("register");
-            setText(" Iniciar sesión");
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    resolver: yupResolver(schema)
+  });
+  
 
-        }else if(auth === "register"){
-            setAuth("login");
-            setText("¿No tienes cuenta? / Registrase");
-        }else{
-            setAuth("login");
-            setText("¿No tienes cuenta? / Registrase");
-        }
-    }
+  const submit =(data)=>{
+    startLogin(data);            //useAuthStore
+  }
 
-
-
-    const renderVista = () => {
-        switch (auth) {
-          case 'login':
-            return <Login /> ;
-          case 'register':
-            return <Register />;
-          default:
-            return <Login />;
-        }
-      };
 
     return (
-
-        <div className=" login-container">
-
-            {
-                renderVista()
-            }
-
-
-            <button type="button" onClick={change_panel}>{text}</button>
-        </div>  
+ <>
+      <div className="row login-container">
+        <div className="col-md-6 login-form-1">
+          <h3>Ingreso</h3>
+          <form onSubmit={handleSubmit(submit)}>
+            <div className="form-group mb-2">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="User_name"
+                {...register('user_name')}
+              />
+              <p className="text-danger">{errors.user_name?.message}</p>
+            </div>
+            <div className="form-group mb-2">
+              <input
+                type="password"
+                className="form-control"
+                placeholder="Contraseña"
+                {...register('password')}
+              />
+              <p className="text-danger">{errors.password?.message}</p>
+            </div>
+            <div className="form-group mb-2">
+              <input
+                type="submit"
+                className="btnSubmit"
+                value="Login"
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
     )
 }

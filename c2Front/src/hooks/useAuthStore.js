@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 
 export const useAuthStore = () =>{
 
-    const {status, user_name, errorMessage} = useSelector( state => state.auth );
+    const {status, user, errorMessage} = useSelector( state => state.auth );
     const dispatch = useDispatch();
 
     const startLogin = async(data) => {
@@ -48,15 +48,15 @@ export const useAuthStore = () =>{
                 dispatch( onChecking() );
                 
                 if (!resp.ok) {
-                    dispatch( onLogout(resp.errors) );
-                    alert(`Error: ${resp.errors || 'Algo salió mal'}`);
-                    console.log(resp.errors);
+                    alert(`Error: ${resp.msg || 'Algo salió mal al registrar'}`);
                     setTimeout(()=>{
                         dispatch( clearErrorMessage() )
-                    },10)
+                    },3)
+                    window.location.reload();
                 } else {
-                    Cookies.set('x-token', resp.jwt, { expires: 14 }); // Expira en 7 días
-                    dispatch( onLogin(resp.data) );
+
+                    alert("Usuario registrado exitosamente");
+                    window.location.reload();
                 }
                 
             }
@@ -117,7 +117,7 @@ export const useAuthStore = () =>{
 
     return {
         status,
-        user_name,
+        user,
         errorMessage,
         startLogin,
         startRegister,

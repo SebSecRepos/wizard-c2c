@@ -159,9 +159,8 @@
     border: 1px solid rgb(26, 255, 0);
     cursor: pointer;
     width: 95%;
-    overflow: scroll;
     padding-top: 20px;
-    max-height: 30px;
+    max-height: 40px;
     padding: 5px;
   }
   
@@ -204,9 +203,8 @@
     margin: 10px 0;
     cursor: pointer;
     width: 95%;
-    overflow: scroll;
     padding-top: 20px;
-    max-height: 30px;
+    max-height: 40px;
     padding: 5px;
     background-color: #212121;
     border: 2px solid rgb(81, 81, 81);

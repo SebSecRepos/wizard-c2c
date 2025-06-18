@@ -24,6 +24,8 @@ export const UploadFile =({id=""})=>{
             "x-token": `${Cookies.get('x-token')}`
         }
     });
+
+    
   };
 
   return (

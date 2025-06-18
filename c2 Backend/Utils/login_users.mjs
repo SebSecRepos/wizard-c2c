@@ -9,7 +9,6 @@ const login_user = async( body ) => {
     let user = await User.findOne({ user_name });
 
     
-    
     if( !user ){
         errors.push("Usuario o contraseña incorrectos");
         return { errors, jwt: false};
@@ -24,7 +23,10 @@ const login_user = async( body ) => {
 
     const token = await new_jwt( user.id, user.user_name );
 
-    return { errors, jwt: token}
+    return { errors, jwt: token, user:{
+        user_name: user.user_name,
+        role: user.role
+    }}
         
 }
 

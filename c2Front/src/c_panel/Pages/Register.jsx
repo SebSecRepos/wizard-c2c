@@ -2,8 +2,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import './auth.css'
 import { useAuthStore } from '../../hooks';
+import { useNavigate } from 'react-router-dom';
 
 // Esquema de validación con Yup
 const schema = yup.object().shape({
@@ -13,6 +13,9 @@ const schema = yup.object().shape({
     .min(2, 'El usuario debe tener entre 2 y 20 caracteres')
     .max(20, 'El usuario debe tener entre 2 y 20 caracteres'),
 
+  role: yup
+    .string()
+    .required('El rol es obligatorio'),
 
   password: yup
     .string()
@@ -35,7 +38,11 @@ const schema = yup.object().shape({
 
 export const Register = () => {
 
-  const { startRegister } = useAuthStore();
+  const { startRegister, user } = useAuthStore();
+
+  const navigate = useNavigate();
+
+  if (user.role != "admin") navigate('/');
 
   const {
     register,
@@ -47,6 +54,8 @@ export const Register = () => {
 
   
   const submit=(data)=>{
+    console.log(data);
+    
     startRegister(data);
   }
   
@@ -68,6 +77,15 @@ export const Register = () => {
 
           <div className="form-group">
             <input type="password" placeholder="Repita su contraseña" {...register('password_repeat')} className="form-control" />
+            <p className="text-danger">{errors.password_repeat?.message}</p>
+          </div>
+          
+          <div className="form-group">
+            <p>Rol de usuario</p>
+             <select className="form-control" {...register(`role`)} defaultValue="hacker">
+                <option value="hacker" >Hacker</option>
+                <option value="admin" >Admin</option>
+              </select>
             <p className="text-danger">{errors.password_repeat?.message}</p>
           </div>
 
