@@ -14,9 +14,6 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
     alert("Implante inactivo");
   };
   
-  console.log(  style === "card" );
-
-
 
    switch (style) {
     case 'card':

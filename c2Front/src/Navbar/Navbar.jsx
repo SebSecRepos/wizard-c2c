@@ -12,7 +12,7 @@ const Navbar = () => {
     <>
       <ul className="navbar">
         <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes</li></Link>
-        <Link to="/botnet/" style={{ textDecoration: 'none' }}><li>Botnet</li></Link>
+        <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li>Botnet</li></Link>
         {
           user.role === "admin" &&  <Link to="/create_user/" style={{ textDecoration: 'none' }}><li>Crear usuario</li></Link>
         }

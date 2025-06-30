@@ -5,6 +5,7 @@ import ImplantRouter from './ImplantRouter';
 import PublicRouter from './PublicRouter';
 import { Auth } from '../Auth/Pages';
 import { useAuthStore } from '../hooks';
+import BotnetRouter from './BotnetRouter';
 
 
 const AppRouter = () => {
@@ -34,6 +35,12 @@ const AppRouter = () => {
         <Route path="/*" element={
           <PrivateRouter status={status}>
             <ImplantRouter />
+          </PrivateRouter>
+        } 
+        />
+        <Route path="/botnet/*" element={
+          <PrivateRouter status={status}>
+            <BotnetRouter />
           </PrivateRouter>
         } 
         />

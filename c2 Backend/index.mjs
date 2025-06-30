@@ -139,7 +139,7 @@ const main = async () =>{
     app.use(type_errors);
     app.use(syntax_errors);
     
-    server.listen(process.env.PORT, '127.0.0.1', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
+    server.listen(process.env.PORT, '0.0.0.0', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
 
 }
 main()

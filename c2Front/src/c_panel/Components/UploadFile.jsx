@@ -25,6 +25,9 @@ export const UploadFile =({id=""})=>{
         }
     });
 
+    const result = await response.json();
+
+    console.log(result);
     
   };
 
