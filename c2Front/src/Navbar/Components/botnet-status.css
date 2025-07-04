@@ -1,0 +1,15 @@
+.botnet-nabvar-info{
+    position: absolute;
+    top: 100px;
+    width: 500px;
+    height: 400px;
+    display: flex;
+    border: 2px solid red;
+}
+
+.botnet-nabvar-info-li{
+    font-size: 14px;
+    list-style: none;
+    text-decoration: none;
+    width: 1000px !important ;
+}

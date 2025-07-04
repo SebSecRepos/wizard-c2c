@@ -100,9 +100,9 @@ export const BotnetCpanel = () => {
       
     </div>
 
-   <div className="bottom_panel">
+{/*    <div className="bottom_panel">
       <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} operations={windowsOperationsArray}/>
-   </div>
+   </div> */}
    </div>
    
    </>

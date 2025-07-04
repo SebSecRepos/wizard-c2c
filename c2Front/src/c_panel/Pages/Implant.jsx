@@ -45,7 +45,8 @@ export const Implant = () => {
         
         const data = JSON.parse(event.data);
 
-        const found = data.find(e => e.id.toString() === id.toString());
+
+        const found = data.data.find(e => e.id.toString() === id.toString());
 
         if(!found || found.status != "active"){
           alert("Inactive")

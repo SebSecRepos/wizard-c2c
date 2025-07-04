@@ -173,8 +173,8 @@ const botnet_attack=(clients, req, res = response)=>{
        // client.on('message', msgHandler);
         client.send(JSON.stringify(req.body));
         
-        //return res.status(200).json({msg:"Sended"})
     }
+    return res.status(200).json({msg:"Sended"})
 
 
 

