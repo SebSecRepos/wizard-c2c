@@ -31,9 +31,7 @@ export const Auth =()=>{
   });
   
 
-  const submit =(data)=>{
-    startLogin(data);            //useAuthStore
-  }
+  const submit =(data)=>startLogin(data);            //useAuthStore
 
 
     return (

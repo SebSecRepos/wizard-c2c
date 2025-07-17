@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 
 const validate_jwt = ( req, res=response, next ) =>{
 
+    
     const token = req.header('x-token') || req.query.token;
 
     if(!token) return res.status(400).json({ ok:false, msg:"Autenticación inválida" });

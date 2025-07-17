@@ -65,6 +65,12 @@ export const BotnetTerminal = () => {
         body=JSON.stringify({stop_attack:''}) 
         break;
 
+      case 2:
+        if(array_cmd[0] != 'stop_attack') return;
+        response = "Attacks stopped"
+        body=JSON.stringify({stop_attack:array_cmd[1]}) 
+        break;
+
       case 3:
         const [ type, target, duration] = array_cmd;
         const attack={

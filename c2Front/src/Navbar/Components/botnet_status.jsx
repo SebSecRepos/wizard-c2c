@@ -8,13 +8,16 @@ const Botnet_status = ({botnet}) => {
   return (
     <>
         <div className='botnet-nabvar-info'>
-        {
-        botnet.map((a)=><li  className='botnet-nabvar-info-li' key={a.attack_type}>
-                <span>Ataque: {a.attack_type}</span>
-                <span>Ataque: {a.attack_type}</span>
-            </li>
-        )
-        }
+          <li className='botnet-nabvar-info-li-1'><span>Attack</span><span>Target</span><span>Status</span></li>
+
+          {
+          botnet.map((a)=><li  className='botnet-nabvar-info-li' key={a.attack_type}>
+                  <span>{a.attack_type}</span>
+                  <span>{a.target}</span>
+                  <span>running</span>
+              </li>
+          )
+          }
         
         </div>
     </>
