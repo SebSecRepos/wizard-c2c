@@ -1,8 +1,8 @@
 
 
 export const login = async (data) => {
-    
-    const response = await fetch('http://localhost:4000/api/auth/', {
+
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

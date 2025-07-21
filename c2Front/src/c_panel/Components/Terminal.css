@@ -17,27 +17,29 @@
 }
 
 .terminal-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
+}
+.terminal-dot-icon{
+  background-color: transparent !important;
+
 }
 
 .terminal-dot.red {
-  background-color: #ff5f56;
+  color: #ff5f56;
+  background-color: transparent !important;
 }
 .terminal-dot.yellow {
-  background-color: #ffbd2e;
+  background-color: transparent !important;
+  color: #ffbd2e;
 }
 .terminal-dot.green {
-  background-color: #27c93f;
+  background-color: transparent !important;
+  color: #27c93f;
 }
 
 .terminal-body {
   padding: 16px;
   height: 400px;
-
-
+  opacity: 1;
   overflow: scroll;
 }
 .terminal-line {

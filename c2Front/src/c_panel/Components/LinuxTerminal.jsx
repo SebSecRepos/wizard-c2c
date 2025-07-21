@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Terminal.css';
-
+import { ToastContainer, toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { useAuthStore } from '../../hooks';
 
@@ -57,7 +57,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
 
   const customCommand = async (input) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/rcv/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
       const data = await response.json();
 
       if (data.msg === "Autenticación inválida") {
-        alert("Autenticación inválida");
+        toast.error("Autenticación inválida");
         startLogOut();
       }
       return data;
@@ -162,6 +162,17 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
           </div>
         </form>
       </div>
+      <ToastContainer
+      position="top-center"
+      autoClose={4000}
+      hideProgressBar={true}
+      newestOnTop={false}
+      closeOnClick
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+      />
     </div>
   );
 };

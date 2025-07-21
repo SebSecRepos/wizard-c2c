@@ -6,6 +6,8 @@ import * as yup from 'yup';
 import { useAuthStore } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import AlertModal from '../../util-components/AlertModal';
+import { ToastContainer, toast } from "react-toastify";
 import './Admin.css';
 
 const getValidationSchema = (isEdit) => {
@@ -63,6 +65,8 @@ export const Admin = () => {
   const [users, setUsers] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [editUserId, setEditUserId] = useState(null);
+  const [alert, setAlert] = useState(false);
+  const [onSending, setOnSending] = useState(false);
 
 
   const {
@@ -85,7 +89,7 @@ export const Admin = () => {
 
 
   const fetchUsers = async () => {
-    const res = await fetch('http://localhost:4000/api/auth/get_users', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/get_users`, {
       headers: { 'x-token': Cookies.get('x-token') },
     });
     const data = await res.json();
@@ -96,13 +100,10 @@ export const Admin = () => {
     if (user?.role !== "admin") navigate('/');
     fetchUsers();
   }, []);
-  useEffect(() => {
-    console.log(users);
-    
-  }, [users]);
-
+ 
 
   const onSubmit = async (data) => {
+    setOnSending(true);
 
     if (editMode) {
       const sendData={};
@@ -112,7 +113,7 @@ export const Admin = () => {
         console.log(data[obj]);
       }
       
-      const res = await fetch(`http://localhost:4000/api/auth/update/${editUserId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/update/${editUserId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,19 +124,20 @@ export const Admin = () => {
 
       const response= await res.json();
       if (response.ok) {
-        reset();
-        setEditMode(false);
-        setEditUserId(null);
-        fetchUsers();
-
-        alert("Usuario actualizado")
+        toast.success("Usuario actualizado");
       }else{
-        alert(response.errors);
+        toast.error(response.errors);
       }
     } else {
       startRegister(data);
-      reset();
     }
+    
+    reset();
+    setOnSending(false);
+    fetchUsers();
+    setEditUserId(null);
+    setEditMode(false);
+
   };
 
   const handleEditClick = (user) => {
@@ -158,11 +160,8 @@ export const Admin = () => {
 
 
   const delete_user=async()=>{
-      const confirm = window.confirm("Delete user?");
 
-      if (!confirm) return;
-
-      const res = await fetch(`http://localhost:4000/api/auth/delete/${editUserId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/delete/${editUserId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -172,14 +171,13 @@ export const Admin = () => {
 
       const response= await res.json();
       if (response.ok) {
+        toast.success("Usuario eliminado");
         reset();
         setEditMode(false);
         setEditUserId(null);
         fetchUsers();
-
-        alert("Usuario ELIMINADO")
       }else{
-        alert(response.errors);
+        toast.error(response.errors);
       }
     
   }
@@ -204,18 +202,19 @@ export const Admin = () => {
           </select>
           <p className="error">{errors.role?.message}</p>
 
+          { !onSending &&
 
-          <div className="edit-btns">
+            <div className="edit-btns">
 
-            <input type="submit" value={editMode ? 'Actualizar' : 'Registrar'} />
+              <input type="submit" value={editMode ? 'Actualizar' : 'Registrar'} />
 
-            {
-              editMode && 
-              <button className='delete-user' type='button' onClick={(e)=> delete_user()}> Eliminar</button> 
-            }
+              {
+                editMode && 
+                <button className='delete-user' type='button' onClick={(e)=> setAlert(true)}> Eliminar</button> 
+              }
 
-          </div>
-
+            </div>
+          }
 
         </form>
       </div>
@@ -227,7 +226,7 @@ export const Admin = () => {
           <>
               {users.map(u => (
                 
-                <li key={u._id} onClick={() => handleEditClick(u)}  className={getValues().user_name === u.user_name && 'selected-user'}>
+                <li key={u._id} onClick={() => handleEditClick(u)}  className={getValues().user_name === u.user_name ? 'selected-user' : ''}>
                   {u.user_name} ({u.role})
                 </li>
 
@@ -243,6 +242,29 @@ export const Admin = () => {
         </li>
       </ul>
     </div>
+
+        <AlertModal 
+        visible={alert}
+        onClose={() => setAlert(false)}
+        onConfirm={() => delete_user()}  
+        title="¡Atención!"
+        description="¿Desea eliminar el usuario?"
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+      
+      />
+        <ToastContainer
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+  />
+
   </div>
   );
 };

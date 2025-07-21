@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Terminal.css';
 import Cookies from 'js-cookie';
 import { useAuthStore } from '../../hooks';
+import { ToastContainer, toast } from 'react-toastify';
+import { FaSkull } from "react-icons/fa6";
 
 export const BotnetTerminal = () => {
   const [input, setInput] = useState('');
@@ -87,7 +89,7 @@ export const BotnetTerminal = () => {
     }
 
     try {
-      const requests = await fetch(`http://localhost:4000/api/rcv/cpanel/all`, {
+      const requests = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/cpanel/all`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-token':`${Cookies.get('x-token')}`},
         body: body
@@ -98,7 +100,7 @@ export const BotnetTerminal = () => {
       const data = await requests.json();
 
       if (data.msg === "Autenticación inválida") {
-        alert("Autenticación inválida");
+        toast.error("Autenticación inválida");
         startLogOut();
       }
       return response;
@@ -142,6 +144,14 @@ export const BotnetTerminal = () => {
           syn_flood              <target_ip:port>           <duration>         (NO http/https)
           icmp_flood             <target_ip:port>           <duration>         (NO http/https)
           dns_amplification      <target_ip:port>           <duration>         (NO http/https)
+
+           _______________Stop attacks____________
+          |__Arg 1__|_____________|______Arg2____|
+        
+          stop_attack                                    (Stop all attacks)
+          stop_attack               <attack_type>        (Stop specific attack)
+
+          
         `;
         break;
         
@@ -172,9 +182,9 @@ export const BotnetTerminal = () => {
   return (
     <div className="terminal-container" onClick={handleClick}>
       <div className="terminal-header">
-        <span className="terminal-dot red" />
-        <span className="terminal-dot yellow" />
-        <span className="terminal-dot green" />
+        <span className="terminal-dot red" > <FaSkull className='terminal-dot-icon'/> </span>
+        <span className="terminal-dot yellow" > <FaSkull className='terminal-dot-icon'/> </span>
+        <span className="terminal-dot green" > <FaSkull className='terminal-dot-icon'/> </span>
       </div>
       <div className="terminal-body">
         {visibleHistory.map((entry, idx) => (
@@ -200,6 +210,17 @@ export const BotnetTerminal = () => {
           </div>
         </form>
       </div>
+      <ToastContainer
+      position="top-center"
+      autoClose={4000}
+      hideProgressBar={true}
+      newestOnTop={false}
+      closeOnClick
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+      />
     </div>
   );
 };

@@ -48,3 +48,7 @@
   color: #888;
   font-style: italic;
 }
+
+.implant-container{
+  background: transparent !important;
+}

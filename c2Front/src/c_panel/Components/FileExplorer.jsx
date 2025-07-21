@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import './fileExplorer.css'
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
+
 
 export default function FileExplorer({id="", openExplorer=false, setOpenExplorer}) {
   const [currentPath, setCurrentPath] = useState("/");
@@ -9,17 +11,17 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
   // Cargar archivos del path actual
   const listFiles = async (path) => {
     try {
-      const url = `http://localhost:4000/api/rcv/get_files/${id}?path=${encodeURIComponent(path)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
+      const url = `${import.meta.env.VITE_API_URL}/api/rcv/get_files/${id}?path=${encodeURIComponent(path)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.items) {
         setItems(data.items);
         setCurrentPath(path);
       } else {
-        alert(data.error || "Error desconocido");
+        toast.error(data.error || "Error desconocido");
       }
     } catch (err) {
-      alert("Error al cargar archivos");
+      toast.error("Error al cargar archivos");
       console.error(err);
     }
   };
@@ -41,7 +43,7 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
   // Descargar archivo desde backend Node
   const downloadFile = (fileName) => {
     const fullPath = `${currentPath}/${fileName}`;
-    const url = `http://localhost:4000/api/rcv/download/${id}?path=${encodeURIComponent(fullPath)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
+    const url = `${import.meta.env.VITE_API_URL}/api/rcv/download/${id}?path=${encodeURIComponent(fullPath)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
     console.log(url);
     window.open(url)
   };

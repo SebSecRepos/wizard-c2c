@@ -10,8 +10,8 @@ import { BottomBar } from '../Components/BottomBar';
 import FileExplorer from '../Components/FileExplorer';
 import { useAuthStore } from '../../hooks';
 import { linuxOperationsArray, windowsOperationsArray } from '../../Utils/operations';
-
 import Cookies from 'js-cookie';
+import { toast, ToastContainer } from 'react-toastify';
 
 export const Implant = () => {
 
@@ -29,7 +29,7 @@ export const Implant = () => {
 
     try {
 
-        const socket = new WebSocket(`ws://localhost:4000?token=${Cookies.get('x-token')}&rol=usuario`);
+        const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=usuario`);
 
         socket.onopen = () => {
           /*    console.log('Conectado al servidor WebSocket'); */
@@ -38,7 +38,7 @@ export const Implant = () => {
       socket.onmessage = (event) => {
 
         if (event.data === "invalid") {
-          alert("Sesión inválida");
+          toast.error("Sesión inválida");
           startLogOut();
           return;
         }
@@ -49,7 +49,7 @@ export const Implant = () => {
         const found = data.data.find(e => e.id.toString() === id.toString());
 
         if(!found || found.status != "active"){
-          alert("Inactive")
+          toast.error("Inactive")
           navigate("/implants/")
         }
         setImplant(found);
@@ -65,7 +65,7 @@ export const Implant = () => {
       };
       
     } catch (error) {
-      alert(error);
+      toast.error(error);
       startLogOut();
     }
      
@@ -119,6 +119,19 @@ export const Implant = () => {
    </div>
    </div>
    
+      <ToastContainer
+      position="top-center"
+      autoClose={4000}
+      hideProgressBar={true}
+      newestOnTop={false}
+      closeOnClick
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+      />
+
+      
    </>
   
 };

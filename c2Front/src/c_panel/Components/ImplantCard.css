@@ -156,13 +156,19 @@
     flex-direction: row;
     justify-content: space-around;
     margin: 10px 0;
-    border: 1px solid rgb(26, 255, 0);
+    border: 1px solid rgb(19, 195, 0);
     cursor: pointer;
     width: 95%;
     padding-top: 20px;
     max-height: 40px;
     padding: 5px;
   }
+  
+  .list:hover{
+    
+    border: 1px solid rgb(26, 255, 0);
+
+   }
   
   .list p{
     background-color: #212121;
@@ -264,3 +270,14 @@
     background-color: #374151;
   }
   
+  .implant-logo{
+    color: greenyellow !important;
+    font-size: 30px !important;
+    background-color: transparent !important;
+  }
+  
+  .sys-op-icon{
+    color: greenyellow !important;
+    background-color: transparent !important;
+    font-size: 20px;
+  }

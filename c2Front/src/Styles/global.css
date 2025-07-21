@@ -84,21 +84,24 @@ body, html{
 /* AUTH */
 
 .login-container{
+    background-color: transparent;
     width: 100% ;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100%;
-}
-.login-form-1{
+  }
+  .login-form-1{
+    background-color: transparent;
     width: 800px;
     border-radius: 5px;
     box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.2), 0 9px 26px 0 rgba(0, 0, 0, 0.19);
     padding: 5%;
     margin-top: 20px;
-}
-.login-form-1 h3{
+  }
+  .login-form-1 h3{
+    background-color: transparent;
     text-align: center;
     color: #333;
 }

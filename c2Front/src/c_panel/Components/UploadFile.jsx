@@ -17,7 +17,7 @@ export const UploadFile =({id=""})=>{
     formData.append("file", file);
     formData.append("destination", destination);
 
-    const response = await fetch(`http://localhost:4000/api/rcv/upload/${id}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/upload/${id}`, {
         method: 'POST',
         body: formData,
         headers: {

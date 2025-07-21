@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { login, registerUser } from "../api";
 import { clearErrorMessage, onChecking, onLogin, onLogout } from "../Store";
 import Cookies from 'js-cookie';
+import { toast } from "react-toastify";
 
 
 export const useAuthStore = () =>{
@@ -19,8 +20,7 @@ export const useAuthStore = () =>{
                 
                 if (!resp.ok) {
                     dispatch( onLogout(resp.errors) );
-                    alert(`Error: ${resp.errors || 'Algo salió mal'}`);
-                    console.log(resp.errors);
+                    toast.error(`Error: ${resp.errors || 'Algo salió mal'}`);
                     setTimeout(()=>{
                         dispatch( clearErrorMessage() )
                     },10)
@@ -32,7 +32,7 @@ export const useAuthStore = () =>{
             }
         } catch (error) {
             console.error('Error al enviar datos:', error);
-            alert('Error fatal');
+            toast.error('Error fatal');
             dispatch( onLogout(['Error fatal']) );
             setTimeout(()=>{
                 dispatch( clearErrorMessage() )
@@ -45,24 +45,23 @@ export const useAuthStore = () =>{
 
             if(data){
                 const resp = await registerUser(data);
-                dispatch( onChecking() );
                 
                 if (!resp.ok) {
-                    alert(`Error: ${resp.msg || 'Algo salió mal al registrar'}`);
+                    toast.error(`Error: ${resp.msg || 'Algo salió mal al registrar'}`);
+                    toast.error(`Error: ${resp.msg || 'Algo salió mal al registrar'}`);
                     setTimeout(()=>{
                         dispatch( clearErrorMessage() )
                     },3)
                     window.location.reload();
                 } else {
-
-                    alert("Usuario registrado exitosamente");
-                    window.location.reload();
+                    
+                    toast.success("Usuario registrado exitosamente");
+                   // window.location.reload();
                 }
                 
             }
         } catch (error) {
-            console.error('Error al enviar datos:', error);
-            alert('Error fatal');
+            toast.error(error);
             dispatch( onLogout(['Error fatal']) );
             setTimeout(()=>{
                 dispatch( clearErrorMessage() )
@@ -77,7 +76,7 @@ export const useAuthStore = () =>{
 
         try {
 
-            const resp = await fetch("http://localhost:4000/api/auth/renew", {
+            const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/renew`, {
                 method:'PUT',
                 headers:{
                     "Content-Type": "application/json",
@@ -101,8 +100,7 @@ export const useAuthStore = () =>{
 
         } catch (error) {
             Cookies.remove('x-token');
-            console.error('Error al enviar datos:', error);
-            alert('Error fatal');
+            toast.error(error);
             dispatch( onLogout(['Error fatal']) );
             setTimeout(()=>{
                 dispatch( clearErrorMessage() )

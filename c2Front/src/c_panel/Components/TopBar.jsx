@@ -13,7 +13,7 @@ export const TopBar = ({ data }) => {
   const containerStyle = {
     height: '150px',
     width: '96%',
-    backgroundColor: '#0f0f0f',
+    background: 'transparent',
     color: '#e0e0e0',
     display: 'flex',
     alignItems: 'center',

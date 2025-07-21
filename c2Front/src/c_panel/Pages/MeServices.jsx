@@ -12,7 +12,7 @@ export const MeServices = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:4000/api/services/profile/me',{
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/services/profile/me`,{
           method:"GET",
           headers:{
             "x-token": Cookies.get('x-token')

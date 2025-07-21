@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 export const registerUser = async (data) => {
     //console.log(data);
 
-    const response = await fetch('http://localhost:4000/api/auth/new', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/new`, {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',

@@ -30,13 +30,6 @@ export const BotnetCpanel = () => {
 
   return  <>
    <div className='implant_cpanel'>
-    <div className="top_panel">
- {/*      <button className="burger-button" onClick={() => setOpenSidebar(!openSideBar)}>
-        <span>
-        ☰
-        </span>
-      </button> */}
-    </div>
 
     <div className="middle_panel">
 {/*       {

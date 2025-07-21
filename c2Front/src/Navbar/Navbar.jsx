@@ -5,13 +5,19 @@ import Cookies from 'js-cookie';
 import './Navbar.css'
 import { useState } from 'react';
 import Botnet_status from './Components/botnet_status';
+import { GrLogout } from "react-icons/gr";
+import { CiVirus } from "react-icons/ci";
+import { GiRobotAntennas } from "react-icons/gi";
+import { RiAdminFill } from "react-icons/ri";
+import AlertModal from '../util-components/AlertModal';
+import { ToastContainer, toast } from 'react-toastify';
 
 const Navbar = () => {
 
   const { startLogOut, user } = useAuthStore();
   const [ botnet, setBotnet ] = useState([]);
   const [ openStatus, setOpenStatus ] = useState(false);
-
+  const [alert, setAlert] = useState(false);
 
 /* 
 {
@@ -27,7 +33,7 @@ const Navbar = () => {
 
     try {
 
-        const socket = new WebSocket(`ws://localhost:4000?token=${Cookies.get('x-token')}&rol=usuario`);
+        const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=usuario`);
 
         socket.onopen = () => {
         };
@@ -35,7 +41,7 @@ const Navbar = () => {
       socket.onmessage = (event) => {
 
         if (event.data === "invalid") {
-          alert("Sesión inválida");
+          toast.error('Invalid sesion');
           startLogOut();
           return;
         }
@@ -58,7 +64,7 @@ const Navbar = () => {
       };
       
     } catch (error) {
-      alert(error);
+      toast.error(error);
       startLogOut();
     }
      
@@ -75,19 +81,42 @@ const Navbar = () => {
   return (
     <>
       <ul className="navbar">
-        <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes</li></Link>
-        <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li>Botnet</li></Link>
+        <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes <CiVirus className='nav-icons'/></li></Link>
+        <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
         {
-          user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel</li></Link>
+          user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
         }
 
         { botnet.length > 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet running</li> }
         
-        <button onClick={startLogOut}>►</button>
+        <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button>
       </ul>
         {
           openStatus && botnet.length > 0 && <Botnet_status botnet={botnet}/>
         }
+
+        <AlertModal 
+        visible={alert}
+        onClose={() => setAlert(false)}
+        onConfirm={() => startLogOut()}  
+        title="¿Desea salir?"
+        description="Se cerrará la sesión"
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+      
+      />
+        <ToastContainer
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+  />
+
     </>
   );
 };

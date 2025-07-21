@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Terminal.css';
 import Cookies from 'js-cookie';
 import { useAuthStore } from '../../hooks';
+import { ToastContainer, toast } from 'react-toastify';
 
 export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => {
   const [input, setInput] = useState('');
@@ -59,7 +60,7 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
 
 
     try {
-      const response = await fetch(`http://localhost:4000/api/rcv/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-token':`${Cookies.get('x-token')}`},
         body: JSON.stringify({ cmd: input })
@@ -71,7 +72,7 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
       const data = await response.json();
 
       if (data.msg === "Autenticación inválida") {
-        alert("Autenticación inválida");
+        toast.error("Autenticación inválida");
         startLogOut();
       }
       return data;
@@ -162,6 +163,17 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
           </div>
         </form>
       </div>
+      <ToastContainer
+      position="top-center"
+      autoClose={4000}
+      hideProgressBar={true}
+      newestOnTop={false}
+      closeOnClick
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+      />
     </div>
   );
 };

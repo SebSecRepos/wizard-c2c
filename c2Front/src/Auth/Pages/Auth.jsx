@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuthStore } from '../../hooks/';
+import { ToastContainer, toast } from 'react-toastify';
 
 export const schema = yup.object().shape({
 
@@ -68,6 +69,17 @@ export const Auth =()=>{
           </form>
         </div>
       </div>
+      <ToastContainer
+      position="top-center"
+      autoClose={4000}
+      hideProgressBar={true}
+      newestOnTop={false}
+      closeOnClick
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+      />
     </>
     )
 }

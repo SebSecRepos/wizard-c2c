@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import ImplantCard from '../Components/ImplantCard';
 import Cookies from 'js-cookie';
+import { BsCardList } from "react-icons/bs";
+import { FaList } from "react-icons/fa6";
 import { useAuthStore } from '../../hooks';
+import './implants.css'
+
 //import Cookies from 'js-cookie';
 import './implants.css'
 
@@ -25,7 +29,7 @@ export const Implants = () => {
 
     try {
 
-      const socket = new WebSocket(`ws://localhost:4000?token=${Cookies.get('x-token')}&rol=usuario`);
+      const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=usuario`);
 
       socket.onopen = () => {
         /*    console.log('Conectado al servidor WebSocket'); */
@@ -34,7 +38,7 @@ export const Implants = () => {
       socket.onmessage = (event) => {
 
         if (event.data === "invalid") {
-          alert("Sesión inválida");
+          toast.error("Sesión inválida");
           startLogOut();
           return;
         }
@@ -54,7 +58,7 @@ export const Implants = () => {
       };
       
     } catch (error) {
-      alert(error);
+      toast.error(error);
       startLogOut();
     }
    
@@ -84,8 +88,7 @@ export const Implants = () => {
 
   return (
 
-    <div className=''>
-      <h2>Implantes</h2>
+    <div className='implant-container'>
 
       <div className="filter-container">
 
@@ -111,20 +114,14 @@ export const Implants = () => {
           ))}
         </select>
 
-          <button className={style === 'list' ? 'card-button' : 'list-button'} onClick={()=>{
+          <button className='list-button' onClick={()=>{
             setStyle(style === 'list' ? 'card' : 'list')
           }}>
             {style === 'card' ? (
-              <ul>
-                <li>___</li>
-                <li>___</li>
-                <li>___</li>
-              </ul>
+            <FaList />
             ) : (
-              <div className="card-btn-item">
-                {/* contenido opcional */}
-              </div>
-            )}
+              <BsCardList />
+        )}
           </button>
       </div>
     </div>

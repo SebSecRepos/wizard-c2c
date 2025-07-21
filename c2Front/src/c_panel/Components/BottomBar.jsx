@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import './BottomBar.css'
 import { useAuthStore } from '../../hooks';
+import { toast } from 'react-toastify';
 
 
 
@@ -44,7 +45,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
         formData.append("file", file);
         formData.append("destination", destination);
 
-        const response = await fetch(`http://localhost:4000/api/rcv/upload/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/upload/${id}`, {
             method: 'POST',
             body: formData,
             headers: {
@@ -63,7 +64,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
 
 
     try {
-      const response = await fetch(`http://localhost:4000/api/rcv/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-token':`${Cookies.get('x-token')}`},
         body: JSON.stringify({ cmd: input })
@@ -74,7 +75,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
       const data = await response.json();
 
       if (data.msg === "Autenticación inválida") {
-        alert("Autenticación inválida");
+        toast.error("Autenticación inválida");
         startLogOut();
       }
 
