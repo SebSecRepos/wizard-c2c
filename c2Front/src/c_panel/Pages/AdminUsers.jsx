@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import AlertModal from '../../util-components/AlertModal';
 import { ToastContainer, toast } from "react-toastify";
-import './Admin.css';
+import './AdminUsers.css';
 
 const getValidationSchema = (isEdit) => {
   return yup.object().shape({
@@ -59,7 +59,7 @@ const getValidationSchema = (isEdit) => {
 
 }
 
-export const Admin = () => {
+export const AdminUsers = () => {
   const { startRegister, user } = useAuthStore();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);

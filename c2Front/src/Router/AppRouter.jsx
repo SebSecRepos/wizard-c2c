@@ -6,6 +6,7 @@ import PublicRouter from './PublicRouter';
 import { Auth } from '../Auth/Pages';
 import { useAuthStore } from '../hooks';
 import BotnetRouter from './BotnetRouter';
+import AdminRouter from './AdminRouter';
 
 
 const AppRouter = () => {
@@ -24,15 +25,26 @@ const AppRouter = () => {
 
     <>
       <Routes>
+        <Route path="/*" element={
+          <PublicRouter status={status}>
+            <Auth/>
+          </PublicRouter>
+        } />
         <Route path="/auth/*" element={
           <PublicRouter status={status}>
             <Auth/>
           </PublicRouter>
         } />
         
-        <Route path="/*" element={
+        <Route path="/implants/*" element={
           <PrivateRouter status={status}>
             <ImplantRouter />
+          </PrivateRouter>
+        } 
+        />
+        <Route path="/admin/*" element={
+          <PrivateRouter status={status}>
+            <AdminRouter />
           </PrivateRouter>
         } 
         />

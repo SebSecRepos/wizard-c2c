@@ -148,6 +148,7 @@ export const Implants = () => {
           <h1 >No se encontraron coincidencias.</h1>
         )}
       </ul>
+      
     </div>
   );
 };

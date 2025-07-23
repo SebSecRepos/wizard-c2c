@@ -1,0 +1,116 @@
+1. Fundamentos Básicos (Redes y Telecomunicaciones)
+
+    Aprende redes de computadoras:
+
+        Modelo OSI y TCP/IP.
+
+        Protocolos como TCP, UDP, IP, BGP, DNS, VoIP (SIP, RTP), GSM, 4G/5G.
+
+        Herramientas: Wireshark, tcpdump.
+
+    Telecomunicaciones:
+
+        Tecnologías móviles (GSM, 3G/4G/5G), redes inalámbricas (Wi-Fi, Bluetooth, Zigbee).
+
+        Conceptos de SS7, Diameter, IMS (IP Multimedia Subsystem).
+
+Recursos:
+
+    Libro: Computer Networking: A Top-Down Approach (Kurose & Ross).
+
+    Curso: Cisco CCNA (para redes básicas).
+
+2. Ciberseguridad Básica
+
+    Conceptos esenciales:
+
+        Vulnerabilidades, exploits, ataques MITM, DoS, sniffing.
+
+        Criptografía aplicada a telecomunicaciones (A5/1 en GSM, ataques a LTE).
+
+    Herramientas:
+
+        Kali Linux, Metasploit, Nmap, Burp Suite.
+
+Certificaciones recomendadas:
+
+    eJPT (Junior Penetration Tester).
+
+    CEH (Certified Ethical Hacker) – Menos técnica, pero reconocida.
+
+3. Seguridad Ofensiva en Telecomunicaciones
+Áreas clave:
+
+✅ Redes móviles (GSM/4G/5G):
+
+    Ataques a SIM cards (SIM swapping), interceptación de llamadas (IMSI Catchers).
+
+    Herramientas: OsmocomBB, YateBTS, Wireshark con filtros GSM.
+
+✅ VoIP (Voz sobre IP):
+
+    Ataques a SIP (session hijacking), DoS en PBX.
+
+    Herramientas: SIPVicious, RTPflood.
+
+✅ Redes inalámbricas (Wi-Fi, Bluetooth, IoT):
+
+    Pentesting en Wi-Fi (WPA3 cracking, Evil Twin).
+
+    Herramientas: Aircrack-ng, Kismet, HackRF.
+
+✅ SS7/Diameter (Redes de operadoras):
+
+    Ataques a redes de telefonía (location tracking, SMS interception).
+
+    Herramientas: SiGaST, SS7MAP.
+
+Recursos avanzados:
+
+    Libro: Hacking Mobile Networks (S. N. Springer).
+
+    Curso: Pentesting LTE/5G Networks (SANS SEC575).
+
+4. Certificaciones Avanzadas
+
+    OSCP (Offensive Security Certified Professional) → Pentesting general.
+
+    OSWP (Wireless Security) → Enfocado en Wi-Fi/Bluetooth.
+
+    GMOB (GSM Security Certification) → Especializado en redes móviles.
+
+5. Práctica y Entorno Legal
+
+    Laboratorios:
+
+        Monta tu propio lab con Raspberry Pi + SDR (Software Defined Radio) para GSM hacking.
+
+        Usa DVSS7 (entorno de pruebas para SS7).
+
+    Bug Bounty: Practica en plataformas como HackerOne (busca programas de telecomunicaciones).
+
+    Aspecto legal: Asegúrate de operar en entornos autorizados (leyes como GDPR, CFAA).
+
+6. Comunidad y Networking
+
+    Únete a grupos como:
+
+        DEF CON’s RF Hacking Village.
+
+        GSMA Security Group.
+
+    Conferencias: Black Hat, HITB, Ekoparty.
+
+Ruta Resumida:
+
+    Redes + Telecomunicaciones → CCNA, Wireshark.
+
+    Ciberseguridad básica → eJPT, CEH.
+
+    Seguridad ofensiva en telecom → SDR, Osmocom, SS7 hacking.
+
+    Certificaciones avanzadas → OSCP, GMOB.
+
+    Práctica real → Labs, Bug Bounty.
+
+🔹 Nota: La seguridad ofensiva en telecomunicaciones es un campo altamente especializado. Requiere conocimientos profundos en redes y mucha experimentación con hardware (SDR, antenas).

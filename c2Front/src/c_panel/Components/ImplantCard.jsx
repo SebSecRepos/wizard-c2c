@@ -25,11 +25,7 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
   useEffect(()=>{console.log(status);
   },[status])
 
-  {
 
-
-    
-  }
    switch (style) {
     case 'card':
       return  <div className={status === "active" ? "card" : "card-in"} onClick={status === "active" ? visit_service : inactive  }>
