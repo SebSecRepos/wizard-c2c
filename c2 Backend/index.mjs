@@ -176,6 +176,7 @@ const main = async () =>{
     app.use('/api/arts/power', express.static(path.join(__dirname, 'public/arts/power/') ));
     app.use('/api/arts/sh', express.static(path.join(__dirname, 'public/arts/sh/') ));
     app.use('/api/arts/bin', express.static(path.join(__dirname, 'public/arts/bin/') ));
+    app.use('/api/arts/web', express.static(path.join(__dirname, 'public/arts/web/') ));
 
     const server = http.createServer(app);
     const {agents} = await webSocketsServer(server, attacks_running)

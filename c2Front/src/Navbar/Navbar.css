@@ -66,6 +66,7 @@
     color: #00b300 !important;
     background-color: black !important;
     transition: color 0.5s;
+    cursor: pointer;
 }
 .logout-btn:hover{
     color: #00ff00 !important;

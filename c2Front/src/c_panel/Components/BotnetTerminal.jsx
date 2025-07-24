@@ -185,6 +185,7 @@ export const BotnetTerminal = () => {
         <span className="terminal-dot red" > <FaSkull className='terminal-dot-icon'/> </span>
         <span className="terminal-dot yellow" > <FaSkull className='terminal-dot-icon'/> </span>
         <span className="terminal-dot green" > <FaSkull className='terminal-dot-icon'/> </span>
+        Type &gt; help
       </div>
       <div className="terminal-body">
         {visibleHistory.map((entry, idx) => (

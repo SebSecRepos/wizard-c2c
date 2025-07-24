@@ -5,7 +5,7 @@
   z-index: 9999;        /* asegúrate de que esté por encima de otros elementos */
   background: rgb(0, 0, 0);
   border: 1px solid #ccc;
-  padding: 16px;
+  padding: 25px 25px 25px 30px;
   width: 100vh;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -13,6 +13,10 @@
   overflow: scroll;
 }
 
+.floating-box-explorer h2{
+  margin: 10px 0;
+  color: white;
+}
 
 
 .directory-list{
@@ -29,3 +33,4 @@
 .directory-list li:hover{
   color: greenyellow;
 }
+

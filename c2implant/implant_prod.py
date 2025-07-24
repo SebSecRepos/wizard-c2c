@@ -15,6 +15,11 @@ from typing import List, Dict, Tuple, Optional
 from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
 import requests
 import ctypes
+import warnings
+
+
+warnings.filterwarnings("ignore", message="No libpcap provider available ! pcap won't be used")
+
 
 
 if sys.platform == "win32":

@@ -125,11 +125,13 @@ export const AdminUsers = () => {
       const response= await res.json();
       if (response.ok) {
         toast.success("Usuario actualizado");
+        fetchUsers();
       }else{
         toast.error(response.errors);
       }
     } else {
       startRegister(data);
+      fetchUsers();
     }
     
     reset();

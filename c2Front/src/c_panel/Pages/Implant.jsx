@@ -93,6 +93,7 @@ export const Implant = () => {
         openSideBar &&
       <div className="left_panel" >
         <UploadFile id={id}/>
+        <hr />
         <button className='btn-filesystem' onClick={()=> setOpenExplorer(!openExplorer)}>Sistema de archivos</button>
       </div>
       }

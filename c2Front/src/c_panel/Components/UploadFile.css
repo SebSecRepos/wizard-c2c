@@ -7,6 +7,14 @@
 }
 .upload-container button{
     background-color: white;
+    padding: 10px;
+    cursor: pointer;
+    background-color: black;
+    color: red;
+    font-weight: bold;
+    margin: 3px;
+    border-radius: 10px;
+    border: none;
 }
 
  .file-upload {
