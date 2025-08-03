@@ -12,6 +12,8 @@ import { RiAdminFill } from "react-icons/ri";
 import AlertModal from '../util-components/AlertModal';
 import { ToastContainer, toast } from 'react-toastify';
 import { TbTruckDelivery } from 'react-icons/tb';
+import logo from '../Assets/logo.png';
+
 
 const Navbar = () => {
 
@@ -50,10 +52,7 @@ const Navbar = () => {
         const data = JSON.parse(event.data);
         const botnet_data = data.botnet;
 
-    /*     console.log(data); */
-        
         setBotnet(botnet_data)
-      
         
       };
   
@@ -82,9 +81,10 @@ const Navbar = () => {
   return (
     <>
       <ul className="navbar">
+        <img src={logo} alt="" srcset="" />
         <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes <CiVirus className='nav-icons'/></li></Link>
         <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
-        <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Delivery buckets  <TbTruckDelivery className='nav-icons'/></li></Link>
+        <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <TbTruckDelivery className='nav-icons'/></li></Link>
         {
           user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
         }

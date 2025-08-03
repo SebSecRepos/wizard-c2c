@@ -1,4 +1,5 @@
 .navbar{
+    background-color: transparent;
     list-style: none;
     display: flex;
     flex-direction: row;
@@ -6,7 +7,6 @@
     padding: 0%;
     margin: 0%;
     text-decoration: none;
-    background-color: black;
     }
 
 .navbar li{
@@ -79,4 +79,13 @@
     color: rgb(37, 148, 0);
     margin-left: 3px;
     transition: all 0.2s;
+}
+
+.navbar img{
+    position: relative;
+    opacity: 0.4;
+    width: 180px;
+    border-radius: 50%;
+    right: 12%;
+    z-index: 1;
 }
