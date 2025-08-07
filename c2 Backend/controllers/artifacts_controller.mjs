@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from "path";
 import { fileURLToPath } from 'url';
 import { getSafeUploadPath } from "../Utils/santize_path.mjs";
+import { ok } from "assert";
 import { unlink } from "fs/promises";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,8 +11,6 @@ const __dirname = path.dirname(__filename);
 
 
 const get_artifacts=(req,res=response)=>{
-
-    
 
     const { id='' } = req.params;
 

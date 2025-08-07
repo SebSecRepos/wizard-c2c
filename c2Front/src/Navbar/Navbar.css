@@ -67,6 +67,7 @@
     background-color: black !important;
     transition: color 0.5s;
     cursor: pointer;
+    max-height: 70px;
 }
 .logout-btn:hover{
     color: #00ff00 !important;
@@ -83,8 +84,8 @@
 
 .navbar img{
     position: relative;
-    opacity: 0.4;
-    width: 180px;
+    opacity: 0.3;
+    width: 140px;
     border-radius: 50%;
     right: 12%;
     z-index: 1;

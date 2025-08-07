@@ -16,6 +16,8 @@ const storage = multer.diskStorage({
     destination: async function (req, file, cb) {
         try {
             const params = {...req.params};
+            console.log(params);
+            
             const {destination='utils'} = params;
             if(destination.includes('..') || destination.includes('/')  || destination.includes('\\') ) throw new Error('Ruta de destino inválida.')
             const safePath = getSafeUploadPath(destination, '../public/arts/');
@@ -32,6 +34,7 @@ const storage = multer.diskStorage({
             if(file.originalname.includes('..') || file.originalname.includes('/' || destination.includes('\\')) ) throw new Error('Ruta de destino inválida.')
             const safeName = sanitizeFilename(file.originalname);
             const finalName = path.basename(safeName);
+            console.log(finalName);
             
             cb(null, finalName);
             

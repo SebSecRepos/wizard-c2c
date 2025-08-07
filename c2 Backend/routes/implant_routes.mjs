@@ -1,5 +1,5 @@
 
-import { response, Router } from "express"; 
+import { Router } from "express"; 
 import { create_implant_controller } from "../controllers/implant_controllers.mjs";
 
 const implant_router = () => {

@@ -60,7 +60,7 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
 
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/cmd/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-token':`${Cookies.get('x-token')}`},
         body: JSON.stringify({ cmd: input })

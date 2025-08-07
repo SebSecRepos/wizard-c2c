@@ -10,14 +10,14 @@ export const UploadFile =({id=""})=>{
 
   const handleUpload = async () => {
 
-    setIsSending(true);
-
+    
     try {
       if (!file){
-        toast.error("Empty file!")
+        toast.error("No file selected!")
         return;
       } 
       
+      setIsSending(true);
       let destination=`C:\\Temp\\${file.name}`
       destination = prompt(`Ingrese la ruta, ruta por defecto C:\\Temp\\${file.name}`);
       if(!destination || destination === null || destination==="") destination=`C:\\Temp\\${file.name}`

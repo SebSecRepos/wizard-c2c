@@ -57,7 +57,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
 
   const customCommand = async (input) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/cmd/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

