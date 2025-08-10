@@ -1,6 +1,7 @@
 import User from '../models/User_model.mjs';
 import bcrypt from 'bcryptjs';
 import {new_jwt} from './jwt.mjs';
+import { writeLog } from '../routes/writeLog.mjs';
 
 const login_user = async( body ) => {
     
@@ -20,7 +21,7 @@ const login_user = async( body ) => {
         errors.push("Usuario o contraseña incorrectos");
         return { errors, jwt: false };
     }
-
+    writeLog(` | User ${user_name} has been logged`)
     const token = await new_jwt( user.id, user.user_name );
 
     return { errors, jwt: token, user:{

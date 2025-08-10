@@ -12,6 +12,7 @@ import { useAuthStore } from '../../hooks';
 import { linuxOperationsArray, windowsOperationsArray } from '../../Utils/operations';
 import Cookies from 'js-cookie';
 import { toast, ToastContainer } from 'react-toastify';
+import { Loader } from '../../util-components/Loader';
 
 export const Implant = () => {
 
@@ -72,7 +73,7 @@ export const Implant = () => {
      
    }, [id]);
 
-  return !implant ? <h1>cargando</h1>
+  return !implant ? <Loader />
    :
    <>
    {

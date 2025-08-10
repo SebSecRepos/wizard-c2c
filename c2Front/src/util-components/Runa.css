@@ -1,0 +1,24 @@
+.runa-loader{
+    width: 100%;
+    height:  auto;
+    background-color: transparent;
+    justify-content: center;
+    display: flex;
+    padding: 50px 0;
+}
+
+.runa-loader img{
+    border-radius: 50%;
+    animation: girar 10s linear infinite;
+    width: 600px;
+}
+
+
+@keyframes girar {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

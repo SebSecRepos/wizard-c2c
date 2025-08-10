@@ -23,7 +23,14 @@ const create_implant = async( body ) => {
 
         const implan_by_model = await Implant.findOneAndUpdate(
             { impl_id },         // criterio para buscar el documento existente
-            { $set: {...body} }, // datos nuevos para actualizar o crear
+            { $set: {
+                impl_mac,
+                impl_number,
+                group,
+                local_ip,
+                operating_system,
+                token,
+            } }, // datos nuevos para actualizar o crear
             {
                 new: true,    // devolver el documento actualizado
                 upsert: true, // si no existe, lo crea

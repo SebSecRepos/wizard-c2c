@@ -8,15 +8,17 @@ import './implants.css'
 
 //import Cookies from 'js-cookie';
 import './implants.css'
+import C2Status from '../Components/C2Status';
+import { Loader } from '../../util-components/Loader';
 
 
 export const Implants = () => {
 
   const { startLogOut } = useAuthStore();
-  
-  const [ implants, setImplants ] = useState([]);
-  const [ style, setStyle ] = useState("list");
-  const [ filteredImplants, setFilteredImplants ] = useState(implants);
+
+  const [implants, setImplants] = useState([]);
+  const [style, setStyle] = useState("list");
+  const [filteredImplants, setFilteredImplants] = useState(implants);
   const [filters, setFilters] = useState({
     group: "",
     os: "",
@@ -44,7 +46,7 @@ export const Implants = () => {
         }
 
         const data = JSON.parse(event.data);
-        
+
         setImplants(data.data);
 
       };
@@ -56,12 +58,12 @@ export const Implants = () => {
       return () => {
         socket.close();
       };
-      
+
     } catch (error) {
       toast.error(error);
       startLogOut();
     }
-   
+
   }, []);
 
 
@@ -92,63 +94,85 @@ export const Implants = () => {
 
       <div className="filter-container">
 
-      <div className="filter-controls">
-        <select name="group" value={filters.group} onChange={handleChange} className="filter-select">
-          <option value="">Todos los grupos</option>
-          {unique(implants, "group").map((val) => (
-            <option key={val} value={val}>{val}</option>
-          ))}
-        </select>
+        <div className="filter-controls">
+          <select name="group" value={filters.group} onChange={handleChange} className="filter-select">
+            <option value="">Todos los grupos</option>
+            {unique(implants, "group").map((val) => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
 
-        <select name="os" value={filters.os} onChange={handleChange} className="filter-select">
-          <option value="">Todos los sistemas</option>
-          {unique(implants, "operating_system").map((val) => (
-            <option key={val} value={val}>{val}</option>
-          ))}
-        </select>
+          <select name="os" value={filters.os} onChange={handleChange} className="filter-select">
+            <option value="">Todos los sistemas</option>
+            {unique(implants, "operating_system").map((val) => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
 
-        <select name="publicIp" value={filters.publicIp} onChange={handleChange} className="filter-select">
-          <option value="">Todas las IP públicas</option>
-          {unique(implants, "public_ip").map((val) => (
-            <option key={val} value={val}>{val}</option>
-          ))}
-        </select>
+          <select name="publicIp" value={filters.publicIp} onChange={handleChange} className="filter-select">
+            <option value="">Todas las IP públicas</option>
+            {unique(implants, "public_ip").map((val) => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
 
-          <button className='list-button' onClick={()=>{
+          <button className='list-button' onClick={() => {
             setStyle(style === 'list' ? 'card' : 'list')
           }}>
             {style === 'card' ? (
-            <FaList />
+              <FaList />
             ) : (
               <BsCardList />
-        )}
+            )}
           </button>
+        </div>
       </div>
-    </div>
-      {/* Resultado filtrado */}
-      <ul className="card-container">
-        {filteredImplants.map((implant) =>{
 
-          return(
-               <ImplantCard
-                style={style}
-                impl_mac={implant.impl_mac}
-                group={implant.group}
-                public_ip={implant.public_ip}
-                local_ip={implant.local_ip}
-                operating_system={implant.operating_system}
-                id={implant.id}
-                status={implant.status}
-              /> 
-          )
-        }
-        
-        )}
-        {filteredImplants.length === 0 && (
-          <h1 >No se encontraron coincidencias.</h1>
-        )}
-      </ul>
-      
+     {filteredImplants && filteredImplants.length === 0 ? (
+        <Loader />
+
+
+     )
+     :
+      <div className='c2c-status'>
+        <ul className={"card-container"} style={ style === "card" ? { paddingTop:'200px'} : {paddingTop:'0'}}>
+
+          { style === "list" &&
+            <li className="implants-desc">
+                <p><span>Group</span></p>
+                <p><span>Operating system</span></p>
+                <p><span>Status</span></p>
+            </li>
+
+          }
+          {filteredImplants.map((implant) =>{
+
+            return(
+                <ImplantCard
+                  style={style}
+                  impl_mac={implant.impl_mac}
+                  group={implant.group}
+                  public_ip={implant.public_ip}
+                  local_ip={implant.local_ip}
+                  operating_system={implant.operating_system}
+                  id={implant.id}
+                  status={implant.status}
+                /> 
+            )
+          }
+          
+          )} 
+    
+        </ul>
+
+        <div className='event-container'>
+          <h1>Eventos</h1>
+          <C2Status />
+        </div>
+
+      </div>
+     }
+
     </div>
   );
 };

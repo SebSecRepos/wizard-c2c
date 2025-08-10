@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './Terminal.css';
+import './BotnetTerminal.css';
 import Cookies from 'js-cookie';
 import { useAuthStore } from '../../hooks';
 import { ToastContainer, toast } from 'react-toastify';
@@ -179,25 +179,25 @@ export const BotnetTerminal = () => {
 
 
   return (
-    <div className="terminal-container" onClick={handleClick}>
-      <div className="terminal-header">
-        <span className="terminal-dot red" > <FaSkull className='terminal-dot-icon'/> </span>
-        <span className="terminal-dot yellow" > <FaSkull className='terminal-dot-icon'/> </span>
-        <span className="terminal-dot green" > <FaSkull className='terminal-dot-icon'/> </span>
+    <div className="botnet-terminal-container" onClick={handleClick}>
+      <div className="botnet-terminal-header">
+        <span className="botnet-terminal-dot red" > <FaSkull className='botnet-terminal-dot-icon'/> </span>
+        <span className="botnet-terminal-dot yellow" > <FaSkull className='botnet-terminal-dot-icon'/> </span>
+        <span className="botnet-terminal-dot green" > <FaSkull className='botnet-terminal-dot-icon'/> </span>
         Type &gt; help
       </div>
-      <div className="terminal-body">
+      <div className="botnet-terminal-body">
         {visibleHistory.map((entry, idx) => (
           <div key={idx}>
-            <div className="terminal-line">
+            <div className="botnet-terminal-line">
               <span className="prompt">(Botnet ☠) &gt;</span>
               <span>{entry.command}</span>
             </div>
-            <div className="terminal-response">{entry.response}</div>
+            <div className="botnet-terminal-response">{entry.response}</div>
           </div>
         ))}
         <form onSubmit={handleCommand}>
-          <div className="terminal-line">
+          <div className="botnet-terminal-line">
             <span className="prompt">(Botnet ☠) &gt;</span>
             <input
               type="text"
@@ -205,7 +205,7 @@ export const BotnetTerminal = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               autoFocus
-              className="terminal-input"
+              className="botnet-terminal-input"
             />
           </div>
         </form>

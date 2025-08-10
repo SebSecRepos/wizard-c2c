@@ -135,7 +135,7 @@ export const AdminDelivery = () => {
 
         }
         <ul className="delivery-files-container">
-          {artifacts.length === 0 ? <p>No hay archivos</p>
+          {  !artifacts || artifacts.length === 0 ? <p>No hay archivos</p>
           :
           
           artifacts.map((ar)=><li className='art-file-li'>

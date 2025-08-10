@@ -12,8 +12,18 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
   // Cargar archivos del path actual
   const listFiles = async (path) => {
     try {
-      const url = `${import.meta.env.VITE_API_URL}/api/rcv/get_files/${id}?path=${encodeURIComponent(path)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
-      const res = await fetch(url);
+      const url = `${import.meta.env.VITE_API_URL}/api/rcv/get_files/`;
+      const res = await fetch(url,{
+        method:'POST',
+        headers:{
+         "Content-Type": "application/json",
+         "x-token": Cookies.get('x-token')
+        },
+        body:JSON.stringify({
+          path,
+          id
+        })
+      });
       const data = await res.json();
       if (data.items) {
         setItems(data.items);
@@ -32,9 +42,9 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
     const segments = currentPath.split("/").filter(Boolean);
 
     if (folderName === "..") {
-      segments.pop(); // sube un nivel
+      segments.pop();
     } else {
-      segments.push(folderName); // entra a subcarpeta
+      segments.push(folderName); 
     }
 
     const normalizedPath = "/" + segments.join("/");
@@ -42,7 +52,6 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
   };
 
   // Descargar archivo desde backend Node
-<<<<<<< HEAD
 const downloadFile = async (fileName) => {
   setIsDownloading(true);
   const fullPath = `${currentPath}/${fileName}`;
@@ -84,14 +93,6 @@ const downloadFile = async (fileName) => {
   }
 
 };
-=======
-  const downloadFile = (fileName) => {
-    const fullPath = `${currentPath}/${fileName}`;
-    const url = `${import.meta.env.VITE_API_URL}/api/rcv/download/${id}?path=${encodeURIComponent(fullPath)}&token=${encodeURIComponent(Cookies.get('x-token'))}`;
-    console.log(url);
-    window.open(url)
-  };
->>>>>>> parent of 0562887 (C# Malware)
 
   useEffect(() => {
     listFiles("/");

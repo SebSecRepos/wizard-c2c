@@ -9,6 +9,7 @@ import { login_user } from "../Utils/login_users.mjs";
 import {new_jwt} from '../Utils/jwt.mjs';
 import User from "../models/User_model.mjs";
 import { update_user } from "../Utils/update_user.mjs";
+import { writeLog } from "../routes/writeLog.mjs";
 
 const register = async(req, res = response) => {
     
@@ -81,7 +82,11 @@ const login = async(req, res = response) => {
     try {
 
         const {errors, jwt, user} = await login_user(req.body);                //login_user component to login user
-        if( !jwt ) return res.status(400).json({ ok:false, errors });
+        if( !jwt ){
+            writeLog(` | Login failed for user ${req.body.user_name || ''}`)
+            return res.status(400).json({ ok:false, errors });
+        }
+            
 
         return res.status(200).json({ ok:true, msg: "Success", jwt, data:user })
         
