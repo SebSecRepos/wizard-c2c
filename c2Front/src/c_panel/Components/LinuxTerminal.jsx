@@ -12,6 +12,14 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
   const [currentDir, setCurrentDir] = useState('/home/user');
   const inputRef = useRef(null);
 
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [input]);
+
   const { startLogOut } = useAuthStore();
 
   useEffect(() => {
@@ -138,7 +146,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
         <span className="terminal-dot yellow" />
         <span className="terminal-dot green" />
       </div>
-      <div className="terminal-body">
+      <div className="terminal-body" ref={containerRef}>
         {visibleHistory.map((entry, idx) => (
           <div key={idx}>
             <div className="terminal-line">

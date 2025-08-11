@@ -11,7 +11,7 @@ import { GiRobotAntennas } from "react-icons/gi";
 import { RiAdminFill } from "react-icons/ri";
 import AlertModal from '../util-components/AlertModal';
 import { ToastContainer, toast } from 'react-toastify';
-import { TbTruckDelivery } from 'react-icons/tb';
+import { BsBucketFill } from 'react-icons/bs';
 import logo from '../Assets/logo.png';
 
 
@@ -84,7 +84,7 @@ const Navbar = () => {
         <img src={logo} alt="" srcset="" />
         <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes <CiVirus className='nav-icons'/></li></Link>
         <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
-        <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <TbTruckDelivery className='nav-icons'/></li></Link>
+        <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <BsBucketFill className='nav-icons'/></li></Link>
         {
           user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
         }

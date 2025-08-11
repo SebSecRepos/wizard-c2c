@@ -11,9 +11,17 @@ export const BotnetTerminal = () => {
   const [fullHistory, setFullHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(null);
   const inputRef = useRef(null);
-
+  
+  
   const {startLogOut} = useAuthStore()
-
+  
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [input]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -186,7 +194,7 @@ export const BotnetTerminal = () => {
         <span className="botnet-terminal-dot green" > <FaSkull className='botnet-terminal-dot-icon'/> </span>
         Type &gt; help
       </div>
-      <div className="botnet-terminal-body">
+      <div className="botnet-terminal-body" ref={containerRef}>
         {visibleHistory.map((entry, idx) => (
           <div key={idx}>
             <div className="botnet-terminal-line">

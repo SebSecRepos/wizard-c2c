@@ -2,7 +2,7 @@
 import { Router } from "express"; 
 import multer from "multer";
 import { validate_jwt } from "../middlewares/validate_jwt.mjs";
-import { delete_artifact, get_artifacts, upload_artifact } from "../controllers/artifacts_controller.mjs";
+import { delete_artifact, get_artifacts, upload_artifact, get_buckets, create_bucket, delete_bucket } from "../controllers/artifacts_controller.mjs";
 import { getSafeUploadPath, sanitizeFilename } from "../Utils/santize_path.mjs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -52,6 +52,9 @@ const artifacts_router = () => {
     router.get('/get/:id', (req,res) => get_artifacts(req,res));
     router.post('/upload/:destination', (req,res, next) =>checkAdmin(req,res, next), upload.single("file"), (req,res) => upload_artifact(req,res));
     router.delete('/delete/:destination', (req,res, next) =>checkAdmin(req,res, next), (req,res) => delete_artifact(req,res));
+    router.get('/buckets/get/', (req,res) => get_buckets(req,res));
+    router.post('/buckets/create/', (req,res, next) =>checkAdmin(req,res, next), (req,res) => create_bucket(req,res));
+    router.delete('/buckets/delete/', (req,res, next) =>checkAdmin(req,res, next), (req,res) => delete_bucket(req,res));
     
     return router;
 };

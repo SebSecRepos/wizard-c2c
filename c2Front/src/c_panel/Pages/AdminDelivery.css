@@ -93,7 +93,7 @@
   padding: 0;
 }
 
-.delivery-artifact-list li {
+.delivery-artifact-list li div {
   padding: 0.6rem 1rem;
   margin-bottom: 0.5rem;
   background-color:rgb(62, 62, 62);
@@ -103,7 +103,7 @@
   transition: background 0.2s ease;
 }
 
-.delivery-artifact-list li:hover {
+.delivery-artifact-list li div:hover {
   background-color:rgb(170, 170, 170);
 }
 
@@ -130,12 +130,22 @@
   color: black;
 }
 
+.li-bucket{
+  display: flex;
+  margin: 5px;
+}
+.div-bucket{
+  min-width: 200px !important;
+  display: flex;
+  justify-content: space-between;
+}
 
 .delivery-delete-art{
     margin-left: 5px;
     padding: 5px;
     border-radius: 8px;
     font-size: 1rem;
+    max-height: 40px;
     background-color:rgb(243, 104, 89);
     color: white;
     border: none;
