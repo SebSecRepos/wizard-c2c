@@ -24,32 +24,9 @@ export const BotnetCpanel = () => {
   const navigate = useNavigate()
   const { startLogOut } = useAuthStore();
 
-/*    {
-    openExplorer && <FileExplorer id={id} openExplorer={openExplorer} setOpenExplorer={setOpenExplorer}/>
-   } */
 
-  return  <>
-   <div className='implant_cpanel'>
-
-    <div className="middle_panel">
-{/*       {
-        openSideBar &&
-      <div className="left_panel" >
-        <UploadFile />
-      </div>
-      } */}
+    return <BotnetTerminal />
       
-        <BotnetTerminal />
       
-    </div>
-
-{/*    <div className="bottom_panel">
-      <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} operations={windowsOperationsArray}/>
-   </div> */}
-   </div>
-   
-   </>
-  
-  
 };
 

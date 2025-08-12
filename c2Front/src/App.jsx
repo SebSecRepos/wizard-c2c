@@ -6,6 +6,7 @@ import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadFull } from 'tsparticles';
 import { useEffect, useMemo, useState } from "react";
 import { loadSlim } from "@tsparticles/slim";
+import Footer from "./Footer/Footer";
 
 function App() {
 
@@ -104,8 +105,9 @@ function App() {
 
         }} 
       />
-      <div style={{ position: 'relative', zIndex: 1, background:'transparent'}}>
+      <div style={{ position: 'relative', zIndex: 1, background:'transparent', display:'flex', flexDirection:'column', minHeight: '100vh'}}>
         <AppRouter/>
+        <Footer />
       </div>
     </Provider>
   )
