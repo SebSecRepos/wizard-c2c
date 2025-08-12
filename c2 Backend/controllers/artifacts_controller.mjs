@@ -51,8 +51,8 @@ const delete_artifact = async(req,res=response) => {
 
             const test_dir = path.join(__dirname, `../public/arts/`);
             
-            if(destination.includes('..') || destination.includes('/') || destination.includes('\\') ) return res.status(400).json({ok:false, msg:'Ruta de destino inválida.'});
-            if(filename.includes('..') || filename.includes('/') || filename.includes('\\') ) return res.status(400).json({ok:false, msg:'Nombre de archivo inválido.'});
+            if(destination.includes('..') || destination.includes('/') || destination.includes('\\') ) return res.status(400).json({ok:false, msg:'Invalid destination path'});
+            if(filename.includes('..') || filename.includes('/') || filename.includes('\\') ) return res.status(400).json({ok:false, msg:'Invalid file name'});
            
             fs.readdir(test_dir, (err, files)=>{
                 if( !files.includes(destination)) return res.status(400).json({ok:false, msg:'Invalid path'});
@@ -64,10 +64,10 @@ const delete_artifact = async(req,res=response) => {
 
             try {
                 await unlink(filepath);
-                return res.status(200).json({ok:true, msg:'Eliminado'});
+                return res.status(200).json({ok:true, msg:'Deleted'});
             } catch (error) {
                 console.log(error);
-                return res.status(400).json({ok:false, msg:'Error al eliminar'});
+                return res.status(400).json({ok:false, msg:'Error deleting'});
             }
 
     } catch (error) {
@@ -88,7 +88,7 @@ const get_buckets=async(req, res=response)=>{
 
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ ok:false, msg: 'Error al traer buckets' });
+    return res.status(500).json({ ok:false, msg: 'Error fetching buckets' });
   }
 
 }

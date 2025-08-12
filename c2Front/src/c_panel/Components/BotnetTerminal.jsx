@@ -103,12 +103,12 @@ export const BotnetTerminal = () => {
         body: body
       });
 
-      if (!requests.ok) throw new Error(`Error del servidor: ${requests.status}`);
+      if (!requests.ok) throw new Error(`Server error ${requests.status}`);
       
       const data = await requests.json();
 
-      if (data.msg === "Autenticación inválida") {
-        toast.error("Autenticación inválida");
+      if (data.msg === "Invalid auth") {
+        toast.error("Invalid auth");
         startLogOut();
       }
       return response;
@@ -126,7 +126,7 @@ export const BotnetTerminal = () => {
 
     switch (command) {
       case 'help':
-        response = 'Comandos disponibles: help, about, clear, history, attacks';
+        response = 'Available commands: help, about, clear, history, attacks';
         break;
       case 'about':
         response = 'Botnet';

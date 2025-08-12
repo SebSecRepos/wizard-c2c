@@ -34,25 +34,6 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
         URL.revokeObjectURL(url);
     }
 
-/*     const handleUpload = async () => {
-        if (!file) return;
-        
-        let destination=`C:\\Temp\\${file.name}`
-        destination = prompt(`Ingrese la ruta, ruta por defecto C:\\Temp\\${file.name}`);
-        if(!destination || destination === null || destination==="") destination=`C:\\Temp\\${file.name}`
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("destination", destination);
-
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/upload/${id}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                "x-token": `${Cookies.get('x-token')}`
-            }
-        });
-    }; */
 
 
   const cmd = async (input, type="") => {
@@ -70,12 +51,12 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
         body: JSON.stringify({ cmd: input })
       });
 
-      if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+      if (!response.ok) throw new Error(`Server error ${response.status}`);
 
       const data = await response.json();
 
-      if (data.msg === "Autenticación inválida") {
-        toast.error("Autenticación inválida");
+      if (data.msg === "Invalid auth") {
+        toast.error("Invalid auth");
         startLogOut();
       }
 
@@ -85,7 +66,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
 
       
     } catch (error) {
-      console.error('Error en customCommand:', error);
+      console.error('Error in customCommand:', error);
     }
   };
 

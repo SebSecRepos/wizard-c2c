@@ -30,7 +30,7 @@ export const Implant = () => {
 
     try {
 
-        const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=usuario`);
+        const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
         socket.onopen = () => {
           /*    console.log('Conectado al servidor WebSocket'); */
@@ -95,7 +95,7 @@ export const Implant = () => {
       <div className="left_panel" >
         <UploadFile id={id}/>
         <hr />
-        <button className='btn-filesystem' onClick={()=> setOpenExplorer(!openExplorer)}>Sistema de archivos</button>
+        <button className='btn-filesystem' onClick={()=> setOpenExplorer(!openExplorer)}>File system</button>
       </div>
       }
 

@@ -10,11 +10,11 @@ export const schema = yup.object().shape({
 
   user_name: yup
     .string()
-    .required('El usuario es obligatorio'),
+    .required('User is required'),
   password: yup
     .string()
-    .required('La contraseña es obligatoria')
-    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+    .required('Password is required')
+    .min(4, 'Password must have at least 4 characters'),
 });
 
 
@@ -40,7 +40,7 @@ export const Auth =()=>{
  <>
       <div className="login-container">
         <div className="login-form-1">
-          <h3>Ingreso</h3>
+          <h3>Login</h3>
           <form onSubmit={handleSubmit(submit)}>
             <div className="form-group">
               <input

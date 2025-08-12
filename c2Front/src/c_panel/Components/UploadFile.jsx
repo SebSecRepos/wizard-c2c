@@ -13,13 +13,13 @@ export const UploadFile =({id=""})=>{
     
     try {
       if (!file){
-        toast.error("No file selected!")
+        toast.error("Empty file")
         return;
       } 
       
       setIsSending(true);
       let destination=`C:\\Temp\\${file.name}`
-      destination = prompt(`Ingrese la ruta, ruta por defecto C:\\Temp\\${file.name}`);
+      destination = prompt(`Write path, default path is C:\\Temp\\${file.name}`);
       if(!destination || destination === null || destination==="") destination=`C:\\Temp\\${file.name}`
   
       const formData = new FormData();
@@ -35,15 +35,23 @@ export const UploadFile =({id=""})=>{
       });
   
       const result = await response.json();
-  
+      
       if(result.ok) toast.success(result.msg)
       if(!result.ok) toast.error(result.msg)
+
+      setTimeout(()=>{
+        setIsSending(false);
+        setFile(undefined);
+      },1000)  
       
     } catch (error) {
       toast.error("Server error")
-    }
+      setTimeout(()=>{
+        setIsSending(false);
+        setFile(undefined);
+      },1000)  
 
-    setIsSending(false);
+    }
 
   };
 
@@ -54,7 +62,7 @@ export const UploadFile =({id=""})=>{
       :
       <>
         <input className="file-upload " type="file" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={handleUpload}>Subir archivo</button>
+        <button onClick={handleUpload}>Upload file</button>
       </>
     }
         <ToastContainer

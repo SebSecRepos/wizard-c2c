@@ -10,7 +10,7 @@ const new_jwt = ( uid, name )=>{
         }, (err, token)=>{
             if(err){
                 console.log(err);
-                reject( "No se pudo generar el token" );
+                reject( "JWT couldn't be geenrated" );
             }
             resolve(token);
         });
@@ -26,7 +26,7 @@ const new_jwt_implant = ()=>{
         }, (err, token)=>{
             if(err){
                 console.log(err);
-                reject( "No se pudo generar el token" );
+                reject( "JWT couldn't be geenrated" );
             }
             resolve(token);
         });

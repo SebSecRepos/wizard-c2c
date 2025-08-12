@@ -7,7 +7,7 @@ const validate_jwt = ( req, res=response, next ) =>{
     
     const token = req.header('x-token') || req.query.token;
 
-    if(!token) return res.status(400).json({ ok:false, msg:"Autenticación inválida" });
+    if(!token) return res.status(400).json({ ok:false, msg:"Invalid auth" });
 
     try {
 
@@ -19,7 +19,7 @@ const validate_jwt = ( req, res=response, next ) =>{
         
     } catch (error) {
         console.log(error);
-        return res.status(401).json({ ok:false, msg:"Autenticación inválida" });
+        return res.status(401).json({ ok:false, msg:"Invalid auth" });
     }
 
     

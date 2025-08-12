@@ -15,8 +15,8 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
   };
   
   const inactive = () => {
-    toast.error("Implante inactivo");
-    console.log("Implante inactivo");
+    toast.error("Implant inactive");
+    console.log("Implant inactive");
     
   };
 

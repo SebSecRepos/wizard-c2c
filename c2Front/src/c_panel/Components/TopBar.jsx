@@ -70,47 +70,47 @@ const listStyle = {
   return (
     <div style={containerStyle}>
       <div style={sectionStyle}>
-        <div style={labelStyle}>Grupo</div>
-        <div style={valueStyle}>{group || 'No definido'}</div>
+        <div style={labelStyle}>Group</div>
+        <div style={valueStyle}>{group || 'Not defined'}</div>
       </div>
 
       <div style={sectionStyle}>
-        <div style={labelStyle}>IP Pública</div>
-        <div style={valueStyle}>{public_ip || 'No disponible'}</div>
+        <div style={labelStyle}>Public IP</div>
+        <div style={valueStyle}>{public_ip || 'Not available'}</div>
       </div>
 
       <div style={sectionStyle}>
-        <div style={labelStyle}>IPs Locales</div>
+        <div style={labelStyle}>Local IPs</div>
         <ul style={listStyle}>
           {local_ip.length > 0 ? (
             local_ip.map((ip, idx) => (
               <li key={idx} style={listItemStyle}>{ip}</li>
             ))
           ) : (
-            <li style={listItemStyle}>Sin datos</li>
+            <li style={listItemStyle}>No data</li>
           )}
         </ul>
       </div>
 
       <div style={sectionStyle}>
-        <div style={labelStyle}>Sistema Operativo</div>
-        <div style={valueStyle}>{operating_system || 'No especificado'}</div>
+        <div style={labelStyle}>Operating system</div>
+        <div style={valueStyle}>{operating_system || 'Not specified'}</div>
       </div>
 
       <div style={sectionStyle}>
         <div style={labelStyle}>ID</div>
-        <div style={valueStyle}>{id || 'No disponible'}</div>
+        <div style={valueStyle}>{id || 'Not available'}</div>
       </div>
 
       <div style={sectionStyle}>
-        <div style={labelStyle}>Macs</div>
+        <div style={labelStyle}>MACs</div>
         <ul style={listStyle}>
           {impl_mac.length > 0 ? (
             impl_mac.map((m, idx) => (
               <li key={idx} style={listItemStyle}>{m}</li>
             ))
           ) : (
-            <li style={listItemStyle}>Sin datos</li>
+            <li style={listItemStyle}>No data</li>
           )}
         </ul>
       </div>

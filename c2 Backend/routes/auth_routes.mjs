@@ -17,12 +17,12 @@ const router = Router();
 router.post(
     '/new', 
     [
-        check('user_name', 'El es usuario obligatorio').not().isEmpty(),
-        check('password', 'La contraseña es obligatoria').not().isEmpty(),
-        check('password', 'La contraseña debe tener entre 6 y 20 caracteres').isLength({min: 6, max:20}).matches(/[A-Z]/).withMessage('Debe contener al menos una mayúscula')
-        .matches(/[a-z]/).withMessage('Debe contener al menos una minúscula')
-        .matches(/[0-9]/).withMessage('Debe contener al menos un número')
-        .matches(/[\W_]/).withMessage('Debe contener al menos un carácter especial'),
+        check('user_name', 'User in required').not().isEmpty(),
+        check('password', 'Password is required').not().isEmpty(),
+        check('password', 'Password must have at least 4 characters and max 20 characters').isLength({min: 4, max:20}).matches(/[A-Z]/).withMessage('Must have at least an uppercase character')
+        .matches(/[a-z]/).withMessage('Must have at least an lowercase character')
+        .matches(/[0-9]/).withMessage('Must have at least an number')
+        .matches(/[\W_]/).withMessage('Must have at least an special character'),
         validate_fields
     ], 
     validate_jwt, register
@@ -32,25 +32,24 @@ router.post(
   [
     check('user_name')
       .optional()
-      .notEmpty().withMessage('El usuario no puede estar vacío'),
+      .notEmpty().withMessage('User can\'t be empty string'),
 
     check('password')
       .optional({checkFalsy:true})
-      .isLength({ min: 6, max: 20 }).withMessage('La contraseña debe tener entre 6 y 20 caracteres')
-      .matches(/[A-Z]/).withMessage('Debe contener al menos una mayúscula')
-      .matches(/[a-z]/).withMessage('Debe contener al menos una minúscula')
-      .matches(/[0-9]/).withMessage('Debe contener al menos un número')
-      .matches(/[\W_]/).withMessage('Debe contener al menos un carácter especial'),
+      .isLength({ min: 4, max: 20 }).withMessage('Password must have at least 4 characters and max 20 characters')
+      .matches(/[a-z]/).withMessage('Must have at least an lowercase character')
+      .matches(/[0-9]/).withMessage('Must have at least an number')
+      .matches(/[\W_]/).withMessage('Must have at least an special character'),
 
     check('role')
       .optional()
-      .notEmpty().withMessage('El rol no puede estar vacío'),
+      .notEmpty().withMessage('Role cant\'t be empty string'),
 
     body('password_repeat')
       .if(body('password').exists().notEmpty())
       .custom((value, { req }) => {
         if (value !== req.body.password) {
-          throw new Error('Las contraseñas no coinciden');
+          throw new Error('Passwords doesn\'t match');
         }
         return true;
       }),
@@ -64,9 +63,9 @@ router.post(
 router.post(
     '/', 
     [
-        check('user_name', 'El usuario es obligatorio').not().isEmpty(),
-        check('password', 'Ingrese una contraseña').not().isEmpty(),
-        check('password', 'La contraseña debe tener 6 o mas caracteres').isLength({min: 6}),
+        check('user_name', 'User is required').not().isEmpty(),
+        check('password', 'Password is required').not().isEmpty(),
+        check('password', 'Password must have at least 4 characters and max 20 characters').isLength({min: 4}),
         validate_fields
     ], 
     login);

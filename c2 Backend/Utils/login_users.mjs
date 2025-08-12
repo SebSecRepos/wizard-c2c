@@ -11,14 +11,25 @@ const login_user = async( body ) => {
 
     
     if( !user ){
-        errors.push("Usuario o contraseña incorrectos");
+        errors.push("Wrong user or password");
         return { errors, jwt: false};
+    }
+
+    if( user.isPasswordChanged ){
+        const updates = { isPasswordChanged:false };
+        const updatedUser = await User.findByIdAndUpdate(
+        user.id,
+        { $set: updates },
+        { new: true } 
+        );
+    
+        await updatedUser.save();     
     }
     
     const valid_password = bcrypt.compareSync( password, user.password );
     
     if( valid_password === false ){
-        errors.push("Usuario o contraseña incorrectos");
+        errors.push("Wrong user or password");
         return { errors, jwt: false };
     }
     writeLog(` | User ${user_name} has been logged`)

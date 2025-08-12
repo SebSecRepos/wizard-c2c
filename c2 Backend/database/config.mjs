@@ -9,9 +9,9 @@ export const db_connection = async () => {
     // Conexión a cada base de datos
     connections.IPV6_PORT1 = await mongoose.connect(process.env.IPV6_PORT1);
     
-    console.log('✅ Todas las bases de datos conectadas');
+    console.log('Database connected successful');
   } catch (error) {
-    console.error('❌ Error al conectar las bases de datos:', error);
+    console.error('Error to connect database', error);
     process.exit(1);
   }
 };
@@ -20,7 +20,7 @@ export const db_connection = async () => {
 // Manejar cierre de conexión en terminación de la aplicación
 process.on('SIGINT', async () => {
   await mongoose.connection.close();
-  console.log('MongoDB connection closed due to app termination');
+  console.log('MongoDB connection has been closed by server administrator');
   process.exit(0);
 });
 

@@ -1,4 +1,3 @@
-import { response } from "express";
 import path from "path";
 
 function getSafeUploadPath(userDir, BASE_UPLOAD_DIR='') {
@@ -9,7 +8,7 @@ function getSafeUploadPath(userDir, BASE_UPLOAD_DIR='') {
   
   // Verifica que esté dentro del directorio base
   if (!normalized.startsWith(path.normalize(BASE_UPLOAD_DIR))) {
-    throw new Error('Ruta de destino inválida.');
+    throw new Error('Invalid destination path');
   }
 
   return normalized;

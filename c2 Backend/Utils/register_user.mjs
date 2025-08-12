@@ -12,7 +12,7 @@ const register_user = async( req ) => {
 
     let errors=[];
 
-    if( user_by_user_name ) errors.push("El nombre de usuario ya está en uso");
+    if( user_by_user_name ) errors.push("Username is already registered");
 
     if(errors.length > 0) return { errors, jwt:false };
 

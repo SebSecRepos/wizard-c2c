@@ -18,7 +18,7 @@ const register = async(req, res = response) => {
         const adminUser = await User.findById(req.uid);
         
         if(adminUser.role != "admin") return res.status(400).json({
-            msg: "Permisos insuficientes",
+            msg: "Permission denied",
             ok:false
         })
         
@@ -30,7 +30,7 @@ const register = async(req, res = response) => {
         
     } catch (error) {                                                                   // <---- Server side error
         console.log(error);
-        return res.status(502).json({ ok: false, msg: "Service error D:" })
+        return res.status(502).json({ ok: false, msg: "Server error" })
     }
 
 }
@@ -47,7 +47,7 @@ const update = async(req, res = response) => {
         
     } catch (error) {                                                                   // <---- Server side error
         console.log(error);
-        return res.status(502).json({ ok: false, errors: ["Service error D:"] })
+        return res.status(502).json({ ok: false, errors: ["Server error"] })
     }
 
 }
@@ -62,7 +62,7 @@ const delete_user = async(req, res = response) => {
         
         if(admin_user.role != 'admin') return res.status(200).json({
             ok:false,
-            msg:'User not allowed'
+            msg:'Permission denied'
         })
 
         const users = await User.findByIdAndDelete(id);
@@ -92,7 +92,7 @@ const login = async(req, res = response) => {
         
     } catch (error) {
         console.log(error)
-        return res.status(500).json({  ok: false, msg: "Service error D:"  });
+        return res.status(500).json({  ok: false, msg: "Server error"  });
     }
     
 }
@@ -108,7 +108,7 @@ const get_users = async(req, res = response) => {
         
         if(admin_user.role != 'admin') return res.status(200).json({
             ok:false,
-            msg:'User not allowed'
+            msg:'Permission denied'
         })
 
         const users = await User.find().select('user_name role');
@@ -117,7 +117,7 @@ const get_users = async(req, res = response) => {
         
     } catch (error) {
         console.log(error)
-        return res.status(500).json({  ok: false, msg: "Service error D:"  });
+        return res.status(500).json({  ok: false, msg: "Server error"  });
     }
     
 }
@@ -129,9 +129,14 @@ const renew = async(req, res = express.response) => {
         const { uid, name } = req;
     
     
-        const jwt = await new_jwt( uid, name );
-    
         const user = await User.findById(uid);
+
+        if( user.isPasswordChanged ) return res.status(400).json({
+            ok: false,
+            msg:"Password has changed, log out"
+        })
+
+        const jwt = await new_jwt( uid, name );
     
         return res.status(200).json({ ok:true, message: 'Logged', jwt, data:{
             user_name: user.user_name,
@@ -139,7 +144,7 @@ const renew = async(req, res = express.response) => {
         }});
     } catch (error) {
         console.log(error);
-        return res.status(200).json({ ok:false, message: 'Error fatal' });
+        return res.status(200).json({ ok:false, message: 'Server error' });
     }
 
 }

@@ -29,10 +29,10 @@ export default function FileExplorer({id="", openExplorer=false, setOpenExplorer
         setItems(data.items);
         setCurrentPath(path);
       } else {
-        toast.error(data.error || "Error desconocido");
+        toast.error(data.error || "Unknowed error");
       }
     } catch (err) {
-      toast.error("Error al cargar archivos");
+      toast.error("Error loading files");
       console.error(err);
     }
   };
@@ -101,7 +101,7 @@ const downloadFile = async (fileName) => {
   return (
     <div className="floating-box-explorer">
       <span className="close" onClick={()=>setOpenExplorer(!openExplorer)}>x</span>
-      <h2 className="text-xl font-bold mb-3">Explorador de archivos: {currentPath}</h2>
+      <h2 className="text-xl font-bold mb-3">File explorer: {currentPath}</h2>
       <ul className="directory-list">
         {
           isDownloading ? 

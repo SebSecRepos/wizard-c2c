@@ -20,7 +20,7 @@ export const useAuthStore = () =>{
                 
                 if (!resp.ok) {
                     dispatch( onLogout(resp.errors) );
-                    toast.error(`Error: ${resp.errors || 'Algo salió mal'}`);
+                    toast.error(`Error: ${resp.errors || resp.msg || 'Someting was wrong'}`);
                     setTimeout(()=>{
                         dispatch( clearErrorMessage() )
                     },10)
@@ -31,9 +31,9 @@ export const useAuthStore = () =>{
                 
             }
         } catch (error) {
-            console.error('Error al enviar datos:', error);
-            toast.error('Error fatal');
-            dispatch( onLogout(['Error fatal']) );
+            console.error('Error sending data', error);
+            toast.error('Server error');
+            dispatch( onLogout(['Server error']) );
             setTimeout(()=>{
                 dispatch( clearErrorMessage() )
             },10)
@@ -47,22 +47,22 @@ export const useAuthStore = () =>{
                 const resp = await registerUser(data);
                 
                 if (!resp.ok) {
-                    toast.error(`Error: ${resp.msg || 'Algo salió mal al registrar'}`);
-                    toast.error(`Error: ${resp.msg || 'Algo salió mal al registrar'}`);
+                    toast.error(`Error: ${resp.msg || 'Someting was wrong'}`);
+                    toast.error(`Error: ${resp.msg || 'Someting was wrong'}`);
                     setTimeout(()=>{
                         dispatch( clearErrorMessage() )
                     },3)
                     window.location.reload();
                 } else {
                     
-                    toast.success("Usuario registrado exitosamente");
+                    toast.success("User has been registered");
                    // window.location.reload();
                 }
                 
             }
         } catch (error) {
             toast.error(error);
-            dispatch( onLogout(['Error fatal']) );
+            dispatch( onLogout(['Server error']) );
             setTimeout(()=>{
                 dispatch( clearErrorMessage() )
             },10)
@@ -101,7 +101,7 @@ export const useAuthStore = () =>{
         } catch (error) {
             Cookies.remove('x-token');
             toast.error(error);
-            dispatch( onLogout(['Error fatal']) );
+            dispatch( onLogout(['Serer error']) );
             setTimeout(()=>{
                 dispatch( clearErrorMessage() )
             },10)

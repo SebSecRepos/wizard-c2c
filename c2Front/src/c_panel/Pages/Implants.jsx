@@ -31,7 +31,7 @@ export const Implants = () => {
 
     try {
 
-      const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=usuario`);
+      const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
       socket.onopen = () => {
         /*    console.log('Conectado al servidor WebSocket'); */
@@ -40,7 +40,7 @@ export const Implants = () => {
       socket.onmessage = (event) => {
 
         if (event.data === "invalid") {
-          toast.error("Sesión inválida");
+          toast.error("Invalid session");
           startLogOut();
           return;
         }
@@ -96,21 +96,21 @@ export const Implants = () => {
 
         <div className="filter-controls">
           <select name="group" value={filters.group} onChange={handleChange} className="filter-select">
-            <option value="">Todos los grupos</option>
+            <option value="">All groups</option>
             {unique(implants, "group").map((val) => (
               <option key={val} value={val}>{val}</option>
             ))}
           </select>
 
           <select name="os" value={filters.os} onChange={handleChange} className="filter-select">
-            <option value="">Todos los sistemas</option>
+            <option value="">All operating systems</option>
             {unique(implants, "operating_system").map((val) => (
               <option key={val} value={val}>{val}</option>
             ))}
           </select>
 
           <select name="publicIp" value={filters.publicIp} onChange={handleChange} className="filter-select">
-            <option value="">Todas las IP públicas</option>
+            <option value="">All public ip</option>
             {unique(implants, "public_ip").map((val) => (
               <option key={val} value={val}>{val}</option>
             ))}
@@ -166,7 +166,7 @@ export const Implants = () => {
         </ul>
 
         <div className='event-container'>
-          <h1>Eventos</h1>
+          <h1>Event logs</h1>
           <C2Status />
         </div>
 

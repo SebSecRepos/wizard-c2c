@@ -14,6 +14,11 @@ const UserSchema = Schema({
         type: String,
         required: true
     },
+    isPasswordChanged:{
+        type: Boolean,
+        required: false,
+        default:false
+    },
 
 })
 

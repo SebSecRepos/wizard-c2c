@@ -75,18 +75,18 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
       });
 
 
-      if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+      if (!response.ok) throw new Error(`Server error ${response.status}`);
       
       const data = await response.json();
 
-      if (data.msg === "Autenticación inválida") {
-        toast.error("Autenticación inválida");
+      if (data.msg === "Invalid auth") {
+        toast.error("Invalid auth");
         startLogOut();
       }
       return data;
     } catch (error) {
-      console.error('Error en customCommand:', error);
-      return { result: 'Hubo un error ejecutando el comando.' };
+      console.error('Error in customCommand:', error);
+      return { result: 'Error executing command' };
     }
   };
 
@@ -98,10 +98,10 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
 
     switch (command) {
       case 'help':
-        response = 'Comandos disponibles: help, about, clear, history';
+        response = 'Available commands: help, about, clear, history';
         break;
       case 'about':
-        response = 'Administración remota de equipos';
+        response = 'Implant windows CLI';
         break;
       case 'clear':
         setVisibleHistory([]);

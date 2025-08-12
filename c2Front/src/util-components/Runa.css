@@ -1,24 +1,72 @@
-.runa-loader{
-    width: 100%;
-    height:  auto;
-    background-color: transparent;
-    justify-content: center;
-    display: flex;
-    padding: 50px 0;
+.loader{
+  width: min(550px, 80vw);    
+  aspect-ratio: 1 / 1;        
+  margin: 50px auto;
+  position: relative;         
+  background: transparent;
 }
 
-.runa-loader img{
-    border-radius: 50%;
-    animation: girar 10s linear infinite;
-    width: 600px;
+
+.loader .out {
+  position: absolute;
+  inset: 0;                   
+  width: 100%;
+  height: 100%;
+  object-fit: contain;        
+  border-radius: 50%;
+  transform-origin: 50% 50%;
+  animation: girarYpulsar 10s linear infinite, cambiarColor 10s linear infinite ;
+
+}
+
+
+.loader .in {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70%;                 
+  height: 70%;
+  object-fit: contain;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transform-origin: 50% 50%;
+  z-index: 2;
+  animation: girar2 15s linear infinite reverse; 
 }
 
 
 @keyframes girar {
-  from {
-    transform: rotate(0deg);
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+
+@keyframes girar2 {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes cambiarColor {
+  from { filter: hue-rotate(0deg); }
+  to { filter: hue-rotate(100deg); }
+}
+
+
+
+@keyframes girarYpulsar {
+  0% {
+    transform: rotate(0deg) scale(1);
   }
-  to {
-    transform: rotate(360deg);
+  25% {
+    transform: rotate(90deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
   }
 }

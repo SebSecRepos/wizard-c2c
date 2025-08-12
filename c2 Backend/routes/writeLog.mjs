@@ -11,8 +11,9 @@ const logsDir = path.join(__dirname, '../Logs');
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir);
 }
-
-const logFile = path.join(logsDir, `${new Date().toISOString().slice(0, 10)}.log`);
+const now = new Date();
+const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+const logFile = path.join(logsDir, `${localDate.toISOString().slice(0, 10)}.log`);
 
 function writeLog(message) {
     const date = new Date();
@@ -30,7 +31,7 @@ function writeLog(message) {
 
       fs.appendFile(logFile, logLine, (err) => {
         if (err) {
-            console.error('Error escribiendo log:', err);
+            console.error('Error writing log:', err);
         }
     }); 
 }

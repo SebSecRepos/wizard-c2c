@@ -12,7 +12,7 @@ const C2Status = () => {
 
     try {
 
-      const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=usuario`);
+      const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
       socket.onopen = () => {
       };
@@ -60,8 +60,8 @@ const C2Status = () => {
   const colorClass = (e) => {
     const msg = String(e).toLowerCase().trim();
     const words = msg.split(/\s+/)
-    if (words.includes("failed") || words.includes("desconectado")) return "red-text";
-    if (words.includes("successful") || words.includes("conectado")) return "green-text";
+    if (words.includes("failed") || words.includes("disconnected") || words.includes("blocked")) return "red-text";
+    if (words.includes("successful") || words.includes("connected") || words.includes("running")) return "green-text";
     if (words.includes("registered") || words.includes("logged")) return "yellow-text";
     return "blue-text";
   };

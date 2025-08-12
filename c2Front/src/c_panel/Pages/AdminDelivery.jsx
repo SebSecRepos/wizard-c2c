@@ -252,8 +252,9 @@ export const AdminDelivery = () => {
       <h3>Bucket</h3>
       <h4>{import.meta.env.VITE_API_URL}{page}/</h4>
       <p>
-        Subir recursos al c2c para ser consumidos desde un objetivo infectado, la url que se visualiza es el bucket de archivos estáticos
-        Estos archivos pueden ser vistos desde cualquier sitio, no colocar información sensible.
+        Upload files in an c2c bucket with the purpose of deliver files in infected devices, this files can be webshells, bash and powershell scripts, binaries, etc.
+        But be careful, all buckets can be accesed by everybody, do not upload sensitive information.
+        You can use the link of each file to deliver them. Happy hacking
       </p>
       <div className="delivery-form-section">
         
@@ -266,10 +267,10 @@ export const AdminDelivery = () => {
                 <div className="delivery-edit-btns">
                   <h4>Upload file</h4>
                   <input className="file-upload " type="file" onChange={(e) => setFile(e.target.files[0])} />
-                  <button onClick={handleUpload}>Subir archivo</button>
+                  <button onClick={handleUpload}>Upload file</button>
                 </div>
                 <div className="delivery-edit-btns">
-                  <button onClick={handleCreateBucket}>Crear bucket</button>
+                  <button onClick={handleCreateBucket}>Create bucket</button>
                 </div>
               </>
             }
@@ -288,7 +289,7 @@ export const AdminDelivery = () => {
                 <Link target='blank' style={{ textDecoration: 'none', backgroundColor:'transparent', height:'100%'}} to={`${import.meta.env.VITE_API_URL}${page}/${ar}`}>📄{ar}</Link> 
                 
                 {user?.role === "admin" &&
-                  <button className='delivery-delete-art' onClick={()=> delete_artifact(ar)}>Eliminar</button>
+                  <button className='delivery-delete-art' onClick={()=> delete_artifact(ar)}>Delete</button>
                 }
                 </li>
                 )
@@ -317,7 +318,7 @@ export const AdminDelivery = () => {
                     <button className='delivery-delete-art' onClick={()=>{ 
                       setToDelete(b);
                       setAlert(true);
-                    } }>Eliminar</button>
+                    } }>Delete</button>
                   }
                 </li>))
 
