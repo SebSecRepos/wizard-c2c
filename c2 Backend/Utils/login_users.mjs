@@ -1,7 +1,7 @@
 import User from '../models/User_model.mjs';
 import bcrypt from 'bcryptjs';
 import {new_jwt} from './jwt.mjs';
-import { writeLog } from '../routes/writeLog.mjs';
+import { writeLog } from "../Utils/writeLog.mjs";
 
 const login_user = async( body ) => {
     

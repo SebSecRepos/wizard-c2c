@@ -90,3 +90,15 @@
     border-radius: 50%;
     right: 12%;
 }
+
+.navbar-user{
+    color: white;
+    position: absolute;
+    font-weight: bold;
+    left: 85%;
+    top: 30px;
+}
+
+.navbar-user span{
+    color: #00b300;
+}

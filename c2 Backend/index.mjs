@@ -14,7 +14,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readLastLines, writeLog } from './routes/writeLog.mjs';
+import { readLastLines, writeLog } from './Utils/writeLog.mjs';
 import sanitize from './middlewares/sanitize.mjs';
 
 

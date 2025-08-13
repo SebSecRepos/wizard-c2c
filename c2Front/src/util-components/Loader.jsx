@@ -8,7 +8,6 @@ export const Loader=()=>{
 
     return(
         <>
-            <h1>Loading....</h1>
             <div class="loader">
                 <img className="out" src={Runa} alt="Cargando..." />
                 <img className="in" src={Runa_in} alt="Cargando..." />

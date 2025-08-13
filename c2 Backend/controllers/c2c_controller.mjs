@@ -1,5 +1,7 @@
 import { response } from "express";
 import fs from 'fs';
+import Operation from '../models/Operations_model.mjs';
+
 
 const send_cmd = async (clients, req, res) => {
     const clientId = req.params.id;
@@ -230,6 +232,7 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
 
 
 
+
 /*     setTimeout(() => {
         client.off('message', msgHandler);
         if (!res.headersSent) {
@@ -238,5 +241,28 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
     }, 5000); */
 }
 
+const getOperations= async(clients, req, res = response) => {
 
-export{ send_cmd, upload_file, getFiles, downloadFiles, botnet_attack }
+    try {
+        const { sys="windows" } = req.body; 
+        const operations = await Operation.find({sys}).select('category command name sys');
+
+        return res.status(200).json({
+            ok:true,
+            operations
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({
+            ok:false,
+            msg:"Error fetching operations"
+        })
+    }
+
+    
+};
+
+
+
+export{ send_cmd, upload_file, getFiles, downloadFiles, botnet_attack, getOperations }

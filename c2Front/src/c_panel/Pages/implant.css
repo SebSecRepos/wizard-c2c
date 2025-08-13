@@ -30,7 +30,7 @@
 .middle_panel{   
     display: flex;
     flex-direction: row;
-    height: 450px;
+    height: 650px;
     justify-content: center;
 
 }

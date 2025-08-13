@@ -9,7 +9,7 @@ import { login_user } from "../Utils/login_users.mjs";
 import {new_jwt} from '../Utils/jwt.mjs';
 import User from "../models/User_model.mjs";
 import { update_user } from "../Utils/update_user.mjs";
-import { writeLog } from "../routes/writeLog.mjs";
+import { writeLog } from "../Utils/writeLog.mjs";
 
 const register = async(req, res = response) => {
     

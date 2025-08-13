@@ -7,14 +7,15 @@ import { toast } from 'react-toastify';
 
 
 
-export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=> {
+export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="windows" })=> {
 
   const {startLogOut} = useAuthStore()
 
     const [activeDropdown, setActiveDropdown] = useState(null);
+    const [operations, setOperations] = useState([]);
+
     const categories = [...new Set(operations.map(op => op.category))];
 
-    const [file, setFile] = useState(null);
 
 
     const download =(file_name, content, type = 'text/plain')=> {
@@ -33,6 +34,38 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
         document.body.removeChild(enlace);
         URL.revokeObjectURL(url);
     }
+
+
+    const getOperationsBySystem=async()=>{
+        try {
+            const req = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/operations`,{
+              method:"post",
+              headers:{
+                "Content-Type":"application/json",
+                "x-token": Cookies.get('x-token')
+              },
+              body:JSON.stringify({sys})
+            })
+
+            const data = await req.json();
+
+
+            setOperations(data.operations)
+        } catch (error) {
+          toast.error(error)
+        }
+    }
+
+
+    useEffect(()=>{
+      getOperationsBySystem()
+    },[])
+
+    useEffect(()=>{
+
+      console.log(operations);
+      
+    },[operations])
 
 
 
@@ -81,6 +114,8 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
 
 
 
+
+
    return (
     <nav className="BottomBar">
       {categories.map((category) => (
@@ -91,13 +126,13 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, operations=[] })=>
           {activeDropdown === category && (
             <div className="dropdown-content floating-box">
               <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
-              {getOperationsByCategory(category).map(({ name, command, type }) => (
+              {getOperationsByCategory(category).map(({ name, command, category }) => (
                 <div className="dropdown-item" key={name}>
                   <strong>{name}</strong>
                   <pre className="command">
                     <button className="launch-btn" onClick={() =>{
                       toggleDropdown(null);
-                      cmd(command, type);
+                      cmd(command, "external");
                     } }>Run</button> {command}
                   </pre>
                 </div>

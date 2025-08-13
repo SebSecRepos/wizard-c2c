@@ -1,7 +1,7 @@
 import { response } from 'express'
 import User from '../models/User_model.mjs';
 import encrypt_passwd from './encrypt_passwd.mjs';
-import { writeLog } from '../routes/writeLog.mjs';
+import { writeLog } from "../Utils/writeLog.mjs";
 
 const update_user = async( req ) => {
     

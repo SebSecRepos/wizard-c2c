@@ -13,7 +13,7 @@ import AlertModal from '../util-components/AlertModal';
 import { ToastContainer, toast } from 'react-toastify';
 import { BsBucketFill } from 'react-icons/bs';
 import logo from '../Assets/logo.png';
-
+import { IoSkullOutline } from 'react-icons/io5';
 
 const Navbar = () => {
 
@@ -72,11 +72,6 @@ const Navbar = () => {
    }, []);  
 
 
-/*    useEffect(()=>{
-    console.log(botnet);
-    
-   },[botnet])
- */
 
   return (
     <>
@@ -90,7 +85,8 @@ const Navbar = () => {
         }
 
         { botnet.length > 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet ON</li> }
-        <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button>
+        
+        <span className='navbar-user'>Welcome: <span>{user.user_name}  <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button></span> </span>
       </ul>
         {
           openStatus && botnet.length > 0 && <Botnet_status botnet={botnet}/>

@@ -1,6 +1,6 @@
 
 import { response } from 'express';
-import { writeLog } from '../routes/writeLog.mjs';
+import { writeLog } from '../Utils/writeLog.mjs'
 
 const detectXSS = (value) =>{
   if (typeof value !== 'string') return false;
