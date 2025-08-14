@@ -73,4 +73,47 @@
   overflow-x: auto;
 }
 
+.top-category-windows{
+  display: flex;
+  margin-top: 10px;
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
 
+.add-cmd-input_container{
+  max-width: 200px;
+}
+.add-cmd-input_command{
+  width: 100%;
+}
+.add-cmd-input_command input{
+  width: 100% !important;
+  border-radius: 10px;
+  color: #33ff00;
+  padding: 3px;
+}
+.add-cmd-input_command label{
+  width: 100%;
+
+}
+
+.add-command-btn{
+  cursor: pointer;
+  color: #000000;
+  font-weight: bold;
+  margin-top: 17px;
+  background-color: #33ff00;
+  padding: 4px;
+  display: flex;
+  max-height: 35px;
+  border-radius: 5px;
+  margin-left: 20px;
+}
+
+.add-cmd-input_container input{
+  border-radius: 10px;
+  color: #33ff00;
+  padding: 3px;
+}

@@ -11,6 +11,7 @@
     border: 2px solid red;
     border-radius: 10px;
     opacity: 0.8;
+    z-index: 1;
 }
 
 .botnet-nabvar-info-li, .botnet-nabvar-info-li-1{

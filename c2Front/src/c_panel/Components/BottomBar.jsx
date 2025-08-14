@@ -2,19 +2,59 @@ import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import './BottomBar.css'
 import { useAuthStore } from '../../hooks';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import AlertModal from '../../util-components/AlertModal';
 
 
+/**
+ * @param {React.ChangeEvent<HTMLInputElement>} e
+ * @param {string} category
+ */
 
 
-export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="windows" })=> {
+export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
 
-  const {startLogOut} = useAuthStore()
+
+    const {startLogOut, user} = useAuthStore()
+    
+    const [alert, setAlert] = useState(false);
+    const [commandToDelete, setCommandToDelete] = useState(undefined);
 
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [operations, setOperations] = useState([]);
+    const [commandToAdd, setCommandToAdd] = useState({
+      command:"",
+      name:"",
+      category:"",
+      sys
+    });
 
     const categories = [...new Set(operations.map(op => op.category))];
+
+    const onChangeCommand = (e) => {
+      const { id, value } = e.target;
+
+      if (id === "name") {
+        setCommandToAdd({
+          ...commandToAdd,
+          name: value, 
+        });
+      }
+
+      if (id === "category") {
+        setCommandToAdd({
+          ...commandToAdd,
+          category: value, 
+        });
+      }
+
+      if (id === "command") {
+        setCommandToAdd({
+          ...commandToAdd,
+          command: value, 
+        });
+      }
+    };
 
 
 
@@ -61,11 +101,6 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="windows" })=>
       getOperationsBySystem()
     },[])
 
-    useEffect(()=>{
-
-      console.log(operations);
-      
-    },[operations])
 
 
 
@@ -105,43 +140,213 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="windows" })=>
 
 
 
-  const getOperationsByCategory = (category) =>
-    operations.filter(op => op.category === category);
+  const getOperationsByCategory = (category) => operations.filter(op => op.category === category);
 
   const toggleDropdown = (category) => {
     setActiveDropdown(activeDropdown === category ? null : category);
   };
 
 
+  const addCommand=async(default_category)=>{
+    try {
+      const { sys, command, category, name } = commandToAdd;
 
+      let new_command={
+        sys,
+        command,
+        category,
+        name
+      }
+
+      if( command.length <=0 || name.length <=0  ){
+        toast.error("Fields shouldn't be empty");
+        return;
+      }
+
+      if( sys != "windows" && sys != 'linux'  ){
+        toast.error("Invalid operating system");
+        return;
+      }
+
+      if (category.length <= 0) new_command.category=default_category;
+      
+      if( !categories.includes(new_command.category) ) toast.info(`New category: ${ category }`);
+      
+      const req = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/add_command`,{
+        method:'post',
+        headers:{
+          'Content-Type': 'application/json',
+          'x-token': Cookies.get('x-token')
+        },
+        body: JSON.stringify(new_command)
+      })
+
+      const resp = await req.json();
+      
+      if(resp.ok) {
+        toast.success(resp.msg)
+        getOperationsBySystem()
+
+      }
+        
+      if(!resp.ok){
+        toast.error(resp.msg);
+      }
+      
+      
+    } catch (error) {
+      toast.error(error)
+    }
+
+    setCommandToAdd({        
+        sys,
+        command:"",
+        category:"",
+        name:""
+      })
+
+  }
+
+
+  const set_command_to_delete=(cmd)=>{
+    setCommandToDelete(cmd);
+    setAlert(true);   
+  }
+
+
+  const delete_command=async()=>{
+
+    try {
+          
+      const req = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/delete_command`,{
+        method:'delete',
+        headers:{
+          'Content-Type': 'application/json',
+          'x-token': Cookies.get('x-token')
+        },
+        body: JSON.stringify(commandToDelete)
+      })
+
+      const resp = await req.json();
+      
+      if(resp.ok) {
+        toast.success(resp.msg)
+        getOperationsBySystem()
+      }
+        
+      if(!resp.ok){
+        toast.error(resp.msg);
+      }
+      
+    } catch (error) {
+      toast.error(error);
+    }
+
+    setCommandToDelete(null);
+  }
+
+
+  useEffect(()=>{console.log(categories);
+  },[operations])
 
 
    return (
-    <nav className="BottomBar">
-      {categories.map((category) => (
-        <div className="dropdown" key={category}>
-          <button className="dropdown-button-bottom-bar" onClick={() => toggleDropdown(category)}>
-            {category}
-          </button>
-          {activeDropdown === category && (
-            <div className="dropdown-content floating-box">
-              <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
-              {getOperationsByCategory(category).map(({ name, command, category }) => (
-                <div className="dropdown-item" key={name}>
-                  <strong>{name}</strong>
-                  <pre className="command">
-                    <button className="launch-btn" onClick={() =>{
-                      toggleDropdown(null);
-                      cmd(command, "external");
-                    } }>Run</button> {command}
-                  </pre>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </nav>
+
+    <>
+    
+      <nav className="BottomBar">
+        {categories.map((category) => (
+          <div className="dropdown" key={category}>
+            <button className="dropdown-button-bottom-bar" onClick={() => toggleDropdown(category)}>
+              {category}
+            </button>
+            {activeDropdown === category && (
+              <div className="dropdown-content floating-box">
+
+                <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
+
+                {user?.role === "admin" &&
+                  <div className='top-category-windows'>
+                    <div className='add-cmd-input_container'>
+                      <label htmlFor="name">Name</label>
+                      <input
+                        type="text"
+                        id="name"
+                        value={commandToAdd.name}
+                        placeholder='name'
+                        onChange={(e) => onChangeCommand(e)}
+                      />
+                    </div>
+                    <div className='add-cmd-input_container'>
+                      <label htmlFor="name">Category</label>
+                      <input
+                        type="text"
+                        id="category"
+                        value={commandToAdd.category}
+                        placeholder={`Current "${category}"`}
+                        onChange={(e) => onChangeCommand(e)}
+                      />
+                    </div>
+
+                    <div className='add-cmd-input_command'>
+                      <label htmlFor="command">Command</label>
+                      <input
+                        type="text"
+                        id="command"
+                        value={commandToAdd.command}
+                        placeholder='command'
+                        onChange={(e) => onChangeCommand(e)}
+                      />
+                    </div>
+
+                    <span className="add-command-btn" onClick={() => addCommand(category)}>
+                      Add command
+                    </span>
+                  </div>
+                  
+                }
+
+                {getOperationsByCategory(category).map(({ name, command, category, sys }) => (
+                  <div className="dropdown-item" key={name}>
+                    <strong>{name}</strong>
+                    <pre className="command">
+                      <button className="launch-btn" onClick={() =>{
+                        toggleDropdown(null);
+                        cmd(command, "external");
+                      } }>Run</button> {command}
+                    </pre>
+                      <button className='launch-btn' onClick={()=> set_command_to_delete({name,command,category,sys})} >Delete command</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+      </nav>
+
+        <ToastContainer
+          position="top-center"
+          autoClose={4000}
+          hideProgressBar={true}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+        <AlertModal
+          visible={alert}
+          onClose={() => setAlert(false)}
+          onConfirm={() => delete_command()}
+          title="Warning! Command will be deleted"
+          description="Command will be deleted"
+          confirmText="Confirm"
+          cancelText="Cancel"
+  
+        />
+    </>
   );
 }
 

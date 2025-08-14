@@ -241,10 +241,13 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
     }, 5000); */
 }
 
-const getOperations= async(clients, req, res = response) => {
+const getOperations= async( req, res = response) => {
 
     try {
+
+
         const { sys="windows" } = req.body; 
+        
         const operations = await Operation.find({sys}).select('category command name sys');
 
         return res.status(200).json({
@@ -263,6 +266,107 @@ const getOperations= async(clients, req, res = response) => {
     
 };
 
+const add_command= async( req, res = response) => {
+
+    try {
+        const { sys="windows", command="", category="", name="" } = req.body; 
+        
+        if( command.length <=0 || name.length <=0 || category.length <=0 ){
+            console.log("Fields shouldn't be empty");
+            return res.status(400).json({
+                ok:false,
+                msg:"Fields shouldn't be empty"
+            });
+        }
+
+        if( sys != "windows" && sys != 'linux'  ){
+            console.log("Invalid operating system");
+            return res.status(400).json({
+                ok:false,
+                msg:"Invalid operating system"
+            });
+        }
+
+        
+        const found_cmd = await Operation.findOne({sys,command,category,name})
+
+        if (found_cmd){
+            console.log("command exists");
+            return res.status(400).json({
+                ok:false,
+                msg:"Command already exists"
+            })
+        }
+        
+        const new_cmd = new Operation({sys,command,category,name});   
+
+        await new_cmd.save();
+
+        return res.status(200).json({
+            ok:true,
+            msg:"New command added"
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({
+            ok:false,
+            msg:"Error creating command"
+        })
+    }
+
+    
+};
+
+const delete_command= async( req, res = response) => {
+
+    try {
+        const { sys="windows", command="", category="", name="" } = req.body; 
+        
+        if( command.length <=0 || name.length <=0 || category.length <=0 ){
+            return res.status(400).json({
+                ok:false,
+                msg:"Error fields"
+            });
+        }
+
+        if( sys != "windows" && sys != 'linux'  ){
+            console.log("Invalid operating system");
+            return res.status(400).json({
+                ok:false,
+                msg:"Invalid operating system"
+            });
+        }
+
+        
+        const found_cmd = await Operation.findOne({sys,command,category,name})
+
+        if (!found_cmd){
+            console.log("Command doesn't exists");
+            return res.status(400).json({
+                ok:false,
+                msg:"Command doesn't exists"
+            })
+        }
+
+        await Operation.findByIdAndDelete(found_cmd._id);
+
+        return res.status(200).json({
+            ok:true,
+            msg:"Command deleted"
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({
+            ok:false,
+            msg:"Error deleting command"
+        })
+    }
+
+    
+};
 
 
-export{ send_cmd, upload_file, getFiles, downloadFiles, botnet_attack, getOperations }
+
+export{ send_cmd, upload_file, getFiles, downloadFiles, botnet_attack, getOperations, add_command, delete_command }

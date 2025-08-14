@@ -9,7 +9,6 @@ import { UploadFile } from '../Components/UploadFile';
 import { BottomBar } from '../Components/BottomBar';
 import FileExplorer from '../Components/FileExplorer';
 import { useAuthStore } from '../../hooks';
-import { linuxOperationsArray, windowsOperationsArray } from '../../Utils/operations';
 import Cookies from 'js-cookie';
 import { toast, ToastContainer } from 'react-toastify';
 import { Loader } from '../../util-components/Loader';
@@ -112,11 +111,11 @@ export const Implant = () => {
    <div className="bottom_panel">
     {
       implant.operating_system.toLowerCase().trim().includes("windows") &&
-      <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} operations={windowsOperationsArray}/>
+      <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} sys='windows' />
     }
     {
       implant.operating_system.toLowerCase().trim().includes("linux") &&
-      <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} operations={linuxOperationsArray}/>
+      <BottomBar id={id}  setExternalCmd={setExternalCmd} externalCmd={externalCmd} sys='linux' />
     }
    </div>
    </div>
