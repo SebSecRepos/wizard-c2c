@@ -31,7 +31,7 @@ export const Implants = () => {
 
     try {
 
-      const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
+      const socket = new WebSocket(`${import.meta.env.VITE_API_TEAM_SERVER}?token=${Cookies.get('x-token')}&rol=user`);
 
       socket.onopen = () => {
         /*    console.log('Conectado al servidor WebSocket'); */

