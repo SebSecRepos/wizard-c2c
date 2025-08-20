@@ -54,6 +54,7 @@
 
 .implant-container{
   background: transparent !important;
+  overflow-y: scroll;
 }
 
 .c2c-status{  

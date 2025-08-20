@@ -115,7 +115,7 @@ export const BotnetTerminal = () => {
 
     } catch (error) {
       //console.error('Error en customCommand:', error);
-      return { result: 'Hubo un error ejecutando el comando.' };
+      return 'Hubo un error ejecutando el comando.' ;
     }
   };
 
@@ -195,7 +195,9 @@ export const BotnetTerminal = () => {
         Type &gt; help
       </div>
       <div className="botnet-terminal-body" ref={containerRef}>
-        {visibleHistory.map((entry, idx) => (
+        {
+        visibleHistory.length > 0 &&
+        visibleHistory.map((entry, idx) => (
           <div key={idx}>
             <div className="botnet-terminal-line">
               <span className="prompt">(Botnet ☠) &gt;</span>
@@ -203,7 +205,8 @@ export const BotnetTerminal = () => {
             </div>
             <div className="botnet-terminal-response">{entry.response}</div>
           </div>
-        ))}
+        ))
+        }
         <form onSubmit={handleCommand}>
           <div className="botnet-terminal-line">
             <span className="prompt">(Botnet ☠) &gt;</span>

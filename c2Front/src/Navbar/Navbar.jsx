@@ -50,6 +50,7 @@ const Navbar = () => {
         }
         
         const data = JSON.parse(event.data);
+
         const botnet_data = data.botnet;
 
         setBotnet(botnet_data)

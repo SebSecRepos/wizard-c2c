@@ -1,0 +1,11 @@
+.listener-cpanel{
+    border: 2px solid rgb(85, 85, 85);
+    overflow-y: scroll;
+    margin: 10px 20px;
+    padding: 10px;
+}
+
+.listener-cpanel button{
+    color: white;
+    padding: 10px;
+}

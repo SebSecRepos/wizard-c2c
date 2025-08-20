@@ -45,7 +45,6 @@ export const Implant = () => {
         
         const data = JSON.parse(event.data);
 
-
         const found = data.data.find(e => e.id.toString() === id.toString());
 
         if(!found || found.status != "active"){
@@ -100,7 +99,7 @@ export const Implant = () => {
 
       {
         implant.operating_system.toLowerCase().trim().includes("windows") &&
-        <WindowsTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
+        <WindowsTerminal  wsTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
       }
       {
         implant.operating_system.toLowerCase().trim().includes("linux") &&

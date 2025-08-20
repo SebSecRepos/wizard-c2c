@@ -17,17 +17,18 @@ const main = async () =>{
     configDotenv();
     let attacks_running={attacks:[]};
     let agents = {agents: new Map()};
-    let listeners = {listeners: new Array};
+    let listeners = {listeners: []};
     let status_connections = {status_connections: new Array};
 
-    await team_app_launcher(attacks_running, agents, status_connections)
+    await team_app_launcher(attacks_running, agents, status_connections, listeners)
     await bucket_app_launcher()
-    await listeners_app_launcher(attacks_running, agents, listeners, status_connections)
+    //await listeners_app_launcher(attacks_running, agents, listeners, status_connections)
 
     await db_connection();
 
-
+    console.log(listeners);
     
+
 
 }
 main()

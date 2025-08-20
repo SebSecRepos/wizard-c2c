@@ -1,20 +1,20 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\User\\Desktop\\c2c\\Implantec#\\",
+  "WorkspaceRootPath": "C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\",
   "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\documents\\wizard c2c\\implantec#\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
     {
       "AbsoluteMoniker": "D:0:0:{00000000-0000-0000-0000-000000000000}|\u003CSolution\u003E|Implante||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\desktop\\c2c\\implantec#\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|C:\\Users\\User\\Desktop\\c2c\\Implantec#\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
       "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\desktop\\c2c\\implantec#\\||{B270807C-D8C6-49EB-8EBE-8E8D566637A1}|5e9a8ac2-4f34-4521-858f-4c248ba31532"
+      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\documents\\wizard c2c\\implantec#\\||{B270807C-D8C6-49EB-8EBE-8E8D566637A1}|5e9a8ac2-4f34-4521-858f-4c248ba31532"
     }
   ],
   "DocumentGroupContainers": [
@@ -24,41 +24,43 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Implante",
-              "DocumentMoniker": "C:\\Users\\User\\Desktop\\c2c\\Implantec#\\Implante.csproj",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\Implante.csproj",
               "RelativeDocumentMoniker": "Implante.csproj",
-              "ToolTip": "C:\\Users\\User\\Desktop\\c2c\\Implantec#\\Implante.csproj",
+              "ToolTip": "C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\Implante.csproj",
               "RelativeToolTip": "Implante.csproj",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2025-08-03T04:25:21.646Z",
+              "IsPinned": true,
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
               "Title": "README.md",
-              "DocumentMoniker": "C:\\Users\\User\\Desktop\\c2c\\Implantec#\\README.md",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\README.md",
               "RelativeDocumentMoniker": "README.md",
-              "ToolTip": "C:\\Users\\User\\Desktop\\c2c\\Implantec#\\README.md",
+              "ToolTip": "C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\README.md",
               "RelativeToolTip": "README.md",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAADAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2025-08-02T05:59:14.725Z"
+              "WhenOpened": "2025-08-02T05:59:14.725Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\User\\Desktop\\c2c\\Implantec#\\Program.cs",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\User\\Desktop\\c2c\\Implantec#\\Program.cs",
+              "ToolTip": "C:\\Users\\User\\Documents\\Wizard c2c\\Implantec#\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAAG0DAAAAAAAAAAAAAIIDAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-02T05:55:32.936Z",
               "EditorCaption": ""

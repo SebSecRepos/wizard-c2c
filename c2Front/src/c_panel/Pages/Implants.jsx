@@ -10,6 +10,7 @@ import './implants.css'
 import './implants.css'
 import C2Status from '../Components/C2Status';
 import { Loader } from '../../util-components/Loader';
+import { Listeners } from '../Components/Listeners';
 
 
 export const Implants = () => {
@@ -46,6 +47,7 @@ export const Implants = () => {
         }
 
         const data = JSON.parse(event.data);
+        console.log(data);
 
         setImplants(data.data);
 
@@ -172,6 +174,8 @@ export const Implants = () => {
 
       </div>
      }
+
+     <Listeners />
 
     </div>
   );

