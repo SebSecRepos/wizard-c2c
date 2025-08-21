@@ -47,6 +47,7 @@ const team_app_launcher=async(attacks_running, agents, status_connections={statu
 
     await create_listener_endpoint(listeners, attacks_running, agents, status_connections);
     
+    
     return app;
 
 }

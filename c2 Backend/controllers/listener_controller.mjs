@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs'
 import path from 'path'
 import { set_server, set_ssl_server } from "../Servers/http_servers.mjs";
+import { writeLog } from "../Utils/writeLog.mjs";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -104,7 +105,8 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
             const ssl_listener = await set_ssl_server(bind, port, newDirPath, attacks_running, agents, status_connections);
             listeners.listeners.push(ssl_listener);
 
-    
+            writeLog(` | New listener added in port ${port} `)
+            
             return res.status(200).json({
                 ok: true,
                 msg: "New listener added"
@@ -112,14 +114,14 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
 
         }
 
-        const new_listener = new Listener({  type, bind, port, ssl_tls });
+        const new_listener = new Listener({  type, bind, url, port, ssl_tls });
         await new_listener.save();
 
         
         const listener = await set_server(bind, port, attacks_running, agents, status_connections);
         listeners.listeners.push(listener);
 
-
+        writeLog(` | New listener added in port ${port} `)
         return res.status(200).json({
             ok: true,
             msg: "New listener added"
@@ -162,12 +164,13 @@ const get_listener=async( req, res = response) => {
 
 
 
-const delete_listener= async( req, res = response) => {
+const delete_listener= async( req, res = response, listeners) => {
 
+    
     try {
-        const { type = "", bind = "", port = 0} = req.body; 
+        const { type = "", bind = "", port_to_delete } = req.body; 
         
-        if( type.length <=0 || bind.length <=0 || port===0 ){
+        if( type.length <=0 || bind.length <=0  ){
             return res.status(400).json({
                 ok:false,
                 msg:"Error fields"
@@ -183,7 +186,8 @@ const delete_listener= async( req, res = response) => {
         }
 
         
-        const found_listener = await Listener.findOne({type, port, bind})
+        const found_listener = await Listener.findOne({ port:port_to_delete })
+
 
         if (!found_listener){
             console.log("Listener doesn't exists");
@@ -192,6 +196,34 @@ const delete_listener= async( req, res = response) => {
                 msg:"Listener doesn't exists"
             })
         }
+
+        
+        listeners.listeners = listeners.listeners.map(l=>{
+            const { app, http_server, ws, port } = l;
+
+            if(port === port_to_delete){
+    
+                try {
+                    ws.close(()=> console.log(`Deleted ws ${port}`))
+                } catch (error) {
+                    console.log("error deleting ws");
+                    
+                }
+                try {
+                    http_server.close(()=> console.log(`Deleted http ${port}`))
+                } catch (error) {
+                    console.log("error deleting http");
+                }
+                try {
+                    http_server.close(()=> console.log(`Deleted http ${port}`))
+                } catch (error) {
+                    console.log("error deleting http");
+                }
+            }else{
+                return l
+            }
+
+        })
 
         await Listener.findByIdAndDelete(found_listener._id);
 

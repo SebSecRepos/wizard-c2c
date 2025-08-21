@@ -250,7 +250,7 @@ export const AdminDelivery = () => {
   return (
     <div className="delivery-register-container">
       <h3>Bucket</h3>
-      <h4>{import.meta.env.VITE_API_URL}{page}/</h4>
+      <h4>{import.meta.env.VITE_API_URL_BUCKETS}{page}/</h4>
       <p>
         Upload files in an c2c bucket with the purpose of deliver files in infected devices, this files can be webshells, bash and powershell scripts, binaries, etc.
         But be careful, all buckets can be accesed by everybody, do not upload sensitive information.

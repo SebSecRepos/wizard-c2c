@@ -16,6 +16,7 @@
     color: white;
     padding: 10px;
     border-radius: 10px;
+    cursor: pointer;
 }
 
 .listener-li-bar{
@@ -45,24 +46,50 @@
     left:40%;
     top: 10%;
     z-index: 1;
-    width: 300px;
+    width: 400px;
     padding: 30px;
     max-height: 400px;
     overflow-y: scroll;
+    border-radius: 10px;
 }
 
-.listener-panel *, .implant-panel *,.listener-panel , .implant-panel {
-    background-color: white;
+.listener-panel *, .implant-panel *,.listener-panel, .implant-panel {
+    background-color: rgb(40, 40, 40);
+    color: black;
 }
 .listener-panel form{
-    background-color: white;
+    background-color: rgb(40, 40, 40);
     display: flex;
     flex-direction: column;
     margin: 20px;
 
 }
+.listener-title{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.listener-title button{
+    background-color: rgb(230, 97, 97);
+    border: none;
+    cursor: pointer;
+}
 .listener-panel form input{
     margin: 10px 0;
     border-radius: 5px;
     padding: 10px;
+}
+
+.listener-panel form select{
+    padding: 5px;
+    border-radius: 4px;
+}
+.listener-panel form select{
+    margin: 10px 0;
+}
+.listener-panel form button{
+    background-color: black;
+    color: chartreuse;
+    margin-top: 20px;
+    cursor: pointer;
 }

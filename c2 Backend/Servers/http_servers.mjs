@@ -14,65 +14,80 @@ import path from "path";
 
 
 const set_server = async(bind, port, attacks_running, agents, status_connections)=>{
-
-    configDotenv();
-    const app = express();
     
-    app.use(cors());
-    app.use(helmet());
-    app.use(express.json())
-    app.use(express.urlencoded({ extended: true })); // Para formularios HTML
-    
-    app.use('/api/impl', sanitize, implant_router())
-    //------Type errors-----
-    app.use(type_errors);
-    app.use(syntax_errors);
-
-    
-    const http_server = http.createServer(app);
-
-    await webSocketsServer(http_server, attacks_running, agents, status_connections);
-    http_server.listen(port, bind, ()=> console.log(`New listener running in port:  ${port}`))
-
-    return {
-        app,
-        http_server,
-        port
+    try {
+        
+            configDotenv();
+            const app = express();
+            
+            app.use(cors());
+            app.use(helmet());
+            app.use(express.json())
+            app.use(express.urlencoded({ extended: true })); // Para formularios HTML
+            
+            app.use('/api/impl', sanitize, implant_router())
+            //------Type errors-----
+            app.use(type_errors);
+            app.use(syntax_errors);
+        
+            
+            const http_server = http.createServer(app);
+        
+            const ws = await webSocketsServer(http_server, attacks_running, agents, status_connections);
+            http_server.listen(port, bind, ()=> console.log(`New listener running in port:  ${port}`))
+        
+            return {
+                app,
+                http_server,
+                ws,
+                port
+            }
+        
+    } catch (error) {
+        console.log("Error staring no ssl server", error);
     }
 
 }
 const set_ssl_server = async(bind, port, path_cert, attacks_running, agents, status_connections)=>{
-
-    configDotenv();
-    const app = express();
     
-    app.use(cors());
-    app.use(helmet());
-    app.use(express.json())
-    app.use(express.urlencoded({ extended: true })); // Para formularios HTML
     
-    app.use('/api/impl', sanitize, implant_router())
-    //------Type errors-----
-    app.use(type_errors);
-    app.use(syntax_errors);
-
-    console.log(path_cert);
+    try {
+        
+        configDotenv();
+        const app = express();
+        
+        app.use(cors());
+        app.use(helmet());
+        app.use(express.json())
+        app.use(express.urlencoded({ extended: true })); // Para formularios HTML
+        
+        app.use('/api/impl', sanitize, implant_router())
+        //------Type errors-----
+        app.use(type_errors);
+        app.use(syntax_errors);
     
-    path_cert = path.normalize(path_cert);
-
-    const options={
-        cert: fs.readFileSync(path.join( path_cert, 'cert.pem')),
-        key: fs.readFileSync(path.join( path_cert, 'key.pem')),
-    }
-    const https_server = https.createServer(options);
+        console.log(path_cert);
+        
+        path_cert = path.normalize(path_cert);
     
-    await webSocketsServer(https_server, attacks_running, agents, status_connections);
-    https_server.listen(port, bind, ()=> console.log(`New SSL listener running in port:  ${port}`))
-
-    return {
-        app,
-        https_server,
-        port
+        const options={
+            cert: fs.readFileSync(path.join( path_cert, 'cert.pem')),
+            key: fs.readFileSync(path.join( path_cert, 'key.pem')),
+        }
+        const https_server = https.createServer(options);
+        
+        
+        const ws = await webSocketsServer(https_server, attacks_running, agents, status_connections);
+        https_server.listen(port, bind, ()=> console.log(`New SSL listener running in port:  ${port}`))
+    
+        return {
+            app,
+            https_server,
+            ws,
+            port
+        }
+    } catch (error) {
+        console.log("Error staring ssl server", error);
     }
 
 }

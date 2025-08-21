@@ -20,6 +20,11 @@ const listener_router = (attacks_running, agents, status_connections, listeners)
     const router = Router();
 
     router.use(validate_jwt);
+
+    const middle=(req,res)=>{
+        console.log(req.body);
+        
+    }
     
     router.get('/', (req, res) => get_listener(req,res));
     router.post(
@@ -33,7 +38,7 @@ const listener_router = (attacks_running, agents, status_connections, listeners)
         ]),
         (req,res=response)=>create_listener(req,res,attacks_running, agents, status_connections, listeners),
     );
-    router.delete('/delete/', (req,res, next) =>checkAdmin(req,res, next), (req,res) => delete_listener(req,res));
+    router.delete('/delete/', checkAdmin, (req,res=response) => delete_listener(req,res, listeners));
     
     return router;
 };

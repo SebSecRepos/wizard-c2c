@@ -135,7 +135,7 @@ const webSocketsServer = async (httpServer, attacks_running, agents, status_conn
 
     server.on("close", () => clearInterval(interval));
 
-
+    return server;
   } catch (error) {
     console.error('Error in websocket server', error);
     return false;

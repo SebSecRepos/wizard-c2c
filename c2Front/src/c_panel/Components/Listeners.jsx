@@ -160,6 +160,38 @@ export const Listeners=()=> {
         }
     }
 
+    const delete_listener =async(l)=>{
+        
+          try {
+            const req = await fetch(`${import.meta.env.VITE_API_URL}/api/listener/delete/`,{
+                method:'DELETE',
+                headers:{
+                  "x-token": Cookies.get('x-token'),
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    type: l.type,
+                    bind: l.bind,
+                    port_to_delete: l.port
+                })
+            })
+
+            const data = await req.json();
+
+            if(data.ok){
+                toast.success("listener deleted")
+                getListeners()
+            }else{
+                toast.error(data.msg)
+            }
+            
+        } catch (error) {
+            console.log(error);
+            
+            toast.error("Listener couldn't be deleted (Server error)")
+        }
+
+    }
 
 
 
@@ -180,7 +212,7 @@ export const Listeners=()=> {
                             <p>{l.url}</p>
                             <p>{l.bind}</p>
                             <p>{l.port}</p>
-                            <button>X</button>
+                            <button onClick={()=> delete_listener(l)}>X</button>
                         </li>)
                         
                     }
@@ -189,7 +221,11 @@ export const Listeners=()=> {
 
                 { listenerPanel &&
                     <div className='listener-panel'>
-                        <h3>Create listener</h3>
+
+                        <div className='listener-title'>
+                            <h3>Create listener</h3>
+                            <button onClick={()=> setListenerPanel(false)}>x</button> 
+                        </div>
                         <form onSubmit={handleSubmitListener}>
                             <label htmlFor="">URL</label>
                             <input type="text" name="url" id="" placeholder='example.net' onChange={handleChangeData}/>
@@ -202,7 +238,7 @@ export const Listeners=()=> {
                                 <option value="ws" >ws</option>
                             </select>
                             <label htmlFor="">SSL/TLS</label>
-                            <select name="" id="" defaultValue={false} >
+                            <select name="" id="" defaultValue={ssl_tls} >
                                 <option value={false} onClick={()=> setSsl_tls(false)}>No</option>
                                 <option value={true} onClick={()=> setSsl_tls(true)}>Yes</option>
                             </select>
@@ -233,18 +269,6 @@ export const Listeners=()=> {
 
             </div>
 
-
-            <ToastContainer
-            position="top-center"
-            autoClose={4000}
-            hideProgressBar={true}
-            newestOnTop={false}
-            closeOnClick
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="dark"
-            />
 
         </>
   );
