@@ -35,8 +35,6 @@ const listeners_app_launcher=async(attacks_running, agents, listeners, status_co
     
     const listener_server = http.createServer(app);
 
-    const default_listener = await webSocketsServer(listener_server, attacks_running, agents, status_connections);
-
 
     listener_server.listen(process.env.DEFAULT_LISTENER_PORT, '127.0.0.1', ()=> console.log(`Default ws listener running in port:  ${process.env.DEFAULT_LISTENER_PORT}`))
     

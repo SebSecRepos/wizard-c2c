@@ -71,6 +71,8 @@ export const Implant = () => {
      
    }, [id]);
 
+
+
   return !implant ? <Loader />
    :
    <>

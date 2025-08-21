@@ -1,13 +1,29 @@
 import { response } from "express";
 import Listener from '../models/Listener_model.mjs';
+import { fileURLToPath } from 'url';
+import fs from 'fs'
+import path from 'path'
+import { set_server, set_ssl_server } from "../Servers/http_servers.mjs";
 
-const create_listener = async (req, res = response) => {
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+const create_listener = async (req, res = response, attacks_running, agents, status_connections, listeners) => {
 
 
     try {
-        const { type = "ws", url = "localhost", port = 0} = req.body;
 
-        if (type.length <= 0 || url.length <= 0 || port === 0) {
+        
+        let { type = "ws", bind = "0.0.0.0", port = 0, url="localhost", ssl_tls=false} = req.body;
+        
+        port = Number(port);
+        ssl_tls = Boolean(ssl_tls);
+
+    
+
+        if (type.length <= 0 || bind.length <= 0 || port === 0) {
             console.log("Fields shouldn't be empty");
             return res.status(400).json({
                 ok: false,
@@ -24,7 +40,7 @@ const create_listener = async (req, res = response) => {
         }
 
 
-        const found_listener = await Listener.findOne({ type, url, port })
+        const found_listener = await Listener.findOne({ type, port });
 
         if (found_listener) {
             console.log("Listener already exists");
@@ -34,9 +50,75 @@ const create_listener = async (req, res = response) => {
             })
         }
 
-        const new_listener = new Listener({  type, url, port });
+                
+        if(ssl_tls){
+            
+            const files = req.files;
+            
+            if (!files.cert || !files.key){
+                return res.status(400).json({
+                    ok: false,
+                    msg:"cert & key are required"
+                })
+            }
+    
+            const certBuffer = files.cert[0].buffer;
+            const keyBuffer = files.key[0].buffer;
+            let caBuffer=undefined;
+            const date = new Date();
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const timestamp = `${day}-${month}-${year}-${port}`;
 
+            const name = path.basename(timestamp);
+        
+            const basePath = path.join(__dirname, '../certs');
+            const newDirPath = path.join(basePath, name);
+        
+            // Crear carpeta
+            fs.mkdir(newDirPath, { recursive: true }, (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(400).json({ ok: false, msg: err.message });
+                }
+            });
+                
+            
+            if (certBuffer.length > 0 && keyBuffer.length > 0 ) {
+                
+                fs.writeFileSync(path.join(`${newDirPath}`, 'cert.pem'), certBuffer);
+                fs.writeFileSync(path.join(`${newDirPath}`, 'key.pem'), keyBuffer);
+                if(caBuffer){
+                    fs.writeFileSync(path.join(`${newDirPath}/`), 'ca.pem', caBuffer);
+                }
+            }else{
+                return res.status(400).json({ok:false, msg:"Size buffers errors"})
+            }
+            
+
+            const new_listener = new Listener({  type, bind, url, port, ssl_tls, path_cert:newDirPath });
+    
+            await new_listener.save();
+
+            const ssl_listener = await set_ssl_server(bind, port, newDirPath, attacks_running, agents, status_connections);
+            listeners.listeners.push(ssl_listener);
+
+    
+            return res.status(200).json({
+                ok: true,
+                msg: "New listener added"
+            })
+
+        }
+
+        const new_listener = new Listener({  type, bind, port, ssl_tls });
         await new_listener.save();
+
+        
+        const listener = await set_server(bind, port, attacks_running, agents, status_connections);
+        listeners.listeners.push(listener);
+
 
         return res.status(200).json({
             ok: true,
@@ -60,7 +142,7 @@ const get_listener=async( req, res = response) => {
     
     try {
         
-        const listeners = await Listener.find().select('url type port');
+        const listeners = await Listener.find().select('bind type port url');
 
         return res.status(200).json({
             ok: true,
@@ -83,9 +165,9 @@ const get_listener=async( req, res = response) => {
 const delete_listener= async( req, res = response) => {
 
     try {
-        const { type = "", url = "", port = 0} = req.body; 
+        const { type = "", bind = "", port = 0} = req.body; 
         
-        if( type.length <=0 || url.length <=0 || port===0 ){
+        if( type.length <=0 || bind.length <=0 || port===0 ){
             return res.status(400).json({
                 ok:false,
                 msg:"Error fields"
@@ -101,7 +183,7 @@ const delete_listener= async( req, res = response) => {
         }
 
         
-        const found_listener = await Listener.findOne({type, port, url})
+        const found_listener = await Listener.findOne({type, port, bind})
 
         if (!found_listener){
             console.log("Listener doesn't exists");

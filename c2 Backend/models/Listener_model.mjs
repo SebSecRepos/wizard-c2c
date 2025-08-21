@@ -5,6 +5,10 @@ const ListenerSchema = Schema({
         type: String,
         require: true
     },
+    bind:{
+        type: String,
+        require: true
+    },
     url:{
         type: String,
         require: true
@@ -12,6 +16,14 @@ const ListenerSchema = Schema({
     port:{
         type: Number,
         require: true,
+    },
+    ssl_tls:{
+        type: Boolean,
+        require: true,
+    },
+    path_cert:{
+        type: String,
+        require: false,
     },
 
 })

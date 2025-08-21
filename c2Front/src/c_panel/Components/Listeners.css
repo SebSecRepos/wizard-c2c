@@ -5,7 +5,64 @@
     padding: 10px;
 }
 
+.listener-ul{
+    margin: 20px 0;
+}
+
+.listener-cpanel h1{
+    margin: 20px 10px;
+}
 .listener-cpanel button{
     color: white;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.listener-li-bar{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;  
+    padding: 4px;
+    color: white;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.listener-li{
+    border-top: 2px solid red;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;  
+    padding: 4px;
+}
+
+
+
+
+.listener-panel,  .implant-panel{
+    width: auto;
+    position: fixed;
+    left:40%;
+    top: 10%;
+    z-index: 1;
+    width: 300px;
+    padding: 30px;
+    max-height: 400px;
+    overflow-y: scroll;
+}
+
+.listener-panel *, .implant-panel *,.listener-panel , .implant-panel {
+    background-color: white;
+}
+.listener-panel form{
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+
+}
+.listener-panel form input{
+    margin: 10px 0;
+    border-radius: 5px;
     padding: 10px;
 }

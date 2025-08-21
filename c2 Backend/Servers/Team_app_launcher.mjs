@@ -37,7 +37,7 @@ const team_app_launcher=async(attacks_running, agents, status_connections={statu
     app.use('/api/auth', sanitize, authRouter)
     app.use('/api/rcv', cmd_router(agents, attacks_running))
     app.use('/api/artifacts', sanitize, artifacts_router())
-    app.use('/api/listener', sanitize, listener_router(listeners))
+    app.use('/api/listener', sanitize, listener_router(attacks_running, agents, status_connections, listeners))
     //------Type errors-----
 
     const team_server = http.createServer(app);

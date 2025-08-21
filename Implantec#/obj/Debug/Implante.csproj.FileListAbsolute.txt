@@ -34,6 +34,9 @@ C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\System.Diagnostics.Diagn
 C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.AssemblyReference.cache
 C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.exe.config
 C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.CoreCompileInputs.cache
-C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
-C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
 C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Up2Date
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Costura.dll
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Newtonsoft.Json.dll
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\System.Diagnostics.DiagnosticSource.dll
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Costura.pdb
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Costura.xml

@@ -47,7 +47,6 @@ export const Implants = () => {
         }
 
         const data = JSON.parse(event.data);
-        console.log(data);
 
         setImplants(data.data);
 
