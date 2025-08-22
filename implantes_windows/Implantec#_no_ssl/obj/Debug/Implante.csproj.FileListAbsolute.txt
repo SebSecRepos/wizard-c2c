@@ -1,0 +1,52 @@
+C:\Users\User\source\repos\Implante\bin\Debug\Implante.exe.config
+C:\Users\User\source\repos\Implante\bin\Debug\Implante.exe
+C:\Users\User\source\repos\Implante\bin\Debug\Implante.pdb
+C:\Users\User\source\repos\Implante\bin\Debug\Newtonsoft.Json.xml
+C:\Users\User\source\repos\Implante\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.csproj.AssemblyReference.cache
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.csproj.CoreCompileInputs.cache
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.csproj.Up2Date
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.exe
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.pdb
+C:\Users\User\source\repos\Implante\obj\Debug\Implante.exe.config
+C:\Users\User\Desktop\c2c\Implantec#\bin\Debug\Implante.exe.config
+C:\Users\User\Desktop\c2c\Implantec#\bin\Debug\Implante.exe
+C:\Users\User\Desktop\c2c\Implantec#\bin\Debug\Implante.pdb
+C:\Users\User\Desktop\c2c\Implantec#\bin\Debug\Newtonsoft.Json.xml
+C:\Users\User\Desktop\c2c\Implantec#\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.csproj.AssemblyReference.cache
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.csproj.CoreCompileInputs.cache
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.csproj.Up2Date
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.exe
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.pdb
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.exe.config
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
+C:\Users\User\Desktop\c2c\Implantec#\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.exe
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.pdb
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Implante.exe.config
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Implante.exe
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Implante.pdb
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\Newtonsoft.Json.xml
+C:\Users\User\Documents\Wizard c2c\Implantec#\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.AssemblyReference.cache
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.exe.config
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.CoreCompileInputs.cache
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Up2Date
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.exe.config
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.exe
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.pdb
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Newtonsoft.Json.xml
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.AssemblyReference.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.exe.config
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.CoreCompileInputs.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Up2Date
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.exe
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.pdb

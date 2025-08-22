@@ -74,15 +74,15 @@ const set_ssl_server = async(bind, port, path_cert, attacks_running, agents, sta
             cert: fs.readFileSync(path.join( path_cert, 'cert.pem')),
             key: fs.readFileSync(path.join( path_cert, 'key.pem')),
         }
-        const https_server = https.createServer(options);
+        const http_server = https.createServer(options, app);
         
         
-        const ws = await webSocketsServer(https_server, attacks_running, agents, status_connections);
-        https_server.listen(port, bind, ()=> console.log(`New SSL listener running in port:  ${port}`))
+        const ws = await webSocketsServer(http_server, attacks_running, agents, status_connections);
+        http_server.listen(port, bind, ()=> console.log(`New SSL listener running in port:  ${port}`))
     
         return {
             app,
-            https_server,
+            http_server,
             ws,
             port
         }
@@ -93,3 +93,6 @@ const set_ssl_server = async(bind, port, path_cert, attacks_running, agents, sta
 }
 
 export { set_server, set_ssl_server };
+
+
+

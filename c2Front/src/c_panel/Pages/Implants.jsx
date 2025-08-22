@@ -17,6 +17,7 @@ export const Implants = () => {
 
   const { startLogOut } = useAuthStore();
 
+  const [loading, setLoading] = useState(true);
   const [implants, setImplants] = useState([]);
   const [style, setStyle] = useState("list");
   const [filteredImplants, setFilteredImplants] = useState(implants);
@@ -25,6 +26,80 @@ export const Implants = () => {
     os: "",
     publicIp: ""
   });
+
+
+
+
+
+/*  */
+
+
+useEffect(() => {
+  let socket;
+  let reconnectInterval;
+  const maxRetries = 5;
+  let retryCount = 0;
+  let manuallyClosed = false;
+
+  const connectWebSocket = () => {
+    socket = new WebSocket(`${import.meta.env.VITE_API_TEAM_SERVER}?token=${Cookies.get('x-token')}&rol=user`);
+
+    socket.onopen = () => {
+      console.log("WebSocket connected");
+      retryCount = 0;
+    };
+
+    socket.onmessage = (event) => {
+      if (event.data === "invalid") {
+        toast.error('Invalid session');
+        startLogOut();
+        return;
+      }
+
+      try {
+        const data = JSON.parse(event.data);
+
+        setImplants(data.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error parsing WebSocket message", err);
+      }
+    };
+
+    socket.onerror = (err) => {
+      console.error("WebSocket error", err);
+      socket.close();
+    };
+
+    socket.onclose = (event) => {
+      if (!manuallyClosed) {
+        if (retryCount < maxRetries) {
+          const delay = Math.pow(2, retryCount) * 1000; // exponential backoff
+          console.warn(`WebSocket closed. Reconnecting in ${delay / 1000}s...`);
+          reconnectInterval = setTimeout(connectWebSocket, delay);
+          retryCount++;
+        } else {
+          toast.error("Unable to reconnect to WebSocket.");
+        }
+      }
+    };
+  };
+
+  connectWebSocket();
+
+  return () => {
+    manuallyClosed = true;
+    if (socket) socket.close();
+    if (reconnectInterval) clearTimeout(reconnectInterval);
+  };
+}, []);
+
+
+/*  */
+
+
+
+
 
 
 
@@ -49,7 +124,8 @@ export const Implants = () => {
         const data = JSON.parse(event.data);
 
         setImplants(data.data);
-
+        setLoading(false);
+        
       };
 
       socket.onclose = () => {
@@ -64,6 +140,8 @@ export const Implants = () => {
       toast.error(error);
       startLogOut();
     }
+    setLoading(false);
+
 
   }, []);
 
@@ -93,88 +171,97 @@ export const Implants = () => {
 
     <div className='implant-container'>
 
-      <div className="filter-container">
+      {
+        implants.length === 0 && loading ?
+          <Loader />
+        :
 
-        <div className="filter-controls">
-          <select name="group" value={filters.group} onChange={handleChange} className="filter-select">
-            <option value="">All groups</option>
-            {unique(implants, "group").map((val) => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
+          <>
+            <div className="filter-container">
 
-          <select name="os" value={filters.os} onChange={handleChange} className="filter-select">
-            <option value="">All operating systems</option>
-            {unique(implants, "operating_system").map((val) => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
+              <div className="filter-controls">
+                <select name="group" value={filters.group} onChange={handleChange} className="filter-select">
+                  <option value="">All groups</option>
+                  {unique(implants, "group").map((val) => (
+                    <option key={val} value={val}>{val}</option>
+                  ))}
+                </select>
 
-          <select name="publicIp" value={filters.publicIp} onChange={handleChange} className="filter-select">
-            <option value="">All public ip</option>
-            {unique(implants, "public_ip").map((val) => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
+                <select name="os" value={filters.os} onChange={handleChange} className="filter-select">
+                  <option value="">All operating systems</option>
+                  {unique(implants, "operating_system").map((val) => (
+                    <option key={val} value={val}>{val}</option>
+                  ))}
+                </select>
 
-          <button className='list-button' onClick={() => {
-            setStyle(style === 'list' ? 'card' : 'list')
-          }}>
-            {style === 'card' ? (
-              <FaList />
-            ) : (
-              <BsCardList />
-            )}
-          </button>
-        </div>
-      </div>
+                <select name="publicIp" value={filters.publicIp} onChange={handleChange} className="filter-select">
+                  <option value="">All public ip</option>
+                  {unique(implants, "public_ip").map((val) => (
+                    <option key={val} value={val}>{val}</option>
+                  ))}
+                </select>
 
-     {filteredImplants && filteredImplants.length === 0 ? (
-        <Loader />
+                <button className='list-button' onClick={() => {
+                  setStyle(style === 'list' ? 'card' : 'list')
+                }}>
+                  {style === 'card' ? (
+                    <FaList />
+                  ) : (
+                    <BsCardList />
+                  )}
+                </button>
+              </div>
+            </div>
 
+          {filteredImplants && filteredImplants.length === 0 ? (
+              <h1>No implants</h1>
 
-     )
-     :
-      <div className='c2c-status'>
-        <ul className={"card-container"} style={ style === "card" ? { paddingTop:'200px'} : {paddingTop:'0'}}>
+          )
+          :
+            <div className='c2c-status'>
+              <ul className={"card-container"} style={ style === "card" ? { paddingTop:'200px'} : {paddingTop:'0'}}>
 
-          { style === "list" &&
-            <li className="implants-desc">
-                <p><span>Group</span></p>
-                <p><span>Operating system</span></p>
-                <p><span>Status</span></p>
-            </li>
+                { style === "list" &&
+                  <li className="implants-desc">
+                      <p><span>Group</span></p>
+                      <p><span>Operating system</span></p>
+                      <p><span>Status</span></p>
+                  </li>
 
-          }
-          {filteredImplants.map((implant) =>{
+                }
+                {filteredImplants.map((implant) =>{
 
-            return(
-                <ImplantCard
-                  style={style}
-                  impl_mac={implant.impl_mac}
-                  group={implant.group}
-                  public_ip={implant.public_ip}
-                  local_ip={implant.local_ip}
-                  operating_system={implant.operating_system}
-                  id={implant.id}
-                  status={implant.status}
-                /> 
-            )
-          }
+                  return(
+                      <ImplantCard
+                        style={style}
+                        impl_mac={implant.impl_mac}
+                        group={implant.group}
+                        public_ip={implant.public_ip}
+                        local_ip={implant.local_ip}
+                        operating_system={implant.operating_system}
+                        id={implant.id}
+                        status={implant.status}
+                      /> 
+                  )
+                }
+                
+                )} 
           
-          )} 
-    
-        </ul>
+              </ul>
 
-        <div className='event-container'>
-          <h1>Event logs</h1>
-          <C2Status />
-        </div>
+              <div className='event-container'>
+                <h1>Event logs</h1>
+                <C2Status />
+              </div>
 
-      </div>
-     }
+            </div>
+          }
 
-     <Listeners />
+          <Listeners />
+
+          </>
+      }
+
 
     </div>
   );

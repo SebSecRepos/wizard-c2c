@@ -3,6 +3,10 @@ import Implant from '../models/Implant_model.mjs';
 
 const create_implant = async( body ) => {
     let errors=[];
+
+    console.log("Registrando implante");
+    
+    console.log(body);
     
     try {
         

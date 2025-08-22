@@ -93,3 +93,55 @@
     margin-top: 20px;
     cursor: pointer;
 }
+
+
+
+/*implant*/
+
+.implant-panel form{
+    background-color: rgb(40, 40, 40);
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+
+}
+.listener-title{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.listener-title button{
+    background-color: rgb(230, 97, 97);
+    border: none;
+    cursor: pointer;
+}
+.implant-panel form input{
+    margin: 10px 0;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.implant-panel form select{
+    padding: 5px;
+    border-radius: 4px;
+    color: white;
+}
+.implant-panel form select option{
+    color: white;
+}
+.implant-panel form select{
+    margin: 10px 0;
+}
+.implant-panel form button{
+    background-color: black;
+    color: chartreuse;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.listener-li-opt{
+    border: 2px solid red !important;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}

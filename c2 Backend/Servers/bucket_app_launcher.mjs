@@ -22,7 +22,7 @@ const bucket_app_launcher =async()=>{
    
 
     const buckets_server = http.createServer(buckets);
-    buckets_server.listen(process.env.BUCKETS_PORT, '127.0.0.1', ()=> console.log(`Bucket server running in port:  ${process.env.BUCKETS_PORT}`))
+    buckets_server.listen(process.env.BUCKETS_PORT, '0.0.0.0', ()=> console.log(`Bucket server running in port:  ${process.env.BUCKETS_PORT}`))
 
 }
 
