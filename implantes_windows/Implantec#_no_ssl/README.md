@@ -17,3 +17,6 @@ Donut
 ```
 .\donut.exe -a 2 -f 1 -i Implante.exe -o loader.bin
 ```
+
+
+ dir ..\Implants\windows\no_ssl\base.exe:

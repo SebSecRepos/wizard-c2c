@@ -269,10 +269,10 @@ const create_implant_controller = async(req, res=response)=>{
 
         switch (system) {
             case "linux":
-                implant_path = `../Implants/linux`;
+                implant_path = `./Implants/linux`;
                 break;
             case "windows":
-                implant_path = `../Implants/windows`;
+                implant_path = `./Implants/windows`;
                 break;
         
             default:
