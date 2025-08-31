@@ -120,18 +120,6 @@ export const Implant = () => {
     }
    </div>
    </div>
-   
-      <ToastContainer
-      position="top-center"
-      autoClose={4000}
-      hideProgressBar={true}
-      newestOnTop={false}
-      closeOnClick
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="dark"
-      />
 
       
    </>

@@ -51,7 +51,8 @@ export const Listeners = () => {
             ...prev,
             [e.target.name]: e.target.value
         }));
-        console.log(implant);
+
+
     }
 
 
@@ -126,7 +127,7 @@ export const Listeners = () => {
     const handleSubmitImplant = async (e) => {
         e.preventDefault();
 
-        if (listeners.some(l => l.port === implant.listener)) {
+        if ( !listeners.some(l => Number(l.port) === Number(implant.listener))) {
             toast.error("Invalid listener");
             return
         }
@@ -134,7 +135,7 @@ export const Listeners = () => {
             toast.error("Invalid operating system");
             return
         }
-        if (implant.type != "python" && implant.type != "bin" && implant.type != "exe") {
+        if (implant.type != "py" && implant.type != "bin" && implant.type != "exe") {
             toast.error("Invalid type");
             return
         }
@@ -154,14 +155,25 @@ export const Listeners = () => {
                 body: JSON.stringify(implant)
             })
 
-            const data = await req.json();
 
-            if (data.ok) {
-                toast.success(data.msg)
-
-            } else {
-                toast.error(data.msg)
+            if (!req.ok) {
+                toast.error(req.error);
+                return;
             }
+
+            const blob = await req.blob();
+
+            const downloadUrl = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `TrustMeImNotAvirus.${implant.type}`; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+
+   
 
         } catch (error) {
             console.log(error);
@@ -198,11 +210,11 @@ export const Listeners = () => {
     useEffect(() => {
         getListeners()
     }, [])
-    useEffect(() => {
+/*     useEffect(() => {
         console.log(listeners);
 
     }, [listeners])
-
+ */
 
 
 
@@ -357,7 +369,7 @@ export const Listeners = () => {
                                     <select name="type" id="" defaultValue="exe" onChange={handleChangeImplant} >
                                         <option value="exe">Exe</option>
                                         <option value="bin">Memory payload</option>
-                                        <option value="python">Python script</option>
+                                        <option value="py">Python script</option>
                                     </select>
                                     <label htmlFor="">Group</label>
                                     <input type="text" name="group" id="" placeholder='default' onChange={handleChangeImplant} />

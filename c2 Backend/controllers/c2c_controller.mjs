@@ -173,7 +173,7 @@ const downloadFiles=async (clients, req, res = response) => {
                 client.off('message', msgHandler);
             }
         } catch (e) {
-            res.status(500).json({ error: "Error procesando archivo" });
+            res.status(500).json({ error: "Error processing file" });
             client.off('message', msgHandler);
         }
     };

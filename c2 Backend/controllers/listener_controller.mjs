@@ -1,7 +1,7 @@
 import { response } from "express";
 import Listener from '../models/Listener_model.mjs';
 import { fileURLToPath } from 'url';
-import fs from 'fs'
+import fs from 'fs/promises';
 import { rm } from 'fs/promises';
 import  path from 'path';
 import  {resolve} from 'path';
@@ -294,10 +294,22 @@ const create_implant_controller = async(req, res=response)=>{
         }
 
 
-        if( !/^[\w\-]+$/.test(group) || !/^[\w\-]+$/.test(found_listener.url || !/^[\w\-]+$/.test(listener) ) ){
+        if( !/^[\w\-]+$/.test(group) ){
             return res.status(400).json({
                 ok:false,
-                msg:"Blocked due to malicious input"
+                msg:"Blocked due to malicious group"
+            })
+        }
+/*         if(  !/^[\w\-]+$/.test(found_listener.url) ){
+            return res.status(400).json({
+                ok:false,
+                msg:"Blocked due to malicious url"
+            })
+        } */
+        if( !/^[\w\-]+$/.test(listener)){
+            return res.status(400).json({
+                ok:false,
+                msg:"Blocked due to malicious listener"
             })
         }
 
@@ -319,51 +331,59 @@ const create_implant_controller = async(req, res=response)=>{
         }
 
 
-        let new_implant;
+        let extension;
+        let result_path;
 
         switch (type) {
             case "exe":{
-                implant_path = `${implant_path}/base.exe`;
+                implant_path = `${implant_path}/exe/base.exe`;
                 implant_path = path.normalize(implant_path);
-                exe_processing(implant_path, found_listener.url, found_listener.port, group)
+                result_path = await exe_processing(implant_path, found_listener.url, found_listener.port, group)
+                extension='exe'
                 break;
             }
-            case "python":{
-                implant_path = `${implant_path}/base.py`;
+            case "py":{
+                implant_path = `${implant_path}/python/base.py`;
                 implant_path = path.normalize(implant_path);
-                new_implant = await python_processing(implant_path)
+                result_path = await python_processing(implant_path, found_listener.url, found_listener.port, group)
+                extension='py'
                 break;
             }
             case "bin":{
-                implant_path = `${implant_path}/base.bin`;
+                implant_path = `${implant_path}/bin/base.bin`;
                 implant_path = path.normalize(implant_path);
-                new_implant = await bin_processing(implant_path)
+                result_path = await bin_processing(implant_path, found_listener.url, found_listener.port, group)
+                extension='bin'
                 break;
             }
-        
             default:
                 return res.status(400).json({
                     ok: false,
                     msg: "Invalid type"
-            })
-        }
+                })
+            }
 
 
-        return res.status(200).json({
+            
+        result_path = path.join(__dirname , result_path);
+        const data = await fs.readFile(result_path);
+        res.writeHead(200,{
+            'Content-Type': 'application/octect-stream',
+            'Content-Disposition': `attachment; filename="file.${extension}"`,
+            'Content-Length': data.length,
+        })
+        res.end(data)
+
+/*         return res.status(200).json({
             ok:true,
             msg:implant_path
-        })
-
-
-
+        }) */
 
 
     } catch (error) {
         console.log(error);
-        return res.status(400).json({
-            ok:false,
-            msg:"Server error"
-        })
+        res.writeHead(500);
+        res.end('Error')
     }
 }
 

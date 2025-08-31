@@ -12,9 +12,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
       "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\documents\\wizard c2c\\implantes_windows\\implantec#_no_ssl\\||{B270807C-D8C6-49EB-8EBE-8E8D566637A1}|5e9a8ac2-4f34-4521-858f-4c248ba31532"
     }
   ],
   "DocumentGroupContainers": [
@@ -36,8 +33,7 @@
               "RelativeToolTip": "Implante.csproj",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2025-08-03T04:25:21.646Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -59,7 +55,7 @@
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAGwDAAAAAAAAAAA+wHkDAAA9AAAAAAAAAA==",
+              "ViewState": "AgIAAAMBAAAAAAAAAAAwwO8AAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-02T05:55:32.936Z",
               "EditorCaption": ""

@@ -21,17 +21,6 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
   };
 
 
-  const returnToast=()=><ToastContainer
-        position="top-center"
-        autoClose={4000}
-        hideProgressBar={true}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        />
   
 
   useEffect(()=>{console.log(status);
@@ -50,14 +39,12 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <p>public_ip: <span>{public_ip}</span></p>
       <p><span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span></span></p>
       <p><span>{status}</span></p>
-      {returnToast()}
     </div>;
     case 'list':
       return    <div className={status === "active" ? "list" : "list-in"} onClick={status === "active" ? visit_service : inactive  }>
       <p><span>{group}</span></p>
       <p><span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span>  </span></p>
       <p><span>{status}</span></p>
-      {returnToast()}
       
     </div>;
 
@@ -66,7 +53,6 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <p><span>{group}</span></p>
       <p><span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span></span></p>
       <p><span>{status}</span></p>
-      {returnToast()}
       
     </div>;
   }

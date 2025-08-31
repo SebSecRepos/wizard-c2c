@@ -1,5 +1,6 @@
 import argparse
 import base64
+import time
 
 
 
@@ -24,6 +25,8 @@ def add_text(ruta_ejecutable,  url, port, group):
     texto_bytes = text_base.encode('utf-16-le')
 
     # Abrimos el archivo en modo binario y append (añadir al final)
+
+    time.sleep(2)
     with open(ruta_ejecutable, 'ab') as f:
         f.write(texto_bytes)
     
