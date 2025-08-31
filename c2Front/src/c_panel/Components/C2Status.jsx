@@ -5,6 +5,7 @@ import Cookies from 'js-cookie'
 
 const C2Status = () => {
   const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const containerRef = useRef(null);
 
@@ -29,6 +30,7 @@ const C2Status = () => {
         const event_data = data.events;
 
         setEvents(event_data)
+        setIsLoading(false)
 
       };
 
@@ -40,10 +42,10 @@ const C2Status = () => {
       };
 
     } catch (error) {
+      setIsLoading(false)
       toast.error(error);
       startLogOut();
     }
-
 
   }, []);
 
@@ -69,13 +71,22 @@ const C2Status = () => {
 
   return (
     <ul className="c2c-events" ref={containerRef}>
-      {events && events.length > 0 ? events.map((e, i) => (
-        <li key={i} className={colorClass(e)} >
-          {e}
-        </li>
-      )) :
+
+      {
+        isLoading ?
         <li>Loading events..</li>
+        :
+        <>
+          {events && events.length > 0 ? events.map((e, i) => (
+            <li key={i} className={colorClass(e)} >
+              {e}
+            </li>
+          )) :
+            <li>No events for now..</li>
+          }
+        </>
       }
+
     </ul>
   )
 

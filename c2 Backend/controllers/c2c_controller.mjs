@@ -18,6 +18,8 @@ const send_cmd = async (clients, req, res) => {
         const msgHandler = (msg) => {
             try {
                 const parsed = JSON.parse(msg);
+                
+                console.log(parsed);
                 res.status(200).json(parsed);
             } catch (e) {
                 res.status(200).json({ result: msg });

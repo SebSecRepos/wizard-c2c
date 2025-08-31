@@ -26,9 +26,6 @@ const main = async () =>{
 
     await db_connection();
 
-    console.log(listeners);
-    
-
 
 }
 main()

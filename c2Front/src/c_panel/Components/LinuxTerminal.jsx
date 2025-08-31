@@ -10,6 +10,8 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
   const [fullHistory, setFullHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(null);
   const [currentDir, setCurrentDir] = useState('/home/user');
+  const [prompt, setPrompt] = useState(false);
+  const [shellPrompt, setShellPrompt] = useState("user@localhost:");
   const inputRef = useRef(null);
 
   const containerRef = useRef(null);
@@ -64,19 +66,34 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
   };
 
   const customCommand = async (input) => {
+
+
     try {
+
+      const cmd = prompt ? {pass:input} : { cmd:input }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/cmd/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-token': `${Cookies.get('x-token')}`
         },
-        body: JSON.stringify({ cmd: input })
+        body: JSON.stringify(cmd)
       });
 
       if (!response.ok) throw new Error(`Server error ${response.status}`);
 
       const data = await response.json();
+
+      
+      if( data.prompt ){
+        setPrompt(true)
+        setShellPrompt(data.prompt)
+      }else{
+        setPrompt(false);
+        setShellPrompt("user@localhost");
+      }
+
 
       if (data.msg === "Invalid auth") {
         toast.error("Invalid auth");
@@ -86,6 +103,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
     } catch (error) {
       console.error('Error in customCommand:', error);
       return { result: 'Error executing command' };
+    
     }
   };
 
@@ -117,7 +135,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
       }
     }
 
-    const newEntry = { command, response };
+    const newEntry = prompt ? { command:"", response } : { command, response };
     setFullHistory([...fullHistory, newEntry]);
     setVisibleHistory([...visibleHistory, newEntry]);
     setInput('');
@@ -150,7 +168,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
         {visibleHistory.map((entry, idx) => (
           <div key={idx}>
             <div className="terminal-line">
-              <span className="prompt">user@localhost:{currentDir}$</span>
+              <span className="prompt">{shellPrompt}{ !prompt ? currentDir : ''}</span>
               <span>{entry.command}</span>
             </div>
             <div className="terminal-response">{entry.response}</div>
@@ -158,9 +176,9 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
         ))}
         <form onSubmit={handleCommand}>
           <div className="terminal-line">
-            <span className="prompt">user@localhost:{currentDir}$</span>
+            <span className="prompt">{shellPrompt}{ !prompt ? currentDir : ''} </span>
             <input
-              type="text"
+              type={ prompt ? "password" : "text"}
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}

