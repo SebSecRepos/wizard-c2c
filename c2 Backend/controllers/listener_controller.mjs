@@ -294,12 +294,12 @@ const create_implant_controller = async(req, res=response)=>{
         }
 
 
-        if( !/^[\w\-]+$/.test(group) ){
+/*         if( !/^[\w\-]+$/.test(group) ){
             return res.status(400).json({
                 ok:false,
                 msg:"Blocked due to malicious group"
             })
-        }
+        } */
 /*         if(  !/^[\w\-]+$/.test(found_listener.url) ){
             return res.status(400).json({
                 ok:false,

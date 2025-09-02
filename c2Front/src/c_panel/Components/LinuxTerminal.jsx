@@ -72,6 +72,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
 
       const cmd = prompt ? {pass:input} : { cmd:input }
 
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/cmd/${id}`, {
         method: 'POST',
         headers: {

