@@ -34,54 +34,55 @@ const runPowerShellCommand = (args, cwd) => {
 
 
 
-const python_processing =async(impl_path="",url,port,group)=>{
+const python_processing =async(impl_path="", url, port, group)=>{
 
-    console.log(impl_path,url,port,group);
     
     try {
         const copy_path = impl_path.replace('.py', '_copy.py');
         const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/edit_text.py'), '-f', impl_path, '-u', url, '-p', port, '-g', group]);
         console.log("Comandos ejecutados correctamente");
+
+
+
         return `..\\${copy_path}`;
     } catch (error) {
         console.error("Error al ejecutar comandos de PowerShell:", error);
     }
 }
-const exe_processing =async(impl_path="",url,port,group)=>{
+const exe_processing =async(impl_path="", url, port, group, sys)=>{
+
+    let result_path=""
 
     try {
 
-        const copy_path = impl_path.replace('.exe', '_copy.exe');
-        
-        const copy = await runPowerShellCommand([`copy`, impl_path, copy_path ]);
-        
-        const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group]);
-        
-        console.log(copy_path);
-        
-        return `..\\${copy_path}`;
+        if (sys === 'windows') {
+            const copy_path = impl_path.replace('.exe', '_copy.exe');
+            const copy = await runPowerShellCommand([`copy`, impl_path, copy_path ]);
+            const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text_windows.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group]);
+            
+            result_path=`..\\${copy_path}`
+        }else if(sys === "linux"){
+
+            const copy_path = impl_path.replace('.elf', '_copy.elf');
+            const copy = await runPowerShellCommand([`copy`, impl_path, copy_path ]);
+            const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text_linux.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group]);
+            result_path=`..\\${copy_path}`
+            
+            console.log(copy_path);
+            console.log(path);
+            console.log(result_path);
+
+        }
+
+        return result_path;
     } catch (error) {
         console.error("Error al ejecutar comandos de PowerShell:", error);
     }
 
 }
-const bin_processing =async(path="",url,port,group)=>{
-
-        try {
-
-        const copy_path = impl_path.replace('.bin', '_copy.bin')
-        
-        const copy = await runPowerShellCommand([`copy`, impl_path, copy_path ]);
-        
-        const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group]);
-        return `..\\${copy_path}`;
-    } catch (error) {
-        console.error("Error al ejecutar comandos de PowerShell:", error);
-    }
-
-}
 
 
-export { python_processing, exe_processing, bin_processing }
+
+export { python_processing, exe_processing }
 
 

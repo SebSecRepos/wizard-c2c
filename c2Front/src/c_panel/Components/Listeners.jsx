@@ -19,6 +19,7 @@ export const Listeners = () => {
     const [implant, setImplant] = useState({
         listener: 4444,
         system: "windows",
+        arch: "x64",
         type: "exe",
         group: "default"
     });
@@ -51,8 +52,6 @@ export const Listeners = () => {
             ...prev,
             [e.target.name]: e.target.value
         }));
-
-
     }
 
 
@@ -135,7 +134,11 @@ export const Listeners = () => {
             toast.error("Invalid operating system");
             return
         }
-        if (implant.type != "py" && implant.type != "bin" && implant.type != "exe") {
+        if (implant.arch != "" && implant.arch != "x86" && implant.arch != "x64") {
+            toast.error("Invalid arch");
+            return
+        }
+        if (implant.type != "py" && implant.type != "exe") {
             toast.error("Invalid type");
             return
         }
@@ -167,7 +170,7 @@ export const Listeners = () => {
 
             const a = document.createElement('a');
             a.href = downloadUrl;
-            a.download = `TrustMeImNotAvirus.${implant.type}`; 
+            a.download = `TrustMeImNotAvirus.${implant.system === 'linux' ? 'elf' : 'exe' }`; 
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -313,6 +316,7 @@ export const Listeners = () => {
                             <select name="type" id="" defaultValue="ws" onChange={handleChangeData}>
                                 <option value="ws" >ws</option>
                             </select>
+
                             <label htmlFor="">SSL/TLS</label>
                             <select name="" id="" defaultValue={ssl_tls} >
                                 <option value={false} onClick={() => setSsl_tls(false)}>No</option>
@@ -361,21 +365,30 @@ export const Listeners = () => {
 
                                     <label htmlFor="">System</label>
                                     <select name="system" id="" defaultValue="windows" onChange={handleChangeImplant} >
-                                        <option value="windows">Windows x86/x64</option>
-                                        <option value="linux">Linux x86/x64</option>
+                                        <option value="windows">Windows</option>
+                                        <option value="linux">Linux</option>
                                     </select>
-
                                     <label htmlFor="">Type</label>
                                     <select name="type" id="" defaultValue="exe" onChange={handleChangeImplant} >
-                                        <option value="exe">Exe</option>
-                                        <option value="bin">Memory payload</option>
-                                        <option value="py">Python script</option>
+                                        <option value="exe">Executable</option>
+                                        <option value="py">Python script (Required libraries in target)</option>
                                     </select>
+                                    { 
+                                        implant.type === 'exe' &&<>
+                                            <label htmlFor="">Architecture</label>
+                                            <select name="arch" id="" defaultValue="x64" onChange={handleChangeImplant} >
+                                                <option value="x64">x64</option>
+                                                <option value="x86">x86</option>
+                                            </select>
+                                        </>
+                                    }
                                     <label htmlFor="">Group</label>
                                     <input type="text" name="group" id="" placeholder='default' onChange={handleChangeImplant} />
 
-                                </>
+                                    <label >Loader payload</label>
+                                    <a href="http://" target="_blank" rel="noopener noreferrer"> Guide for raw binary implants </a>
 
+                                </>
 
                                 :
                                 <h3>No listeners available, create one first</h3>

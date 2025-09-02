@@ -286,7 +286,7 @@ export const AdminDelivery = () => {
               :
               
               artifacts.map((ar)=><li className='art-file-li'>
-                <Link target='blank' style={{ textDecoration: 'none', backgroundColor:'transparent', height:'100%'}} to={`${import.meta.env.VITE_API_URL_BUCKETS}${page}/${ar}`}>📄{ar}</Link> 
+                <Link target='blank' style={{ textDecoration: 'none', backgroundColor:'transparent', height:'100%'}} to={`${import.meta.env.VITE_API_BUCKET_URL}${page}/${ar}`}>📄{ar}</Link> 
                 
                 {user?.role === "admin" &&
                   <button className='delivery-delete-art' onClick={()=> delete_artifact(ar)}>Delete</button>

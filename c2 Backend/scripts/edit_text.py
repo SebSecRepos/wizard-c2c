@@ -1,5 +1,4 @@
 import argparse
-import base64
 
 
 def parse_arguments():
@@ -16,7 +15,6 @@ def parse_arguments():
 
 def add_text(script_path,  url, port, group):
 
-    replacmente = ""    
     with open(script_path, 'r') as f_in, open(str(script_path).replace("base.py", "base_copy.py"), "w") as f_out:
         replacement = f_in.read().replace("localhost", str(url)).replace("4444", str(port)).replace("grupo", str(group))
         f_out.write(replacement)
