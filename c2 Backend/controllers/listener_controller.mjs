@@ -2,12 +2,13 @@ import { response } from "express";
 import Listener from '../models/Listener_model.mjs';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
-import { rm } from 'fs/promises';
+import { rm, mkdir, writeFile } from 'fs/promises';
 import  path from 'path';
 import  {resolve} from 'path';
 import { set_server, set_ssl_server } from "../Servers/http_servers.mjs";
 import { writeLog } from "../Utils/writeLog.mjs";
 import { exe_processing, python_processing } from "../Utils/implant_processing.mjs";
+import { isValidPEM } from "../Utils/ssl_verify.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,15 +81,15 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
             const newDirPath = path.join(basePath, name);
         
             // Crear carpeta
-            fs.mkdir(newDirPath, { recursive: true }, (err) => {
+/*             fs.mkdir(newDirPath, { recursive: true }, (err) => {
                 if (err) {
                     console.error(err);
                     return res.status(400).json({ ok: false, msg: err.message });
                 }
             });
-                
+                 */
             
-            if (certBuffer.length > 0 && keyBuffer.length > 0 ) {
+/*             if (certBuffer.length > 0 && keyBuffer.length > 0 ) {
                 
                 fs.writeFileSync(path.join(`${newDirPath}`, 'cert.pem'), certBuffer);
                 fs.writeFileSync(path.join(`${newDirPath}`, 'key.pem'), keyBuffer);
@@ -98,7 +99,33 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
             }else{
                 return res.status(400).json({ok:false, msg:"Size buffers errors"})
             }
-            
+ */
+
+            await mkdir(newDirPath, { recursive: true });
+
+            if (certBuffer.length > 0 && keyBuffer.length > 0) {
+
+                if (!isValidPEM(certBuffer.toString(), "cert")) {
+                    return res.status(400).json({ ok: false, msg: "Certificado inválido" });
+                }
+                if (!isValidPEM(keyBuffer.toString(), "key")) {
+                    return res.status(400).json({ ok: false, msg: "Clave privada inválida" });
+                }
+
+
+                await writeFile(path.join(newDirPath, "cert.pem"), certBuffer);
+                await writeFile(path.join(newDirPath, "key.pem"), keyBuffer);
+
+                if (caBuffer) {
+                    await writeFile(path.join(newDirPath, "ca.pem"), caBuffer);
+                }
+
+            } else {
+                return res
+                .status(400)
+                .json({ ok: false, msg: "Size buffers errors" });
+            }
+
 
             const new_listener = new Listener({  type, bind, url, port, ssl_tls, path_cert:newDirPath });
     
@@ -128,6 +155,8 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
             ok: true,
             msg: "New listener added"
         })
+
+
 
     } catch (error) {
         console.log(error);
@@ -201,6 +230,7 @@ const delete_listener= async( req, res = response, listeners) => {
 
 
         for(let i=0; i < listeners.listeners.length; i++){
+
 
             if(listeners.listeners[i].port === port_to_delete){
                 const { http_server="", ws="", port=0 } = listeners.listeners[i];
