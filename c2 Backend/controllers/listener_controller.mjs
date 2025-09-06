@@ -101,7 +101,6 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
             }
  */
 
-            await mkdir(newDirPath, { recursive: true });
 
             if (certBuffer.length > 0 && keyBuffer.length > 0) {
 
@@ -112,6 +111,7 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
                     return res.status(400).json({ ok: false, msg: "Clave privada inválida" });
                 }
 
+                await mkdir(newDirPath, { recursive: true });
 
                 await writeFile(path.join(newDirPath, "cert.pem"), certBuffer);
                 await writeFile(path.join(newDirPath, "key.pem"), keyBuffer);

@@ -24,6 +24,7 @@ const main = async () =>{
     await bucket_app_launcher()
     //await listeners_app_launcher(attacks_running, agents, listeners, status_connections)
 
+    
     await db_connection();
 
 

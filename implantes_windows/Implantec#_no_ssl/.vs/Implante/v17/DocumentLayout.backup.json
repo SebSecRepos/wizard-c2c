@@ -1,17 +1,24 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\",
+  "WorkspaceRootPath": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\",
   "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\documents\\wizard c2c\\implantes_windows\\implantec#_no_ssl\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
     {
       "AbsoluteMoniker": "D:0:0:{00000000-0000-0000-0000-000000000000}|\u003CSolution\u003E|Implante||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\documents\\wizard-c2c\\implantes_windows\\implantec#_no_ssl\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
       "RelativeMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|solutionrelative:readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0F13086E-9362-4FAA-8786-7CB09A04ED59}|Implante.csproj|c:\\users\\user\\documents\\wizard-c2c\\implantes_windows\\implantec#_no_ssl\\||{B270807C-D8C6-49EB-8EBE-8E8D566637A1}|5e9a8ac2-4f34-4521-858f-4c248ba31532"
     }
   ],
   "DocumentGroupContainers": [
@@ -21,27 +28,40 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Implante",
-              "DocumentMoniker": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\Implante.csproj",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\Implante.csproj",
               "RelativeDocumentMoniker": "Implante.csproj",
-              "ToolTip": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\Implante.csproj",
+              "ToolTip": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\Implante.csproj",
               "RelativeToolTip": "Implante.csproj",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2025-08-03T04:25:21.646Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "AssemblyInfo.cs",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\Properties\\AssemblyInfo.cs",
+              "RelativeDocumentMoniker": "Properties\\AssemblyInfo.cs",
+              "ToolTip": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\Properties\\AssemblyInfo.cs",
+              "RelativeToolTip": "Properties\\AssemblyInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-05T19:10:08.402Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "README.md",
-              "DocumentMoniker": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\README.md",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\README.md",
               "RelativeDocumentMoniker": "README.md",
-              "ToolTip": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\README.md",
+              "ToolTip": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\README.md",
               "RelativeToolTip": "README.md",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
@@ -49,13 +69,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\Program.cs",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\User\\Documents\\Wizard c2c\\implantes_windows\\Implantec#_no_ssl\\Program.cs",
+              "ToolTip": "C:\\Users\\User\\Documents\\wizard-c2c\\implantes_windows\\Implantec#_no_ssl\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAEUAAAAAAAAAAAAAAHkDAAA9AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAMsCAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-02T05:55:32.936Z",
               "EditorCaption": ""

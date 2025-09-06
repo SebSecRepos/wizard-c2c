@@ -69,7 +69,9 @@ class LinuxImpl:
             elif 'attack' in data:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
-                await self._stop_attack(ws, attack_type=data['stop_attack'])
+                                await self._stop_attack(ws, attack_type=data['stop_attack'])
+            elif 'finish' in data:
+                await self._exit(ws)
         
         except ConnectionClosedError:
             pass

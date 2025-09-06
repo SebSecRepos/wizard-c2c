@@ -5,16 +5,16 @@ import jwt from 'jsonwebtoken';
 import { readLastLines, writeLog } from '../Utils/writeLog.mjs';
 
 
-const webSocketsServer = async (httpServer, attacks_running, agents, status_connections={status_connections:[]}) => {
+
+const webSocketsServer = (httpServer, attacks_running, agents, status_connections={status_connections:[]}) => {
   try {
     const server = new WebSocketServer({ server: httpServer });
     const events = [];
-    
+    let replacing = false;
 
-    server.on('connection', (socket, request) => {
+    server.on('connection', async(socket, request) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
-      const clientId = url.searchParams.get('id');
-
+      const clientId = url.searchParams.get('id').replace('/','-').replace('\\','-').toLowerCase().replace(/\s+/g, "");
 
       // Si es Agent
       if (!clientId) {
@@ -26,16 +26,21 @@ const webSocketsServer = async (httpServer, attacks_running, agents, status_conn
       
 
       if (agents.agents.has(clientId)) {
-        writeLog(`Agent ${clientId} already connected replacing connection.`)
-        agents.agents.get(clientId).terminate();
+
+        replacing = true;
+        let to_update = agents.agents.get(clientId);
+        to_update.send(JSON.stringify({'finish':''}));
+
+      }else{
+        writeLog(` | Agent connected with ID: ${clientId}`)
       }
-      
-      writeLog(` | Agent connected with ID: ${clientId}`)
+
       
       events.push();
       
       socket.isAlive = true;
       agents.agents.set(clientId, socket);
+        
       
       //------------------------Datos proveniente de implantes-------------------------
       socket.on('message', (data) => {
@@ -67,13 +72,24 @@ const webSocketsServer = async (httpServer, attacks_running, agents, status_conn
           }
       });
 
-      socket.on('pong', () => socket.isAlive = true);
-
-
-      socket.on('close', () => {
-        writeLog(` | Agent ${clientId} disconnected`)
-        agents.agents.delete(clientId);
+      socket.on('pong', () =>{
+        console.log("pong");
+        socket.isAlive = true
       });
+
+ 
+      socket.on('close', () => {
+
+        if (replacing) {
+          writeLog(`Agent ${clientId} already connected replacing connection.`)
+        }else{
+          agents.agents.delete(clientId);
+          writeLog(` | Agent ${clientId} disconnected`)
+        }
+
+        replacing = false; 
+      });
+      
     });
 
     const interval = setInterval(async () => {
@@ -82,30 +98,24 @@ const webSocketsServer = async (httpServer, attacks_running, agents, status_conn
       
       const client_db_list = db_clients.map(x => x);
 
-
-
       client_db_list.forEach((c) => {
-        /* console.log("db:",c.impl_id); */
-        
-        //Agents.agents status
-/*         const ws = agents.agents.get(c.impl_id);
-        if (ws) {
-          if (ws.isAlive) {
-            status_connections.status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
-          } else {
-            status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
-          }
-        } else {
-          status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system });
-        }
-     */      
+
         const ws = agents.agents.get(c.impl_id);
+/* 
+         for (const [clave, valor] of agents.agents) {
+          console.log("agents key: ",clave, typeof(clave));
+          console.log("impl key: ",c.impl_id, typeof(c.impl_id));
+          console.log(clave.replace(/\s+/g, "").toString() === c.impl_id.replace(/\s+/g, "").toString());
+        } */
         const arr_index = status_connections.status_connections.findIndex(i=>i.id === c.impl_id)
+        //status_connections.status_connections.map(console.log(i=>i.id === c.impl_id))
+
 
         if(arr_index !== -1){
           
           if (ws) {
             if (ws.isAlive) {
+              
               status_connections.status_connections[arr_index] = { ...status_connections.status_connections[arr_index], status: 'active'};
             } else {
               status_connections.status_connections[arr_index] = { ...status_connections.status_connections[arr_index], status: 'inactive'};

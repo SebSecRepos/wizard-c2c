@@ -25,6 +25,14 @@ const ImplantSchema = Schema({
         type: String,
         require: true
     },
+    root:{
+        type: Boolean,
+        require: true
+    },
+    user:{
+        type: String,
+        require: true
+    },
 
 })
 

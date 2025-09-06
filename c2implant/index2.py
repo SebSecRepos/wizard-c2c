@@ -105,7 +105,7 @@ async def receive():
                 cmd = await ws.recv()
                 data = json.loads(cmd.replace("'", '"'))
 
-                print(data)
+                
                 if 'cmd' in data:
                     try:
                         out, err, cwd = cmo(data["cmd"])
