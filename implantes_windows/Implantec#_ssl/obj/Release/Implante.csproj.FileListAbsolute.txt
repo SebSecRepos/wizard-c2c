@@ -13,5 +13,11 @@ C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Release\
 C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Release\Implante.csproj.Up2Date
 C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Release\Program.exe
 C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Release\Program.pdb
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Release\Implante.csproj.Fody.CopyLocal.cache
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Release\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\Costura.dll
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\Newtonsoft.Json.dll
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\System.Buffers.dll
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\System.Memory.dll
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\System.Numerics.Vectors.dll
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\Costura.pdb
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Release\Costura.xml

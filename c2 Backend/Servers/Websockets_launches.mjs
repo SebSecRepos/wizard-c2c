@@ -104,11 +104,10 @@ const webSocketsServer = (httpServer, attacks_running, agents, status_connection
 /* 
          for (const [clave, valor] of agents.agents) {
           console.log("agents key: ",clave, typeof(clave));
-          console.log("impl key: ",c.impl_id, typeof(c.impl_id));
+          console.log("impl database: ",c.impl_id, typeof(c.impl_id));
           console.log(clave.replace(/\s+/g, "").toString() === c.impl_id.replace(/\s+/g, "").toString());
         } */
-        const arr_index = status_connections.status_connections.findIndex(i=>i.id === c.impl_id)
-        //status_connections.status_connections.map(console.log(i=>i.id === c.impl_id))
+        const arr_index = status_connections.status_connections.findIndex(i=>i.id.toLowerCase() === c.impl_id.toLowerCase())
 
 
         if(arr_index !== -1){
@@ -168,7 +167,7 @@ const main_ws_server = async (httpServer, attacks_running, agents, status_connec
 
       if (rol === 'user') {
         try {
-          const decoded = jwt.verify(token, process.env.SEED); // valida y decodifica el JWT
+          const decoded = jwt.verify(token, process.env.SEED); 
 
           users.add(socket);
 
@@ -178,17 +177,14 @@ const main_ws_server = async (httpServer, attacks_running, agents, status_connec
 
           
         } catch (err) {
-          console.log('Invalid JWT', err.message);
           socket.send('invalid')
-          socket.close(); // cerrar conexión si el token es inválido
+          socket.close(); 
         }
 
         return;
       }
 
 
-      
-      
       // Enviar estados a todos los users conectados
       const payload = {
         data: status_connections.status_connections,

