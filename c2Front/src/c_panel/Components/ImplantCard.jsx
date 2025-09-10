@@ -6,7 +6,7 @@ import { FaWindows } from "react-icons/fa";
 import { toast, ToastContainer } from 'react-toastify';
 
 
-const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, id, status, style}) => {
+const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, id, status, style, root}) => {
   
   const navigate = useNavigate(); 
 
@@ -39,12 +39,14 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <p>public_ip: <span>{public_ip}</span></p>
       <p><span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span></span></p>
       <p><span>{status}</span></p>
+      <p><span className={root ? "root-indicator-t" : "root-indicator-f"} >{root ? "True" : "False"}</span></p>
     </div>;
     case 'list':
       return    <div className={status === "active" ? "list" : "list-in"} onClick={status === "active" ? visit_service : inactive  }>
       <p><span>{group}</span></p>
-      <p><span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span>  </span></p>
+      <p><span>{operating_system.substring(0,15)}.. <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span>  </span></p>
       <p><span>{status}</span></p>
+      <p><span className={root ? "root-indicator-t" : "root-indicator-f"} >{root ? "True" : "False"}</span></p>
       
     </div>;
 

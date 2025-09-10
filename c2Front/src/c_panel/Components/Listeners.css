@@ -1,5 +1,6 @@
 .listener-cpanel{
     border: 2px solid rgb(85, 85, 85);
+    border-radius: 10px;
     overflow-y: scroll;
     margin: 10px 20px;
     padding: 10px;
@@ -10,6 +11,7 @@
 }
 
 .listener-cpanel h1{
+    color: rgb(0, 255, 21) !important;
     margin: 20px 10px;
 }
 .listener-cpanel button{
@@ -30,6 +32,7 @@
 }
 .listener-li{
     border-top: 2px solid red;
+    margin-left: -30px;
     color: white;
     display: flex;
     flex-direction: row;
@@ -68,6 +71,10 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    color: rgb(255, 255, 255);
+}
+.listener-title h3{
+    color: rgb(255, 255, 255);
 }
 .listener-title button{
     background-color: rgb(230, 97, 97);
@@ -77,11 +84,17 @@
 .listener-panel form input{
     margin: 10px 0;
     border-radius: 5px;
+    color: rgb(255, 255, 255);
+    font-weight: bold;
     padding: 10px;
+}
+.listener-panel label{
+    color: rgb(255, 255, 255);
 }
 
 .listener-panel form select{
     padding: 5px;
+    color: rgb(255, 255, 255);
     border-radius: 4px;
 }
 .listener-panel form select{
@@ -103,15 +116,28 @@
     display: flex;
     flex-direction: column;
     margin: 20px;
-
+}
+.implant-panel form a{
+    color: aqua;
+}
+.implant-panel label{
+    color: rgb(255, 255, 255);
 }
 .listener-title{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
 }
+
+.listener-title h3{
+}
 .listener-title button{
     background-color: rgb(230, 97, 97);
+    border: none;
+    cursor: pointer;
+}
+.listener-title button:hover{
+    background-color: rgb(255, 0, 0);
     border: none;
     cursor: pointer;
 }
@@ -148,3 +174,49 @@
 }
 
 
+.delete-listener-btn{
+    font-size: 18px;
+    border: none;
+    padding: 10px !important;
+    background-color: rgb(227, 83, 83);
+    color: black !important;
+    font-weight: bold;
+    transition: all 0.5s;
+}
+
+.delete-listener-btn:hover{
+    background-color: red;
+}
+
+.listener-create-btn{
+    
+    transition: all 0.1s;
+}
+.listener-create-btn:hover{
+    background-color: red;
+    color: black;
+    font-weight: bold;
+}
+
+
+@media(max-width: 860px){
+    .listener-panel, .implant-panel{
+        left:25%;
+        top: 20%;
+    }
+}
+
+@media(max-width: 570px){
+    .listener-panel, .implant-panel{
+        left:10%;
+        top: 25%;
+    }
+}
+
+@media(max-width: 490px){
+    
+    .listener-panel, .implant-panel{
+        left:15%;
+        width: 300px;
+    }
+}

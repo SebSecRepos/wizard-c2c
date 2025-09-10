@@ -9,26 +9,17 @@
     font-family: 'Helvetica Neue', sans-serif;
     background-color: #212121;
     border-radius: 10px;
-    margin-left: -36px;
     display: flex;
     flex-direction: column;
     height: 450px ;
     justify-content: center;
     align-items:center;
-    width:56% ;
+    width:50% ;
     font-size: 12px;
     overflow-y: scroll;
   }
   
-  @media(max-width:1480px){
-    
-    .card-container{
-      width:95% !important;
-      height: 60%  !important;
-      margin-left: 0;
-    }
 
-}
 
 
 /* Actvie implants */
@@ -171,6 +162,7 @@
     padding-top: 20px;
     max-height: 40px;
     padding: 5px;
+    margin-left: -25px;
   }
   
   .list:hover{
@@ -287,4 +279,79 @@
     color: greenyellow !important;
     background-color: transparent !important;
     font-size: 20px;
+  }
+
+
+  .root-indicator-t{
+    color: rgb(0, 255, 4) !important;
+  }
+  
+  
+  .root-indicator-f{
+    
+    color: rgb(255, 0, 0) !important;
+  }
+
+
+
+    @media(max-width:1480px){
+    
+    .card-container{
+      width:95% !important;
+      height: 60%  !important;
+      margin-left: 0;
+    }
+
+  }
+
+  @media(max-width:870px){
+    .implants-desc p span{
+      font-size: 15px ;
+    }
+
+    .list p span{
+      font-size: 13px;
+    }
+    
+    .list-in p span{
+      
+      font-size: 13px;
+    }
+
+  }
+  
+  @media(max-width:700px){
+    
+    .card-container{
+      overflow-x: scroll !important;
+    }
+    
+  }
+
+  @media(max-width:630px){
+
+
+    .list p span{
+      font-size: 11px;
+    }
+    
+    .list-in p span{
+      
+      font-size: 11px;
+    }
+
+  }
+
+  @media(max-width:520px){
+
+
+    .list p span{
+      font-size: 8px;
+    }
+    
+    .list-in p span{
+      
+      font-size: 8px;
+    }
+
   }

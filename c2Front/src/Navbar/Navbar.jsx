@@ -14,13 +14,17 @@ import { ToastContainer, toast } from 'react-toastify';
 import { BsBucketFill } from 'react-icons/bs';
 import logo from '../Assets/logo.png';
 import { IoSkullOutline } from 'react-icons/io5';
+import { RxHamburgerMenu } from "react-icons/rx";
 
 const Navbar = () => {
 
   const { startLogOut, user } = useAuthStore();
   const [ botnet, setBotnet ] = useState([]);
   const [ openStatus, setOpenStatus ] = useState(false);
+  const [ open, setOpen ] = useState(true);
   const [alert, setAlert] = useState(false);
+  const [width, setWidth] = useState(window.innerWidth);
+
 
 /* 
 {
@@ -89,23 +93,47 @@ useEffect(() => {
 }, []);
 
 
+
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if(width > 1500) setOpen(true)
+  }, [width]);
+
+
   return (
     <>
-      <ul className="navbar">
-        <img src={logo} alt="" srcset="" />
-        <Link to="/agents/" style={{ textDecoration: 'none' }}><li>agents <CiVirus className='nav-icons'/></li></Link>
-        <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
-        <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <BsBucketFill className='nav-icons'/></li></Link>
-        {
-          user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
-        }
+      <ul className={ "navbar"}>
 
-        { botnet.length > 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet ON</li> }
-        
-        <span className='navbar-user'>Welcome: <span>{user.user_name}  <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button></span> </span>
+
+          <img src={logo} alt="" srcset="" />
+
+          <div className={ width > 1500 ? "navbar-content" : `sidebar ${open ? "open" : ""}`}>
+              <Link to="/agents/" style={{ textDecoration: 'none' }}><li>agents <CiVirus className='nav-icons'/></li></Link>
+              <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
+              <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <BsBucketFill className='nav-icons'/></li></Link>
+              {
+                user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
+              }
+
+              { botnet.length === 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet ON</li> }
+
+              <span>Welcome:{user.user_name}  <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button></span>
+
+            </div>
+
+
+        { width < 1500 &&
+          <RxHamburgerMenu className='burger-btn' onClick={()=> setOpen(!open)}/>
+        }
+          
       </ul>
         {
-          openStatus && botnet.length > 0 && <Botnet_status botnet={botnet}/>
+          openStatus && botnet.length === 0 && <Botnet_status botnet={botnet}/>
         }
 
         <AlertModal 

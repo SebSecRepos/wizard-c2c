@@ -13,7 +13,9 @@ export const Listeners = () => {
 
 
     const [listeners, setListeners] = useState([]);
+    const [alert, setAlert] = useState(false);
     const [listenerPanel, setListenerPanel] = useState(false);
+    const [listenerToDelete, setListenerToDelete] = useState({});
     const [implantPanel, setImplantPanel] = useState(false);
     const [ssl_tls, setSsl_tls] = useState(false);
     const [implant, setImplant] = useState({
@@ -198,6 +200,8 @@ export const Listeners = () => {
 
             const data = await req.json();
 
+            console.log(data);
+            
             if (data.ok) {
                 setListeners(data.listeners)
             } else {
@@ -277,9 +281,9 @@ export const Listeners = () => {
     return (
         <>
             <div className='listener-cpanel'>
-                <h1>listeners</h1>
-                <button onClick={() => change_listener_panel(!listenerPanel)}>Create listener</button>
-                <button onClick={() => change_implant_panel(!implantPanel)}>Create implant</button>
+                <h1>Listeners</h1>
+                <button className='listener-create-btn' onClick={() => change_listener_panel(!listenerPanel)}>Create listener</button>
+                <button className='listener-create-btn' onClick={() => change_implant_panel(!implantPanel)}>Create implant</button>
 
                 <ul className='listener-ul'>
                     <li className='listener-li-bar'><p>Type</p> <p>Url</p> <p>Bind</p> <p>Port</p> <p></p></li>
@@ -287,11 +291,14 @@ export const Listeners = () => {
                     {listeners && listeners.length > 0 &&
 
                         listeners.map(l => <li className='listener-li'>
-                            <p>{l.type}</p>
+                            <p>{ l.ssl_tls ? 'wss' : l.type}</p>
                             <p>{l.url}</p>
                             <p>{l.bind}</p>
                             <p>{l.port}</p>
-                            <button onClick={() => delete_listener(l)}>X</button>
+                            <button className='delete-listener-btn' onClick={() => {
+                                setListenerToDelete(l);
+                                setAlert(true);
+                            }}>X</button>
                         </li>)
 
                     }
@@ -394,15 +401,23 @@ export const Listeners = () => {
                                 <h3>No listeners available, create one first</h3>
 
                             }
-
-
-
                             <button>Create</button>
                         </form>
 
                     </div>
                 }
 
+
+            <AlertModal
+                visible={alert}
+                onClose={() => setAlert(false)}
+                onConfirm={() => delete_listener(listenerToDelete)}
+                title="Warning! Listener will be deleted"
+                description="Listener will be deleted"
+                confirmText="Confirm"
+                cancelText="Cancel"
+        
+            />
             </div>
 
 

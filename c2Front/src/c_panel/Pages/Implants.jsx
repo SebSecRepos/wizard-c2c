@@ -59,6 +59,8 @@ useEffect(() => {
       try {
         const data = JSON.parse(event.data);
 
+        console.log(data);
+        
         setImplants(data.data);
         setLoading(false);
       } catch (err) {
@@ -213,49 +215,54 @@ useEffect(() => {
               </div>
             </div>
 
+          <div className='c2c-status'>
           {filteredImplants && filteredImplants.length === 0 ? (
               <h1>No implants</h1>
 
           )
           :
-            <div className='c2c-status'>
-              <ul className={"card-container"} style={ style === "card" ? { paddingTop:'200px'} : {paddingTop:'0'}}>
 
-                { style === "list" &&
-                  <li className="implants-desc">
-                      <p><span>Group</span></p>
-                      <p><span>Operating system</span></p>
-                      <p><span>Status</span></p>
-                  </li>
+          <>
+        
+            <ul className={"card-container"} style={ style === "card" ? { paddingTop:'200px'} : {paddingTop:'0'}}>
 
-                }
-                {filteredImplants.map((implant) =>{
+              { style === "list" &&
+                <li className="implants-desc">
+                    <p><span>Group</span></p>
+                    <p><span>Operating system</span></p>
+                    <p><span>Status</span></p>
+                    <p><span>Root</span></p>
+                </li>
 
-                  return(
-                      <ImplantCard
-                        style={style}
-                        impl_mac={implant.impl_mac}
-                        group={implant.group}
-                        public_ip={implant.public_ip}
-                        local_ip={implant.local_ip}
-                        operating_system={implant.operating_system}
-                        id={implant.id}
-                        status={implant.status}
-                      /> 
-                  )
-                }
-                
-                )} 
-          
-              </ul>
+              }
+              {filteredImplants.map((implant) =>{
 
-              <div className='event-container'>
-                <h1>Event logs</h1>
-                <C2Status />
-              </div>
+                return(
+                    <ImplantCard
+                      style={style}
+                      impl_mac={implant.impl_mac}
+                      group={implant.group}
+                      public_ip={implant.public_ip}
+                      local_ip={implant.local_ip}
+                      operating_system={implant.operating_system}
+                      id={implant.id}
+                      status={implant.status}
+                      root={implant.root}
+                    /> 
+                )
+              }
+              
+              )} 
+        
+            </ul>
 
-            </div>
-          }
+          </>
+        }
+          <div className='event-container'>
+            <h1>Event logs</h1>
+            <C2Status />
+          </div>
+      </div>
 
           <Listeners />
           </>

@@ -208,7 +208,7 @@ class Impl:
             try {{
                 $result = Invoke-Command -ComputerName {host} -Credential $credential -ScriptBlock {{
                     Set-Location '{self.current_dir}'
-                    if ($args[0] -match '\\.(exe|com|bat|cmd|msi|py)$' -or $args[0] -match '^(calc|notepad|mspaint|winword|excel|powerpnt)') {{
+                    if ($args[0] -match '\\.(exe|com|bat|cmd|msi|py)$' ) {{
                         & $args[0] 2>&1 | Out-String
                     }} else {{
                         Invoke-Expression $args[0] 2>&1 | Out-String
