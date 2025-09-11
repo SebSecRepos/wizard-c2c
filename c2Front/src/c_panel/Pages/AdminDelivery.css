@@ -13,6 +13,7 @@
 .delivery-form-section {
   display: flex;
   justify-content: space-around;
+  flex-direction: row;
   flex: 1;
   background-color:black;
   padding: 2rem;
@@ -42,7 +43,7 @@
 .delivery-register-container h4{
   background-color:transparent;
 
-  font-size: 18px;
+  font-size: 30px;
   color: #11ff00;
 }
 .delivery-register-container p{
@@ -57,10 +58,24 @@
   gap: 1rem;
 }
 
-.delivery-form button {
+.bucket-upload-btn {
     background-color:rgb(0, 191, 45);
     color: white;
     border: none;
+    margin: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 10px;
+    transition: background 0.2s ease;
+}
+
+.create-bucket-btn {
+    background-color:rgb(238, 255, 0);
+    color: rgb(0, 0, 0);
+    border: none;
+    margin: 10px;
+    font-weight: bold;
+    border-radius: 10px;
     cursor: pointer;
     padding: 10px;
     transition: background 0.2s ease;
@@ -151,4 +166,36 @@
     border: none;
     cursor: pointer;
     transition: background 0.2s ease;
+}
+
+
+@media(max-width: 930px){
+  .delivery-form-section{
+    flex-direction: column;
+    justify-content: center;
+    gap: 50px;
+  }
+
+  .delivery-files-container{
+    min-height: 200px;
+    padding: 20px 30px;
+  }
+
+  .delivery-artifact-list{
+    border: 2px solid rgb(61, 61, 61);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .li-bucket{
+    width: auto;
+    justify-content: center;
+  }
+  
+  .div-bucket{
+    width: 60%;
+
+  }
 }

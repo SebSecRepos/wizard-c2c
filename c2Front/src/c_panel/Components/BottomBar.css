@@ -46,11 +46,13 @@
 .dropdown-item {
   padding: 6px 0;
   border-bottom: 1px solid #eee;
+  margin: 20px 0;
 }
 .dropdown-item .launch-btn{
     font-size: 13px !important;
     color: black;
-    background-color: red;
+    background-color: rgb(30, 255, 0);
+    height: 34px;
     padding: 5px;
     font-weight: bold;
     border: 1px solid white ;
@@ -64,14 +66,11 @@
   border-bottom: none;
 }
 
-.command {
-  background-color: #1c1c1c;
-  padding: 6px;
-  border-radius: 4px;
-  color: greenyellow;
-  font-size: 12px;
-  overflow-x: auto;
+.dropdown-item h4{
+  color: white;
+  text-transform: capitalize;
 }
+
 
 .top-category-windows{
   display: flex;
@@ -92,10 +91,12 @@
   width: 100% !important;
   border-radius: 10px;
   color: #33ff00;
-  padding: 3px;
+  padding: 5px;
 }
 .add-cmd-input_command label{
   width: 100%;
+  color: white;
+  padding: 5px;
 
 }
 
@@ -112,8 +113,59 @@
   margin-left: 20px;
 }
 
+.add-cmd-input_container label{
+  color: #ffffff;
+  padding: 5px;
+}
 .add-cmd-input_container input{
   border-radius: 10px;
   color: #33ff00;
-  padding: 3px;
+  padding: 5px;
+}
+
+
+.command {
+  display: flex;
+  align-items: center;
+  background-color: #1c1c1c;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  overflow-x: auto;
+  overflow-x: scroll;
+}
+
+.delete-cmd-btn{
+  border: none;
+  border-radius: 10px;
+  background-color: #f74444;
+  color: rgb(0, 0, 0);
+  font-size: 15px;
+  font-weight: bold;
+  padding: 5px;
+}
+
+.cmd-pre{
+  margin-left: 10px;
+  margin-top: 10px;
+  font-size: 18px;
+  text-align: center;
+  width: fit-content;
+  color: #33ff00;
+  background-color:#1e1e1e;
+
+}
+
+@media(max-width:930px){
+  .dropdown-content{
+    left: 10px !important;
+    width: 450px !important;
+  }
+}
+
+@media(max-width:480px){
+  .dropdown-content{
+    left: 10px !important;
+    width: 350px !important;
+  }
 }

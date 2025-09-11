@@ -252,7 +252,7 @@ export const AdminDelivery = () => {
       <h3>Bucket</h3>
       <h4>{import.meta.env.VITE_API_URL_BUCKETS}{page}/</h4>
       <p>
-        Upload files in an c2c bucket with the purpose of deliver files in infected devices, this files can be webshells, bash and powershell scripts, binaries, etc.
+        Upload files into c2c bucket with the purpose of deliver files to infected devices, this files can be webshells, bash and powershell scripts, binaries, etc.
         But be careful, all buckets can be accesed by everybody, do not upload sensitive information.
         You can use the link of each file to deliver them. Happy hacking
       </p>
@@ -267,10 +267,10 @@ export const AdminDelivery = () => {
                 <div className="delivery-edit-btns">
                   <h4>Upload file</h4>
                   <input className="file-upload " type="file" onChange={(e) => setFile(e.target.files[0])} />
-                  <button onClick={handleUpload}>Upload file</button>
+                  <button className="bucket-upload-btn" onClick={handleUpload}>Upload file</button>
                 </div>
                 <div className="delivery-edit-btns">
-                  <button onClick={handleCreateBucket}>Create bucket</button>
+                  <button className='create-bucket-btn' onClick={handleCreateBucket}>Create bucket</button>
                 </div>
               </>
             }

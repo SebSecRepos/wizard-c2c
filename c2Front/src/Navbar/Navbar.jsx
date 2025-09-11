@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import {  Link } from 'react-router-dom';
+import {  Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../hooks';
 import Cookies from 'js-cookie';
 import './Navbar.css'
@@ -105,14 +105,17 @@ useEffect(() => {
   }, [width]);
 
 
+  const navigate = useNavigate()
+
   return (
     <>
       <ul className={ "navbar"}>
 
 
-          <img src={logo} alt="" srcset="" />
 
           <div className={ width > 1500 ? "navbar-content" : `sidebar ${open ? "open" : ""}`}>
+              <img src={logo} alt="" srcset="" onClick={()=> navigate("/")}/>
+              
               <Link to="/agents/" style={{ textDecoration: 'none' }}><li>agents <CiVirus className='nav-icons'/></li></Link>
               <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
               <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <BsBucketFill className='nav-icons'/></li></Link>
@@ -120,9 +123,9 @@ useEffect(() => {
                 user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
               }
 
-              { botnet.length === 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet ON</li> }
+              { botnet.length > 0 && <li className='botnet_status_btn' onClick={()=> setOpenStatus(!openStatus)}> ☠ Botnet ON</li> }
 
-              <span>Welcome:{user.user_name}  <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button></span>
+              <span className='exit-span'>Welcome: {user.user_name}  <button onClick={()=>setAlert(true)} className='logout-btn'><GrLogout /></button></span>
 
             </div>
 
@@ -133,7 +136,7 @@ useEffect(() => {
           
       </ul>
         {
-          openStatus && botnet.length === 0 && <Botnet_status botnet={botnet}/>
+          openStatus && botnet.length > 0 && <Botnet_status botnet={botnet}/>
         }
 
         <AlertModal 

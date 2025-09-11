@@ -3,6 +3,7 @@
     top: 100px;
     left: 130px;
     width: 70%;
+    min-width: 400px;
     min-height: 50%;
     display: flex;
     justify-content: center;
@@ -49,4 +50,15 @@
     color: rgb(9, 255, 0);
     
 
+}
+
+
+@media(max-width:480px){
+
+    .botnet-nabvar-info{
+        left: 15px;
+        max-width: 450px;
+        -width: 450px;
+        overflow-x: scroll;
+    }
 }

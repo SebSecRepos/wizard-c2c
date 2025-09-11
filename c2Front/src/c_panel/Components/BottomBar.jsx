@@ -263,7 +263,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
 
             {
             activeDropdown === 'Add' && (
-              <div className="dropdown-content floating-box">
+              <div className="dropdown-content">
 
                 <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
 
@@ -374,14 +374,16 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
                 {
                 getOperationsByCategory(category).map(({ name, command, category, sys }) => (
                   <div className="dropdown-item" key={name}>
-                    <strong>{name}</strong>
+                    <h4>{name}</h4>
                     <pre className="command">
                       <button className="launch-btn" onClick={() =>{
                         toggleDropdown(null);
                         cmd(command, "external");
-                      } }>Run</button> {command}
+                      } }>Run</button> 
+                      <p className='cmd-pre'>{command}</p>
+                       
                     </pre>
-                      <button className='launch-btn' onClick={()=> set_command_to_delete({name,command,category,sys})} >Delete command</button>
+                      <button className='delete-cmd-btn' onClick={()=> set_command_to_delete({name,command,category,sys})} >Delete command</button>
                   </div>
                 ))
                 

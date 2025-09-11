@@ -200,7 +200,7 @@ export const BotnetTerminal = () => {
         visibleHistory.map((entry, idx) => (
           <div key={idx}>
             <div className="botnet-terminal-line">
-              <span className="prompt">(Botnet ☠) &gt;</span>
+              <span className="botnet-prompt">(Botnet ☠) &gt;</span>
               <span>{entry.command}</span>
             </div>
             <div className="botnet-terminal-response">{entry.response}</div>
@@ -209,7 +209,7 @@ export const BotnetTerminal = () => {
         }
         <form onSubmit={handleCommand}>
           <div className="botnet-terminal-line">
-            <span className="prompt">(Botnet ☠) &gt;</span>
+            <span className="botnet-prompt">(Botnet ☠) &gt;</span>
             <input
               type="text"
               ref={inputRef}

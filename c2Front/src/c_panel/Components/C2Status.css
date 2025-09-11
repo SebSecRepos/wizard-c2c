@@ -12,7 +12,8 @@
 }
 
 .event-container{
-    width: max-content;
+    min-height: 300px;
+    width: 40%;
 }
 .event-container h1{
     color: red;
@@ -24,6 +25,7 @@
 .c2c-events{
     border: 4px solid rgba(20, 20, 20, 0.979);
     border-radius: 20px;
+    min-height: 300px;
     max-height: 400px;
     padding: 10px;
     overflow-y: scroll;

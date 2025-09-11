@@ -6,14 +6,15 @@
   }
   
   .card-container {
+    padding: 50px 50px;
     font-family: 'Helvetica Neue', sans-serif;
     background-color: #212121;
     border-radius: 10px;
     display: flex;
     flex-direction: column;
     height: 450px ;
-    justify-content: center;
     align-items:center;
+    box-sizing: border-box;
     width:50% ;
     font-size: 12px;
     overflow-y: scroll;
@@ -25,22 +26,22 @@
 /* Actvie implants */
   
   .card {
+    padding: 40px 40px;
+    overflow-y:scroll;
     background-color: #212121;
     border-radius: 5px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding:10px 20px;
     border: 2px solid rgb(26, 255, 0);
     cursor: pointer;
     width: 95%;
-    padding-top: 20px;
-    max-height: 200px;
+    min-height: 200px;
+    box-sizing: border-box;
   }
   
   .card p{
     background-color: #212121;
-    color: black;
+    color: rgb(255, 255, 255);
     font-weight: bold;
     margin: 1px;
   }
@@ -67,24 +68,24 @@
 /* Inactvie implants */
   
  
-  .card-in {
-    background-color: #212121;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin:10px 0 !important;
-    border: 2px solid rgb(81, 81, 81);
-    cursor: pointer;
-    width: 95%;
-    padding-top: 20px;
-    max-height: 200px;
-    padding: 10px;
-  }
+.card-in {
+  box-sizing: border-box;
+  padding: 40px 40px;   /* margen superior real */
+  overflow-y: scroll;
+  background-color: #212121;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0 !important;
+  border: 2px solid rgb(81, 81, 81);
+  cursor: pointer;
+  width: 95%;
+  min-height: 200px;
+}
   
   .card-in p{
     background-color: #212121;
-    color: black;
+    color: rgb(255, 255, 255);
     font-weight: bold;
     margin: 1px;
   }
@@ -288,7 +289,6 @@
   
   
   .root-indicator-f{
-    
     color: rgb(255, 0, 0) !important;
   }
 
@@ -299,6 +299,7 @@
     .card-container{
       width:95% !important;
       height: 60%  !important;
+      padding: 50px 20px;
       margin-left: 0;
     }
 

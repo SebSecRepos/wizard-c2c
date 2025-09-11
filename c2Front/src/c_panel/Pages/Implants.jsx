@@ -224,7 +224,7 @@ useEffect(() => {
 
           <>
         
-            <ul className={"card-container"} style={ style === "card" ? { paddingTop:'200px'} : {paddingTop:'0'}}>
+            <ul className={"card-container"} >
 
               { style === "list" &&
                 <li className="implants-desc">

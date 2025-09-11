@@ -34,3 +34,19 @@
   color: greenyellow;
 }
 
+
+
+@media(max-width: 838px){
+  .floating-box-explorer{
+    left: 0;
+    min-width: 350px;
+    max-width: 350px;
+    width: auto;
+  }
+  
+  .directory-list{
+    min-width: 500px;
+    max-width: 500px;
+    overflow-x: scroll;
+  }
+}

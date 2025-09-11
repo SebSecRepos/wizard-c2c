@@ -152,11 +152,7 @@ export const AdminUsers = () => {
       fetchUsers();
     }
     
-/*     reset();
-    setOnSending(false);
-    fetchUsers();
-    setEditUserId(null);
-    setEditMode(false); */
+
 
   };
 

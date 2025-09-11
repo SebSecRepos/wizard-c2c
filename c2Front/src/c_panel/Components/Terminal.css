@@ -74,8 +74,56 @@
 
 
 .terminal-response {
+  text-overflow: ellipsis;
   margin-left: 20px;
   color: #2bff00;
   font-size: 18px;
   white-space: pre-wrap;
 }
+
+
+@media(max-width: 1458px){
+  
+  .terminal-line, .terminal-input, .terminal-response, .prompt{
+    font-size: 16px;
+  }
+  
+}
+
+@media(max-width: 1312px){
+  
+  .terminal-line, .terminal-input, .terminal-response, .prompt{
+    font-size: 13px;
+  }
+  
+}
+
+@media(max-width: 1068px){
+  
+  .terminal-response{
+    font-size: 10px;
+    margin-left: 0px;
+  }
+  
+  .terminal-line, .terminal-input, .prompt{
+    font-size: 10px ;
+  }
+
+}
+
+@media(max-width: 1090px){
+  
+  .terminal-response{
+    font-size: 8px;
+  }
+  .terminal-container{
+    overflow-x: scroll;
+    width: 800px !important;
+  }
+  .terminal-body{
+    width: 800px !important;
+  }
+
+
+}
+

@@ -14,6 +14,7 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
     padding: 0%;
     margin: 0%;
     text-decoration: none;
@@ -93,12 +94,13 @@
 }
 
 .navbar img{
+    cursor: pointer;
     position: relative;
     opacity: 0.8;
     width: 140px;
     margin: 5px;
     border-radius: 50%;
-    right: 12%;
+    right: 15%;
 }
 
 .navbar-user{
@@ -117,6 +119,7 @@
 
 
 .sidebar{
+  z-index: 1;  
   position: fixed;       
   top: 0;                
   left: -250px;                   
@@ -127,6 +130,7 @@
   padding: 20px;
   box-shadow: 2px 0 5px rgba(0,0,0,0.3);
   transition: left 0.3s ease; 
+  border-right: 2px solid rgb(61, 61, 61);
 }
 
 .sidebar.open{
@@ -135,19 +139,33 @@
 
 .burger-btn{
     position: relative;
-    left: 100px;
+    left: 40%;
     font-size: 50px;
     color: white;
     cursor: pointer;
+    margin: 20px 0;
 }
 .burger-btn:hover{
     color: #00b300;
+}
+
+.exit-span{
+    color: white;
+    position: relative;
+    left: 130px;
 }
 
 @media(max-width:1500px){
     .navbar{
         margin-right: 100px;
         justify-content: space-around;
+    }
+    .exit-span{
+        left: 0;
+    }
+
+    .navbar img{
+        right: -23px;
     }
 
 }

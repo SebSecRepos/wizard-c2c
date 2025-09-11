@@ -35,11 +35,11 @@ const ImplantCard = ({ impl_mac, group, public_ip, local_ip, operating_system, i
       <ul>{impl_mac.map(m=><><li>{m}</li>,</>)}</ul>
       <p>Local ips: </p>
       <ul>{local_ip.map(m=><><li>{m}</li>,</>)}</ul>
-      <p><span>{group}</span></p>
+      <p>Group: <span>{group}</span></p>
       <p>public_ip: <span>{public_ip}</span></p>
-      <p><span>{operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span></span></p>
-      <p><span>{status}</span></p>
-      <p><span className={root ? "root-indicator-t" : "root-indicator-f"} >{root ? "True" : "False"}</span></p>
+      <p>Operating system:<span> {operating_system} <span className='sys-op-icon'>{operating_system.toLowerCase().includes('linux')? <FcLinux/> : <FaWindows/>}</span></span></p>
+      <p>Status:<span>{status}</span></p>
+      <p>Root?: <span className={root ? "root-indicator-t" : "root-indicator-f"} >{root ? "True" : "False"}</span></p>
     </div>;
     case 'list':
       return    <div className={status === "active" ? "list" : "list-in"} onClick={status === "active" ? visit_service : inactive  }>

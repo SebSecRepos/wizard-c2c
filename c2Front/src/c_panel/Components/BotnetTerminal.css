@@ -1,7 +1,7 @@
 .botnet-terminal-container {
   width: 100% !important;
   color: #f5f5f5;
-  height: 70vh;
+  height: 80vh;
   font-family: monospace;
   border-radius: 6px;
   box-shadow: 0 0 10px #000;
@@ -41,7 +41,7 @@
 
 .botnet-terminal-body {
   padding: 16px;
-  height: 90%;
+  height: 100%;
   opacity: 1;
   overflow: scroll;
   border-bottom-left-radius: 20px;
@@ -59,7 +59,7 @@
   color: rgb(255, 0, 0);
 }
 
-.prompt {
+.botnet-prompt {
   color: #00ff00;
   margin-right: 6px;
   white-space: nowrap;
@@ -85,3 +85,40 @@
   color: #ff0000;
   white-space: pre-wrap;
 }
+
+
+@media(max-width: 1200px){
+  
+  .botnet-terminal-line, .botnet-terminal-input, .botnet-terminal-response, .botnet-prompt{
+    font-size: 16px;
+  }
+  
+}
+
+@media(max-width: 890px){
+  
+  .botnet-terminal-line, .botnet-terminal-input, .botnet-terminal-response, .botnet-prompt{
+    font-size: 13px;
+  }
+  
+}
+
+@media(max-width: 730px){
+  
+  .botnet-terminal-response{
+    font-size: 10px;
+  }
+  .botnet-terminal-response {
+    margin-left: 0px;
+  }
+
+}
+@media(max-width: 572px){
+  
+  .botnet-terminal-response{
+    font-size: 8px;
+  }
+
+
+}
+

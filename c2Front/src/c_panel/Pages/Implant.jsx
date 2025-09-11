@@ -20,7 +20,7 @@ export const Implant = () => {
   const [openExplorer, setOpenExplorer] = useState(false);
   const [openSideBar, setOpenSidebar] = useState(false);
 
-  const { id } = useParams(); // obtiene el parámetro 'id' de la URL
+  const { id } = useParams();
   const navigate = useNavigate()
   const { startLogOut } = useAuthStore();
 
@@ -32,13 +32,12 @@ export const Implant = () => {
         const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
         socket.onopen = () => {
-          /*    console.log('Conectado al servidor WebSocket'); */
         };
   
       socket.onmessage = (event) => {
 
         if (event.data === "invalid") {
-          toast.error("Sesión inválida");
+          toast.error("Invalid sesion");
           startLogOut();
           return;
         }
@@ -105,7 +104,7 @@ export const Implant = () => {
       }
       {
         implant.operating_system.toLowerCase().trim().includes("linux") &&
-        <LinuxTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd}  />
+        <LinuxTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd} user={implant.user}  />
       }
     </div>
 

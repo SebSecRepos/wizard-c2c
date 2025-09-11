@@ -4,14 +4,14 @@ import { ToastContainer, toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { useAuthStore } from '../../hooks';
 
-export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => {
+export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd, user="" }) => {
   const [input, setInput] = useState('');
   const [visibleHistory, setVisibleHistory] = useState([]);
   const [fullHistory, setFullHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(null);
   const [currentDir, setCurrentDir] = useState('/home/user');
   const [prompt, setPrompt] = useState(false);
-  const [shellPrompt, setShellPrompt] = useState("user@localhost:");
+  const [shellPrompt, setShellPrompt] = useState(`${user}@localhost:`);
   const inputRef = useRef(null);
 
   const containerRef = useRef(null);
@@ -92,7 +92,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd }) => 
         setShellPrompt(data.prompt)
       }else{
         setPrompt(false);
-        setShellPrompt("user@localhost");
+        setShellPrompt(`${user}@localhost:`);
       }
 
 

@@ -2,6 +2,7 @@
 
 .register-container {
   display: flex;
+  flex-direction: row;
   gap: 2rem;
   padding: 2rem;
   font-family: 'Segoe UI', sans-serif;
@@ -106,4 +107,12 @@
     border: none;
     cursor: pointer;
     transition: background 0.2s ease;
+}
+
+@media(max-width: 760px){
+
+  .register-container{
+    flex-direction: column;
+  }
+
 }
