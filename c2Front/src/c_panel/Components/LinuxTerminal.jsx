@@ -6,6 +6,7 @@ import { useAuthStore } from '../../hooks';
 
 export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd, user="" }) => {
   const [input, setInput] = useState('');
+  const [guide, setGuide] = useState(false);
   const [visibleHistory, setVisibleHistory] = useState([]);
   const [fullHistory, setFullHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(null);
@@ -161,9 +162,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd, user=
   return (
     <div className="terminal-container" onClick={handleClick}>
       <div className="terminal-header">
-        <span className="terminal-dot red" />
-        <span className="terminal-dot yellow" />
-        <span className="terminal-dot green" />
+        <button className='guide-btn' onClick={()=> setGuide(!guide)}>Privesc and execution as another user</button>
       </div>
       <div className="terminal-body" ref={containerRef}>
         {visibleHistory.map((entry, idx) => (
@@ -200,6 +199,17 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd, user=
       pauseOnHover
       theme="dark"
       />
+      { guide &&
+        <div className="alert-guide floating-box">
+          <div><button onClick={()=>setGuide(!guide)}>x</button></div>
+          <h4> Command as specific user</h4>
+          <pre>sudo -u &lt;user&gt; &lt;command&gt; </pre>
+          <pre>sudo  &lt;command&gt; </pre>
+          <h4> Privilege escalation (Use disown!)</h4>
+          <pre>sudo -u &lt;user&gt; implant.elf disown </pre>
+          <pre>sudo implant.elf disown </pre>
+        </div>
+      }
     </div>
   );
 };

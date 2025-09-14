@@ -33,6 +33,10 @@ const ImplantSchema = Schema({
         type: String,
         require: true
     },
+    sess_key:{
+        type: String,
+        require: true
+    },
 
 })
 

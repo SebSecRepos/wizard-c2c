@@ -115,7 +115,7 @@ export const BotnetTerminal = () => {
 
     } catch (error) {
       //console.error('Error en customCommand:', error);
-      return 'Hubo un error ejecutando el comando.' ;
+      return 'Error executing command' ;
     }
   };
 

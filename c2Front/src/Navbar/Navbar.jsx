@@ -119,6 +119,8 @@ useEffect(() => {
               <Link to="/agents/" style={{ textDecoration: 'none' }}><li>agents <CiVirus className='nav-icons'/></li></Link>
               <Link to="/botnet/c_panel" style={{ textDecoration: 'none' }}><li> Botnet <GiRobotAntennas className='nav-icons'/></li></Link>
               <Link to="/admin/delivery" style={{ textDecoration: 'none' }}><li> Public buckets  <BsBucketFill className='nav-icons'/></li></Link>
+              
+              <Link to="/guides/" style={{ textDecoration: 'none' }}><li> Guides</li></Link>
               {
                 user.role === "admin" &&  <Link to="/admin/" style={{ textDecoration: 'none' }}><li>Admin panel <RiAdminFill className='nav-icons'/></li></Link>
               }

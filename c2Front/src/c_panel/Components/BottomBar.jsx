@@ -159,7 +159,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
       }
 
       if( command.length <=0 || name.length <=0  ){
-        toast.error("Fields shouldn't be empty");
+        toast.error("Fields can't be empty");
         return;
       }
 
@@ -263,7 +263,7 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
 
             {
             activeDropdown === 'Add' && (
-              <div className="dropdown-content">
+              <div className="dropdown-content floating-box">
 
                 <span className="close" onClick={ () => toggleDropdown(null) }>x</span>
 

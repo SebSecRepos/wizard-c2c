@@ -3,10 +3,11 @@ import { WebSocketServer } from 'ws';
 import Implant from '../models/Implant_model.mjs';
 import jwt from 'jsonwebtoken';
 import { readLastLines, writeLog } from '../Utils/writeLog.mjs';
+import SessKey from '../models/SessionKey_model.mjs';
 
 
 
-const webSocketsServer = (httpServer, attacks_running, agents, status_connections={status_connections:[]}) => {
+const webSocketsServer = async(httpServer, attacks_running, agents, status_connections={status_connections:[]}) => {
   try {
     const server = new WebSocketServer({ server: httpServer });
     const events = [];
@@ -15,10 +16,13 @@ const webSocketsServer = (httpServer, attacks_running, agents, status_connection
     server.on('connection', async(socket, request) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
       const clientId = url.searchParams.get('id').replace('/','-').replace('\\','-').toLowerCase().replace(/\s+/g, "");
+      const sess_key = url.searchParams.get('sess_key');
 
-      // Si es Agent
-      if (!clientId) {
-        console.log("Client with no ID, closing..");
+      const found_sess_key = await SessKey.findOne({sess_key});
+
+      if (!clientId || !found_sess_key) {
+        console.log("Invalid conection");
+        socket.send("Invalid conection")
         socket.close();
         return;
       }
@@ -73,7 +77,6 @@ const webSocketsServer = (httpServer, attacks_running, agents, status_connection
       });
 
       socket.on('pong', () =>{
-        console.log("pong");
         socket.isAlive = true
       });
 
@@ -127,12 +130,12 @@ const webSocketsServer = (httpServer, attacks_running, agents, status_connection
 
            if (ws) {
             if (ws.isAlive) {
-              status_connections.status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root });
+              status_connections.status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user });
             } else {
-              status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root });
+              status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user });
             }
           } else {
-            status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root });
+            status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user });
           }
         }
     

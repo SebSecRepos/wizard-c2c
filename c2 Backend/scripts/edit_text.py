@@ -7,22 +7,23 @@ def parse_arguments():
     parser.add_argument("-u", "--url", required=False, dest="url", help="ex: -u 'localhost'")
     parser.add_argument("-p", "--port", required=False, dest="port", help="ex: -p 4444")
     parser.add_argument("-g", "--group", required=False, dest="group", help="ex: -g 'group1'")
+    parser.add_argument("-s", "--sess_key", required=False, dest="sess_key", help="ex: -s 'gras2dsoupa234'")
 
     options = parser.parse_args()
 
-    return options.file, options.url, options.port, options.group
+    return options.file, options.url, options.port, options.group, options.sess_key
 
 
-def add_text(script_path,  url, port, group):
+def add_text(script_path,  url, port, group, sess_key):
 
     with open(script_path, 'r') as f_in, open(str(script_path).replace("base.py", "base_copy.py"), "w") as f_out:
-        replacement = f_in.read().replace("localhost", str(url)).replace("4444", str(port)).replace("grupo", str(group))
+        replacement = f_in.read().replace("localhost", str(url)).replace("4444", str(port)).replace("grupo", str(group)).replace("1234567", str(sess_key))
         f_out.write(replacement)
     
 
 def main():
-    file, url, port, group = parse_arguments()
-    add_text(file, url, port, group)
+    file, url, port, group, sess_key = parse_arguments()
+    add_text(file, url, port, group, sess_key)
 
 
 if __name__ == "__main__":

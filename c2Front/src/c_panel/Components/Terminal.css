@@ -39,6 +39,7 @@
 
 .terminal-body {
   padding: 16px;
+  padding-bottom: 50px;
   opacity: 1;
   overflow: scroll;
   height: 100%;
@@ -82,7 +83,57 @@
 }
 
 
+.guide-btn{
+  cursor: pointer;
+  background-color: yellow;
+  color: black;
+  border: 2px solid #000;
+  padding: 3px;
+  font-weight: bold;
+  border-radius: 5px;
+  font-size: 15px;
+}
+
+.alert-guide{
+  width: 400px;
+  height: 400px;
+  font-size: 17px;
+}
+
+.alert-guide div{
+  width: 100%;
+  display: flex;
+  flex-direction: row-reverse;
+}
+.alert-guide div button{
+  background-color: #ff5f56;
+  border-radius: 3px;
+  padding: 5px 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 20px;
+  transition: 0.5 all;
+}
+.alert-guide div button:hover{
+  background-color: #ff1f13;
+}
+
+.alert-guide h4{
+  margin-top: 20px !important;
+  margin-bottom: 7px !important;
+}
+.alert-guide pre{
+  background-color: #2a2a2a;
+  color: #27c93f;
+  border-radius: 10px;
+  margin: 1px;
+  padding: 5px;
+}
+
+
 @media(max-width: 1458px){
+
   
   .terminal-line, .terminal-input, .terminal-response, .prompt{
     font-size: 16px;
@@ -118,12 +169,23 @@
   }
   .terminal-container{
     overflow-x: scroll;
-    width: 800px !important;
-  }
-  .terminal-body{
-    width: 800px !important;
   }
 
+}
+@media(max-width: 750px){
+  
+
+  .alert-guide{
+    width: 350px !important;
+  }
+
+}
+@media(max-width: 480px){
+  
+  .alert-guide{
+    left: 1% !important;
+    overflow-y: scroll;
+  }
 
 }
 

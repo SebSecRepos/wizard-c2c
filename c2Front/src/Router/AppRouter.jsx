@@ -7,7 +7,7 @@ import { Auth } from '../Auth/Pages';
 import { useAuthStore } from '../hooks';
 import BotnetRouter from './BotnetRouter';
 import AdminRouter from './AdminRouter';
-
+import GuidesRouter from './GuidesRouter';
 
 const AppRouter = () => {
 
@@ -51,6 +51,12 @@ const AppRouter = () => {
         <Route path="/botnet/*" element={
           <PrivateRouter status={status}>
             <BotnetRouter />
+          </PrivateRouter>
+        } 
+        />
+        <Route path="/guides/*" element={
+          <PrivateRouter status={status}>
+            <GuidesRouter />
           </PrivateRouter>
         } 
         />

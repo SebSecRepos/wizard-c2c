@@ -298,8 +298,9 @@
     
     .card-container{
       width:95% !important;
-      height: 60%  !important;
+      max-height: 400px  !important;
       padding: 50px 20px;
+      overflow-y: scroll;
       margin-left: 0;
     }
 

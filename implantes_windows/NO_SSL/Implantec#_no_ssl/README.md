@@ -19,7 +19,7 @@ Donut
 ```
 
 ```
-exec_as administrador admin4191 ".\Application Windows.exe" &
+exec_as administrador admin123 ".\Application Windows.exe" &
 ```
 
 

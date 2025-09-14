@@ -1,0 +1,49 @@
+.guide-container{
+    background-color: transparent;
+    box-shadow: 3px rgb(252, 252, 252);
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    box-sizing: content-box;
+}
+.guide-container h1{
+    background-color: transparent;
+    width: 100%;
+    font-size: 50px;
+    text-align: center;
+    margin: 50px 0;
+    color: rgb(0, 255, 115);
+    text-transform: capitalize;
+}
+
+.guide-text-block{
+    background-color: transparent;
+    margin: 150px 60px;
+    width: 90%;
+}
+.guide-text-block ul li{
+    background-color: transparent;
+    font-size: 20px;
+    color: rgb(170, 170, 170);
+}
+.guide-text-block h3{
+    background-color: transparent;
+    color: rgb(126, 126, 126);
+    font-size: 35px;
+    margin: 20px 0;
+}
+
+.guide-text-block img{
+    border: 2px solid white;
+    border-radius: 10px;
+    width: 100%;
+    margin: 10px 0;
+
+}
+.guide-text-block p{
+    background-color: transparent;
+    font-size: 20px;
+    color: rgb(170, 170, 170);
+    margin: 30px 0;
+
+}

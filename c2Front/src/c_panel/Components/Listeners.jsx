@@ -23,7 +23,7 @@ export const Listeners = () => {
         system: "windows",
         arch: "x64",
         type: "exe",
-        group: "default"
+        group: "default",
     });
     const [formData, setFormData] = useState({
         type: "ws",
@@ -31,7 +31,8 @@ export const Listeners = () => {
         bind: "0.0.0.0",
         port: 0,
         cert: "",
-        key: ""
+        key: "",
+        sess_key:""
     });
 
 
@@ -140,6 +141,10 @@ export const Listeners = () => {
             toast.error("Invalid arch");
             return
         }
+        if (implant.sess_key.length < 10) {
+            toast.error("Session key must have 10 or more characters");
+            return
+        }
         if (implant.type != "py" && implant.type != "exe") {
             toast.error("Invalid type");
             return
@@ -200,7 +205,6 @@ export const Listeners = () => {
 
             const data = await req.json();
 
-            console.log(data);
             
             if (data.ok) {
                 setListeners(data.listeners)
@@ -284,6 +288,7 @@ export const Listeners = () => {
                 <h1>Listeners</h1>
                 <button className='listener-create-btn' onClick={() => change_listener_panel(!listenerPanel)}>Create listener</button>
                 <button className='listener-create-btn' onClick={() => change_implant_panel(!implantPanel)}>Create implant</button>
+                <button className='listener-create-btn' onClick={() => change_implant_panel(!implantPanel)}>Add session key</button>
 
                 <ul className='listener-ul'>
                     <li className='listener-li-bar'><p>Type</p> <p>Url</p> <p>Bind</p> <p>Port</p> <p></p></li>
@@ -378,19 +383,21 @@ export const Listeners = () => {
                                     <label htmlFor="">Type</label>
                                     <select name="type" id="" defaultValue="exe" onChange={handleChangeImplant} >
                                         <option value="exe">Executable</option>
-                                        <option value="py">Python script (Required libraries in target)</option>
+                                        <option value="py">Python script (Python libraries required in target)</option>
                                     </select>
                                     { 
                                         implant.type === 'exe' &&<>
                                             <label htmlFor="">Architecture</label>
                                             <select name="arch" id="" defaultValue="x64" onChange={handleChangeImplant} >
                                                 <option value="x64">x64</option>
-                                                <option value="x86">x86</option>
                                             </select>
                                         </>
                                     }
                                     <label htmlFor="">Group</label>
                                     <input type="text" name="group" id="" placeholder='default' onChange={handleChangeImplant} />
+
+                                    <label htmlFor="">Session key</label>
+                                    <input type="text" name="sess_key" id="" onChange={handleChangeImplant} />
 
                                     <label >Loader payload</label>
                                     <a href="http://" target="_blank" rel="noopener noreferrer"> Guide for raw binary implants </a>

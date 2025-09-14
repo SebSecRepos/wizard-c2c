@@ -10,6 +10,8 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
   const [fullHistory, setFullHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(null);
   const [currentDir, setCurrentDir] = useState('C:\\');
+  const [guide, setGuide] = useState(false);
+  
   const inputRef = useRef(null);
 
   const containerRef = useRef(null);
@@ -143,9 +145,9 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
   return (
     <div className="terminal-container" onClick={handleClick}>
       <div className="terminal-header">
-        <span className="terminal-dot red" />
-        <span className="terminal-dot yellow" />
-        <span className="terminal-dot green" />
+      <div className="terminal-header">
+        <button className='guide-btn' onClick={()=> setGuide(!guide)}>Privesc and execution as another user</button>
+      </div>
       </div>
       <div className="terminal-body" ref={containerRef}>
         {visibleHistory.map((entry, idx) => (
@@ -182,6 +184,18 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
       pauseOnHover
       theme="dark"
       />
+
+      { guide &&
+      <div className="alert-guide floating-box">
+        <div><button onClick={()=>setGuide(!guide)}>x</button></div>
+        <h4> Privilege escalation (None staged implant) (Winrm required)</h4>
+        <pre>exec_as &lt;user&gt; &lt;password&gt; ".\Implant.exe" &  </pre>
+
+        <h4> Privilege escalation (Staged implant) (Winrm required)</h4>
+        <pre>exec_as &lt;user&gt; &lt;password&gt; .\Loader.exe "process.exe" & </pre>
+   
+      </div>
+      }
     </div>
   );
 };

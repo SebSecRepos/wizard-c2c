@@ -53,6 +53,7 @@ export const Implant = () => {
         setImplant(found);
         
       };
+
   
       socket.onclose = () => {
         console.log('WebSocket cerrado');
@@ -66,7 +67,6 @@ export const Implant = () => {
       toast.error(error);
       startLogOut();
     }
-     
      
    }, [id]);
 
@@ -104,7 +104,7 @@ export const Implant = () => {
       }
       {
         implant.operating_system.toLowerCase().trim().includes("linux") &&
-        <LinuxTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd} user={implant.user}  />
+        <LinuxTerminal id={implant.id} externalCmd={externalCmd} setExternalCmd={setExternalCmd} user={implant.user? implant.user.replace('\n', '') : "undefined"}  />
       }
     </div>
 

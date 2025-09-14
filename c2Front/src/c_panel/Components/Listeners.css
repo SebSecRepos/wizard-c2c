@@ -32,12 +32,14 @@
 }
 .listener-li{
     border-top: 2px solid red;
-    margin-left: -30px;
+    margin-left: 0px;
+    padding-top: 10px;
+    padding-top: 10px;
+    padding-left: 20px;
     color: white;
     display: flex;
     flex-direction: row;
     justify-content: space-around;  
-    padding: 4px;
 }
 
 
