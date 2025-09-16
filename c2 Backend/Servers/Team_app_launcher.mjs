@@ -15,6 +15,7 @@ import { create_listener_endpoint } from '../Utils/create_listener.mjs';
 import { validate_jwt } from '../middlewares/validate_jwt.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import session_keys_router from '../routes/session_keys_routes.mjs';
 
 const team_app_launcher=async(attacks_running, agents, status_connections={status_connections:[]}, listeners={listeners:[]})=>{
     const middle=(req,res=response, next)=>{
@@ -22,7 +23,6 @@ const team_app_launcher=async(attacks_running, agents, status_connections={statu
         next()
     }
 
-    
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -41,10 +41,11 @@ const team_app_launcher=async(attacks_running, agents, status_connections={statu
     app.use(type_errors);
     app.use(syntax_errors);
     app.use('/api/auth', sanitize, authRouter)
-    app.use('/api/rcv', cmd_router(agents, attacks_running))
+    app.use('/api/rcv', cmd_router(agents, attacks_running, status_connections))
     app.use('/api/artifacts', sanitize, artifacts_router())
     app.use('/api/listener', sanitize, listener_router(attacks_running, agents, status_connections, listeners))
     app.use('/api/sources/', validate_jwt, express.static(path.join(__dirname, '../public/Sources/') ));
+    app.use('/api/sessKeys/', sanitize, session_keys_router(attacks_running, agents, status_connections, listeners));
     
     //------Type errors-----
 

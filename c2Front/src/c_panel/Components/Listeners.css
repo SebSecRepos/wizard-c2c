@@ -200,6 +200,14 @@
     font-weight: bold;
 }
 
+.session_key_select{
+    margin: 10px;
+    font-size: 20px;
+    width: 100%;
+    border-radius: 5px;
+    padding: 5px;
+    color: rgb(68, 255, 0);
+}
 
 @media(max-width: 860px){
     .listener-panel, .implant-panel{

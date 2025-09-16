@@ -9,6 +9,8 @@ import { set_server, set_ssl_server } from "../Servers/http_servers.mjs";
 import { writeLog } from "../Utils/writeLog.mjs";
 import { exe_processing, python_processing } from "../Utils/implant_processing.mjs";
 import { isValidPEM } from "../Utils/ssl_verify.mjs";
+import SessKey from "../models/SessionKey_model.mjs";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -324,6 +326,13 @@ const create_implant_controller = async(req, res=response)=>{
                 })
         }
 
+
+        const found_sess_key = await SessKey.findOne({sess_key});
+
+        if(!found_sess_key) return res.status(400).json({
+            ok:false,
+            msg:"Invalid session key"
+        })
 
         const found_listener = await Listener.findOne({ port: listener });
 

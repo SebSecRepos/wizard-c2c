@@ -317,7 +317,7 @@ class Impl:
                 "status": "attack_completed",
                 "attack_type": attack_type,
                 "target": target,
-                "message": "Ataque completado"
+                "message": "Attack completed"
             }))
         except Exception as e:
             next

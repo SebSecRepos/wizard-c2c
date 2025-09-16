@@ -12,9 +12,13 @@ import './Listeners.css';
 export const Listeners = () => {
 
 
+    const [sessionKeys, setSessionKeys] = useState([]);
+    const [selectedSessionKey, setSelectedSessionKey] = useState("create_ssesskey");
     const [listeners, setListeners] = useState([]);
     const [alert, setAlert] = useState(false);
+    const [alertSessKey, setAlertSessKey] = useState(false);
     const [listenerPanel, setListenerPanel] = useState(false);
+    const [keyPanel, setKeyPanel] = useState(false);
     const [listenerToDelete, setListenerToDelete] = useState({});
     const [implantPanel, setImplantPanel] = useState(false);
     const [ssl_tls, setSsl_tls] = useState(false);
@@ -57,6 +61,45 @@ export const Listeners = () => {
         }));
     }
 
+    const handleSubmitSessionKey = async (e) => {
+        e.preventDefault();
+
+        let new_sess_key = e.target[0]?.value?.toString() || ""
+
+        if (new_sess_key.length < 10) {
+            toast.error("Session key must have 10 or more characters");
+            return;
+        }
+        
+        try {
+            const req = await fetch(`${import.meta.env.VITE_API_URL}/api/sessKeys/create`, {
+                method: 'POST',
+                headers: {
+                    "x-token": Cookies.get('x-token'),
+                    "Content-Type": "application/json"
+                },
+                body:JSON.stringify({sess_key:new_sess_key})
+            })
+
+            const data = await req.json();
+
+            if (data.ok) {
+                toast.success("Session key created")
+                getSessionKeys();
+            } else {
+                toast.error(data.msg)
+            }
+
+        } catch (error) {
+            toast.error("Session key was not created (Server error)")
+        }
+
+        
+    }
+    const handleDeleteSessionKey = async (e) => {
+        e.preventDefault();
+        setAlertSessKey(true);
+    }
 
     const handleSubmitListener = async (e) => {
         e.preventDefault();
@@ -128,6 +171,7 @@ export const Listeners = () => {
 
     const handleSubmitImplant = async (e) => {
         e.preventDefault();
+        
 
         if ( !listeners.some(l => Number(l.port) === Number(implant.listener))) {
             toast.error("Invalid listener");
@@ -218,8 +262,32 @@ export const Listeners = () => {
     }
 
 
+    const getSessionKeys = async () => {
+        try {
+            const req = await fetch(`${import.meta.env.VITE_API_URL}/api/sessKeys/`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-token": Cookies.get('x-token')
+                }
+            })
+
+            const data = await req.json();
+            
+            if (data.ok) {
+                setSessionKeys(data.session_keys)
+            } else {
+                toast.error(data.msg)
+            }
+
+        } catch (error) {
+            toast.error("Listeners couldn't be fetched (Server error)")
+        }
+    }
+
+
     useEffect(() => {
         getListeners()
+        getSessionKeys()
     }, [])
 /*     useEffect(() => {
         console.log(listeners);
@@ -233,6 +301,7 @@ export const Listeners = () => {
         if (value) {
             setListenerPanel(value);
             setImplantPanel(!value)
+            setKeyPanel(!value)
         } else {
             setListenerPanel(value);
         }
@@ -242,8 +311,18 @@ export const Listeners = () => {
         if (value) {
             setImplantPanel(value)
             setListenerPanel(!value);
+            setKeyPanel(!value)
         } else {
             setImplantPanel(value)
+        }
+    }
+    const change_Key_panel = (value) => {
+        if (value) {
+            setKeyPanel(value)
+            setListenerPanel(!value);
+            setListenerPanel(!value);
+        } else {
+            setKeyPanel(value)
         }
     }
 
@@ -279,6 +358,36 @@ export const Listeners = () => {
         }
 
     }
+    const delete_sessKeys = async (sessKey) => {
+
+        try {
+            const req = await fetch(`${import.meta.env.VITE_API_URL}/api/sessKeys/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    "x-token": Cookies.get('x-token'),
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    sessKey,
+                })
+            })
+
+            const data = await req.json();
+
+            if (data.ok) {
+                toast.success("Session key deleted")
+                getSessionKeys()
+            } else {
+                toast.error(data.msg)
+            }
+
+        } catch (error) {
+            console.log(error);
+
+            toast.error("Listener couldn't be deleted (Server error)")
+        }
+
+    }
 
 
 
@@ -288,7 +397,7 @@ export const Listeners = () => {
                 <h1>Listeners</h1>
                 <button className='listener-create-btn' onClick={() => change_listener_panel(!listenerPanel)}>Create listener</button>
                 <button className='listener-create-btn' onClick={() => change_implant_panel(!implantPanel)}>Create implant</button>
-                <button className='listener-create-btn' onClick={() => change_implant_panel(!implantPanel)}>Add session key</button>
+                <button className='listener-create-btn' onClick={() => change_Key_panel(!keyPanel)}>Manage session keys</button>
 
                 <ul className='listener-ul'>
                     <li className='listener-li-bar'><p>Type</p> <p>Url</p> <p>Bind</p> <p>Port</p> <p></p></li>
@@ -352,6 +461,46 @@ export const Listeners = () => {
                     </div>
                 }
 
+
+                {keyPanel &&
+                    <div className='listener-panel'>
+
+                        <div className='listener-title'>
+                            <h3>Session keys</h3>
+                            <button onClick={() => setKeyPanel(false)}>x</button>
+                        </div>
+
+                            <>
+                                <select name="session-keys" id="" className='session_key_select' defaultValue="create_ssesskey"  >
+                                    {sessionKeys && sessionKeys.length > 0 &&
+                                        sessionKeys.map(l => <option onClick={()=>setSelectedSessionKey(l)} value={l}>
+                                            {l}
+                                        </option>)
+                                    }
+
+                                    <option value="create_ssesskey" onClick={()=>setSelectedSessionKey("create_ssesskey")} >Create session key</option>
+
+                                </select>
+                                { selectedSessionKey === "create_ssesskey" ?
+
+                                    <form onSubmit={handleSubmitSessionKey}>
+                                        <label htmlFor="">Create new session key</label>
+                                        <input type="text" name="sess_key" id="" placeholder='3454fe5643' onChange={handleChangeImplant} />
+                                        <button>Create</button>
+                                    </form>
+                                    :
+                                    <form onSubmit={handleDeleteSessionKey}>
+                                        <button>Delete</button>
+                                    </form>
+                                }
+                            </>
+
+                            
+
+           
+                    </div>
+                }
+
                 {implantPanel &&
                     <div className='implant-panel' >
 
@@ -365,50 +514,66 @@ export const Listeners = () => {
                             {listeners && listeners.length > 0 ?
 
                                 <>
-                                    <select name="listener" id="" className='listener-li-opt' onChange={handleChangeImplant} defaultValue={listeners[0].port} >
-                                        {
-                                            listeners.map(l => <option value={l.port}>
-                                                {l.ssl_tls ? 'wss' : 'ws'}://
-                                                {l.url}:
-                                                {l.port}
-                                            </option>)
+                                    
+                                    { sessionKeys && sessionKeys.length > 0 ?
+
+                                        <>
+                                        
+                                        <select name="listener" id="" className='listener-li-opt' onChange={handleChangeImplant} defaultValue={listeners[0].port} >
+                                            {
+                                                listeners.map(l => <option value={l.port}>
+                                                    {l.ssl_tls ? 'wss' : 'ws'}://
+                                                    {l.url}:
+                                                    {l.port}
+                                                </option>)
+                                            }
+                                        </select>
+
+                                        <label htmlFor="">System</label>
+                                        <select name="system" id="" defaultValue="windows" onChange={handleChangeImplant} >
+                                            <option value="windows">Windows</option>
+                                            <option value="linux">Linux</option>
+                                        </select>
+                                        <label htmlFor="">Type</label>
+                                        <select name="type" id="" defaultValue="exe" onChange={handleChangeImplant} >
+                                            <option value="exe">Executable</option>
+                                            <option value="py">Python script (Python libraries required in target)</option>
+                                        </select>
+                                        { 
+                                            implant.type === 'exe' &&<>
+                                                <label htmlFor="">Architecture</label>
+                                                <select name="arch" id="" defaultValue="x64" onChange={handleChangeImplant} >
+                                                    <option value="x64">x64</option>
+                                                </select>
+                                            </>
                                         }
-                                    </select>
+                                        <label htmlFor="">Group</label>
+                                        <input type="text" name="group" id="" placeholder='default' onChange={handleChangeImplant} />
 
-                                    <label htmlFor="">System</label>
-                                    <select name="system" id="" defaultValue="windows" onChange={handleChangeImplant} >
-                                        <option value="windows">Windows</option>
-                                        <option value="linux">Linux</option>
-                                    </select>
-                                    <label htmlFor="">Type</label>
-                                    <select name="type" id="" defaultValue="exe" onChange={handleChangeImplant} >
-                                        <option value="exe">Executable</option>
-                                        <option value="py">Python script (Python libraries required in target)</option>
-                                    </select>
-                                    { 
-                                        implant.type === 'exe' &&<>
-                                            <label htmlFor="">Architecture</label>
-                                            <select name="arch" id="" defaultValue="x64" onChange={handleChangeImplant} >
-                                                <option value="x64">x64</option>
-                                            </select>
+
+                                        <label >Sessions key</label>
+                                        <select name="sess_key" className='listener-li-opt' onChange={handleChangeImplant} >
+                                            {
+                                                sessionKeys.map(l => <option value={l}>
+                                                    {l}
+                                                </option>)
+                                            }
+                                        </select>
+
+                                        <label >Loader payload</label>
+                                        <a href="http://" target="_blank" rel="noopener noreferrer"> Guide for raw binary implants </a>
+                                        <button>Create</button>
+                                        
                                         </>
+                                    :
+                                        <h3>No sessions key found, create one first</h3>
+
                                     }
-                                    <label htmlFor="">Group</label>
-                                    <input type="text" name="group" id="" placeholder='default' onChange={handleChangeImplant} />
-
-                                    <label htmlFor="">Session key</label>
-                                    <input type="text" name="sess_key" id="" onChange={handleChangeImplant} />
-
-                                    <label >Loader payload</label>
-                                    <a href="http://" target="_blank" rel="noopener noreferrer"> Guide for raw binary implants </a>
-
                                 </>
-
                                 :
                                 <h3>No listeners available, create one first</h3>
 
                             }
-                            <button>Create</button>
                         </form>
 
                     </div>
@@ -423,7 +588,15 @@ export const Listeners = () => {
                 description="Listener will be deleted"
                 confirmText="Confirm"
                 cancelText="Cancel"
-        
+            />
+            <AlertModal
+                visible={alertSessKey}
+                onClose={() => setAlertSessKey(false)}
+                onConfirm={() => delete_sessKeys(selectedSessionKey)}
+                title="Warning! Session key will be deleted"
+                description="All implants using this session key will loose connection"
+                confirmText="Confirm"
+                cancelText="Cancel"
             />
             </div>
 

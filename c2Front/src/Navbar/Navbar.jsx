@@ -59,6 +59,7 @@ useEffect(() => {
         const data = JSON.parse(event.data);
         const botnet_data = data.botnet;
         setBotnet(botnet_data);
+        
       } catch (err) {
         console.error("Error parsing WebSocket message", err);
       }
@@ -85,12 +86,15 @@ useEffect(() => {
 
   connectWebSocket();
 
+
   return () => {
     manuallyClosed = true;
     if (socket) socket.close();
     if (reconnectInterval) clearTimeout(reconnectInterval);
   };
 }, []);
+
+
 
 
 
@@ -103,6 +107,8 @@ useEffect(() => {
   useEffect(() => {
     if(width > 1500) setOpen(true)
   }, [width]);
+
+
 
 
   const navigate = useNavigate()

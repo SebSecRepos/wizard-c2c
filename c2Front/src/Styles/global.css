@@ -11,10 +11,10 @@ body, html{
 }
 
 .floating-box {
-  position: fixed;      /* fuera del flujo del DOM y fijo en la pantalla */
-  top: 10px;           /* distancia desde la parte superior */
-  left: 100px;          /* distancia desde la izquierda */
-  z-index: 9999;        /* asegúrate de que esté por encima de otros elementos */
+  position: fixed;      
+  top: 10px;           
+  left: 100px;          
+  z-index: 9999;        
   background: rgb(0, 0, 0);
   border: 1px solid #ccc;
   padding: 16px;
@@ -165,3 +165,14 @@ body, html{
   font-size: 0.875rem;
 }
   
+
+@media(max-width:890px){
+
+  .login-form-1{
+    width: 90%;
+  }
+
+  .form-section-auth{
+    width: 90%;
+  }
+}
