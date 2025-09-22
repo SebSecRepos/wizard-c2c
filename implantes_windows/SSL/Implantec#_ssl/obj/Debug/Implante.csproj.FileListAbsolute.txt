@@ -37,20 +37,29 @@ C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.CoreComp
 C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Up2Date
 C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
 C:\Users\User\Documents\Wizard c2c\Implantec#\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\Program.exe.config
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\Program.exe
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\Program.pdb
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\Newtonsoft.Json.xml
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\System.Buffers.xml
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\System.Memory.xml
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\System.Numerics.Vectors.xml
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Implante.csproj.AssemblyReference.cache
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Implante.csproj.SuggestedBindingRedirects.cache
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Program.exe.config
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Implante.csproj.CoreCompileInputs.cache
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Implante.csproj.Up2Date
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Program.exe
-C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_ssl\obj\Debug\Program.pdb
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.exe.config
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.exe
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.pdb
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Newtonsoft.Json.xml
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.AssemblyReference.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.exe.config
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.CoreCompileInputs.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Up2Date
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.exe
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.pdb
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
+C:\Users\User\Documents\Wizard c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.exe
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.pdb
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.exe.config
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.exe
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Implante.pdb
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\Newtonsoft.Json.xml
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.AssemblyReference.cache
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.exe.config
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.CoreCompileInputs.cache
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Fody.CopyLocal.cache
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Fody.RuntimeCopyLocal.cache
+C:\Users\User\Documents\wizard-c2c\implantes_windows\Implantec#_no_ssl\obj\Debug\Implante.csproj.Up2Date

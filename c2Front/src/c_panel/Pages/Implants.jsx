@@ -30,11 +30,6 @@ export const Implants = () => {
 
 
 
-
-
-/*  */
-
-
 useEffect(() => {
   let socket;
   let reconnectInterval;
@@ -96,11 +91,6 @@ useEffect(() => {
 }, []);
 
 
-/*  */
-
-
-
-
 
 
 
@@ -129,7 +119,6 @@ useEffect(() => {
       };
 
       socket.onclose = () => {
-        /* console.log('WebSocket cerrado'); */
       };
 
       return () => {

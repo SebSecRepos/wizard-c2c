@@ -221,7 +221,11 @@ export const Listeners = () => {
 
             const a = document.createElement('a');
             a.href = downloadUrl;
-            a.download = `TrustMeImNotAvirus.${implant.system === 'linux' ? 'elf' : 'exe' }`; 
+            if (implant.type === "exe") {
+                a.download = `TrustMeImNotAvirus.${implant.system === 'linux' ? 'elf' : 'exe' }`; 
+            }else if(implant.type === "py"){
+                a.download = `TrustMeImNotAvirus.py`; 
+            }
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

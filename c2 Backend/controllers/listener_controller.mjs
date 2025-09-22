@@ -397,7 +397,7 @@ const create_implant_controller = async(req, res=response)=>{
             case "py":{
                 implant_path = `${implant_path}/python/base.py`;
                 implant_path = path.normalize(implant_path);
-                result_path = await python_processing(implant_path, found_listener.url, found_listener.port, group, system, sess_key)
+                result_path = await python_processing(implant_path, found_listener.url, found_listener.port, group, sess_key)
                 ext='py'
                 break;
             }
@@ -408,7 +408,7 @@ const create_implant_controller = async(req, res=response)=>{
                 })
             }
 
-            
+        
         result_path = path.join(__dirname , result_path);
         const data = await fs.readFile(result_path);
         res.writeHead(200,{

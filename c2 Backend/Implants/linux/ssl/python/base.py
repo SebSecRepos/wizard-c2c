@@ -92,10 +92,6 @@ class LinuxImpl:
             ) as ws:
                 self.retry_count = 0  
 
-                rec = await asyncio.wait_for(ws.recv(), timeout=60)
-
-                if "Invalid conection" in str(rec).strip():
-                    sys.exit(0)
                 
                 while self.running:
                     try:

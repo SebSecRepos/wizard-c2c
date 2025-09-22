@@ -51,14 +51,16 @@ const python_processing =async(impl_path="", url, port, group, sess_key)=>{
 }
 const exe_processing =async(impl_path="", url, port, group, sys, sess_key)=>{
 
+    
+    
     let result_path=""
-
+    
     try {
-
+        
         if (sys === 'windows') {
             const copy_path = impl_path.replace('.exe', '_copy.exe');
             const copy = await runPowerShellCommand([`copy`, impl_path, copy_path ]);
-            const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text_windows.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group, , '-s', sess_key]);
+            const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text_windows.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group, '-s', sess_key]);
             
             result_path=`..\\${copy_path}`
 
@@ -66,13 +68,9 @@ const exe_processing =async(impl_path="", url, port, group, sys, sess_key)=>{
 
             const copy_path = impl_path.replace('.elf', '_copy.elf');
             const copy = await runPowerShellCommand([`copy`, impl_path, copy_path ]);
-            const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text_linux.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group, , '-s', sess_key]);
+            const replace = await runPowerShellCommand([`python`, path.normalize('./scripts/append_text_linux.py'), '-f', copy_path, '-t', 'write', '-u', url, '-p', port, '-g', group, '-s', sess_key]);
             result_path=`..\\${copy_path}`
             
-            console.log(copy_path);
-            console.log(path);
-            console.log(result_path);
-
         }
 
         return result_path;
