@@ -174,16 +174,17 @@ export const WindowsTerminal = ({ id = "", externalCmd = "", setExternalCmd }) =
         </form>
       </div>
       <ToastContainer
-      position="top-center"
-      autoClose={4000}
-      hideProgressBar={true}
-      newestOnTop={false}
-      closeOnClick
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="dark"
-      />
+        style={{backgroundColor:"transparent"}}
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />  
 
       { guide &&
       <div className="alert-guide floating-box">

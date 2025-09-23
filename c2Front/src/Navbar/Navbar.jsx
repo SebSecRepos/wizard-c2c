@@ -41,10 +41,9 @@ useEffect(() => {
   let manuallyClosed = false;
 
   const connectWebSocket = () => {
-    socket = new WebSocket(`${import.meta.env.VITE_API_TEAM_SERVER}?token=${Cookies.get('x-token')}&rol=user`);
+    socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
     socket.onopen = () => {
-      console.log("WebSocket connected");
       retryCount = 0;
     };
 
@@ -158,6 +157,18 @@ useEffect(() => {
       
       />
 
+      <ToastContainer
+        style={{backgroundColor:"transparent"}}
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />  
 
     </>
   );

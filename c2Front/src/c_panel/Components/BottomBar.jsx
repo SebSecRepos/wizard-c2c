@@ -396,16 +396,17 @@ export const BottomBar=({ id="", setExternalCmd, externalCmd, sys="" })=> {
       </nav>
 
         <ToastContainer
-          position="top-center"
-          autoClose={4000}
-          hideProgressBar={true}
-          newestOnTop={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
+        style={{backgroundColor:"transparent"}}
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        />    
         <AlertModal
           visible={alert}
           onClose={() => setAlert(false)}

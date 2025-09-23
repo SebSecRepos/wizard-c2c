@@ -13,7 +13,7 @@ const create_implant_controller = async(req,res) =>{
         return res.status(200).json({ ok: true, msg: "Success"})
     
     } catch (error) {                                                                   
-        console.log(error);
+        
         return res.status(502).json({ ok: false, msg: "Server error" })
     }
 }

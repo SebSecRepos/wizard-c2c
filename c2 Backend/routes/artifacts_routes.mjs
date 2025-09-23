@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
             cb(null, finalName);
             
         } catch (error) {
-            console.log(error);
+            
         }
     }
     

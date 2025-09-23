@@ -189,6 +189,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd, user=
         </form>
       </div>
       <ToastContainer
+      style={{backgroundColor:"transparent"}}
       position="top-center"
       autoClose={4000}
       hideProgressBar={true}
@@ -198,7 +199,7 @@ export const LinuxTerminal = ({ id = "", externalCmd = "", setExternalCmd, user=
       draggable
       pauseOnHover
       theme="dark"
-      />
+      />  
       { guide &&
         <div className="alert-guide floating-box">
           <div><button onClick={()=>setGuide(!guide)}>x</button></div>

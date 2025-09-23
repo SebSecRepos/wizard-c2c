@@ -15,11 +15,11 @@ export const BotnetGuide = () => {
             <div className="guide-text-block">
                 <h3>Help</h3>
                 <img src={help} alt="help" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
+                <p>Display available commands</p>
             </div>
             <div className="guide-text-block">
                 <h3>Attacks</h3>
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
+                <p>Display available attacks </p>
                 <img src={attacks} alt="attacks" srcset="" />
                 <img src={attack} alt="attack" srcset="" />
                 <img src={botnet_status} alt="botnet_status" srcset="" />
@@ -27,7 +27,7 @@ export const BotnetGuide = () => {
             <div className="guide-text-block">
                 <h3>Stopping attacks</h3>
                 <img src={stopping} alt="" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
+                <p>How to stop running attacks, you cant stop an specific attack or all attacks in the same time.</p>
             </div>
 
         </div>

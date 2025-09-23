@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './C2Status.css'
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import Cookies from 'js-cookie'
 
 const C2Status = () => {
@@ -86,6 +86,20 @@ const C2Status = () => {
           }
         </>
       }
+
+
+      <ToastContainer
+        style={{backgroundColor:"transparent"}}
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />    
 
     </ul>
   )

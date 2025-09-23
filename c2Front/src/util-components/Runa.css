@@ -4,6 +4,7 @@
   margin: 50px auto;
   position: relative;         
   background: transparent;
+  z-index: 2;
 }
 
 

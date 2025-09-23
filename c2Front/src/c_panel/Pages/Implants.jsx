@@ -11,6 +11,8 @@ import './implants.css'
 import C2Status from '../Components/C2Status';
 import { Loader } from '../../util-components/Loader';
 import { Listeners } from '../Components/Listeners';
+import { ToastContainer, toast } from 'react-toastify';
+
 
 
 export const Implants = () => {
@@ -38,7 +40,7 @@ useEffect(() => {
   let manuallyClosed = false;
 
   const connectWebSocket = () => {
-    socket = new WebSocket(`${import.meta.env.VITE_API_TEAM_SERVER}?token=${Cookies.get('x-token')}&rol=user`);
+    socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
     socket.onopen = () => {
       retryCount = 0;
@@ -98,7 +100,7 @@ useEffect(() => {
 
     try {
 
-      const socket = new WebSocket(`${import.meta.env.VITE_API_TEAM_SERVER}?token=${Cookies.get('x-token')}&rol=user`);
+      const socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}?token=${Cookies.get('x-token')}&rol=user`);
 
       socket.onopen = () => {
       };
@@ -265,7 +267,18 @@ useEffect(() => {
           </>
       }
 
-
+    <ToastContainer
+      style={{backgroundColor:"transparent"}}
+      position="top-center"
+      autoClose={4000}
+      hideProgressBar={true}
+      newestOnTop={false}
+      closeOnClick
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+    />  
     </div>
   );
 };

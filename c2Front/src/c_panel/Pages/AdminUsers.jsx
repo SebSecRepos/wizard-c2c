@@ -110,7 +110,6 @@ export const AdminUsers = () => {
       for (const obj in data){
         if(data[obj].length === 0 || obj === 'isEdit') continue;
         sendData[obj]= data[obj];
-        console.log(data[obj]);
       }
       
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/update/${editUserId}`, {
@@ -269,7 +268,8 @@ export const AdminUsers = () => {
         cancelText="Cancel"
       
       />
-        <ToastContainer
+      <ToastContainer
+        style={{backgroundColor:"transparent"}}
         position="top-center"
         autoClose={4000}
         hideProgressBar={true}
@@ -279,7 +279,7 @@ export const AdminUsers = () => {
         draggable
         pauseOnHover
         theme="dark"
-  />
+        />    
 
   </div>
   );

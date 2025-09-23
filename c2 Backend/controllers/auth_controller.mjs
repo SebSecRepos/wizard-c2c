@@ -29,7 +29,7 @@ const register = async(req, res = response) => {
         return res.status(200).json({ ok: true, msg: "Success", jwt})
         
     } catch (error) {                                                                   // <---- Server side error
-        console.log(error);
+        
         return res.status(502).json({ ok: false, msg: "Server error" })
     }
 
@@ -46,7 +46,7 @@ const update = async(req, res = response) => {
 
         
     } catch (error) {                                                                   // <---- Server side error
-        console.log(error);
+        
         return res.status(502).json({ ok: false, errors: ["Server error"] })
     }
 
@@ -70,7 +70,7 @@ const delete_user = async(req, res = response) => {
         return res.status(200).json({ ok:true, msg: "User deleted" })
         
     } catch (error) {
-        console.log(error)
+        
         return res.status(500).json({  ok: false, msg: "Error deleting user"  });
     }
     
@@ -91,7 +91,7 @@ const login = async(req, res = response) => {
         return res.status(200).json({ ok:true, msg: "Success", jwt, data:user })
         
     } catch (error) {
-        console.log(error)
+        
         return res.status(500).json({  ok: false, msg: "Server error"  });
     }
     
@@ -116,7 +116,7 @@ const get_users = async(req, res = response) => {
         return res.status(200).json({ ok:true, msg: "Success", users })
         
     } catch (error) {
-        console.log(error)
+        
         return res.status(500).json({  ok: false, msg: "Server error"  });
     }
     
@@ -143,7 +143,7 @@ const renew = async(req, res = express.response) => {
             role: user.role
         }});
     } catch (error) {
-        console.log(error);
+        
         return res.status(200).json({ ok:false, message: 'Server error' });
     }
 

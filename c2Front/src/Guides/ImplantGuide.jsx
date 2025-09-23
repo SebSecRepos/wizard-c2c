@@ -18,29 +18,28 @@ export const ImplantGuide = () => {
             <div className="guide-text-block">
                 <h3>Implant list</h3>
                 <img src={list} alt="panel" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
             </div>
             <div className="guide-text-block">
                 <h3>Implant terminal</h3>
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
+                <p>The implant terminal is a well interactive web based terminal, you can change directory and execute commands as another users</p>
                 <img src={terminal} alt="attacks" srcset="" />
             </div>
             <div className="guide-text-block">
                 <h3>Left panel </h3>
                 <img src={lef_panel} alt="" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
+                <p>In left panel you can find the file system explorer of the victim machine, you can download victim files from there, also there's the upload functionality to transfer files in target.</p>
             </div>
             <div className="guide-text-block">
                 <h3>Victim file explorer </h3>
                 <img src={file_explorer} alt="" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
             </div>
             <div className="guide-text-block">
                 <h3>Custom operations </h3>
+                <p>You can create your own custom commands in order to automate operations divided in categories.</p>
+
                 <img src={operations} alt="" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
+                <p></p>
                 <img src={operations2} alt="" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
                 <img src={operations3} alt="" srcset="" />
             </div>
 

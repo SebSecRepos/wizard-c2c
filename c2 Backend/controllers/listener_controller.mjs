@@ -161,7 +161,7 @@ const create_listener = async (req, res = response, attacks_running, agents, sta
 
 
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok: false,
             msg: "Error creating listener"
@@ -185,7 +185,7 @@ const get_listener=async( req, res = response) => {
         })
         
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok: false,
             msg:"Error fetching listeners"
@@ -282,7 +282,7 @@ const delete_listener= async( req, res = response, listeners) => {
         })
         
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok:false,
             msg:"Error deleting listener"
@@ -421,7 +421,7 @@ const create_implant_controller = async(req, res=response)=>{
 
 
     } catch (error) {
-        console.log(error);
+        
         res.writeHead(500);
         res.end('Error')
     }

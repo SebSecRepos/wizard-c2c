@@ -12,7 +12,7 @@ const checkAdmin =async(req, res=response, next)=>{
         next();
         
     } catch (error) {
-        console.log(error);
+        
         
         return res.status(400).json({ok:false, msg:'Server error'});
     }

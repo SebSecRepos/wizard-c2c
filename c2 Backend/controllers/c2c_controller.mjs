@@ -71,7 +71,7 @@ const send_cmd = async (clients, req, res, status_connections) => {
                     }, 5000);
 
             } catch (error) {
-                console.log(error);
+                
             }    
         }
     }   
@@ -334,7 +334,7 @@ const getOperations= async( req, res = response) => {
         })
         
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok:false,
             msg:"Error fetching operations"
@@ -386,7 +386,7 @@ const add_command= async( req, res = response) => {
         })
         
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok:false,
             msg:"Error creating command"
@@ -435,7 +435,7 @@ const delete_command= async( req, res = response) => {
         })
         
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok:false,
             msg:"Error deleting command"

@@ -94,7 +94,9 @@ function App() {
 
  if (init) {
     return (
+      
     <Provider store={store}>
+      
       <Particles id="tsparticles" particlesLoaded={particlesLoaded} options={options} style={{
         position: 'absolute', 
         width:'100%',  
@@ -108,7 +110,9 @@ function App() {
       <div style={{ position: 'relative', zIndex: 1, background:'transparent', display:'flex', flexDirection:'column', minHeight: '100vh'}}>
         <AppRouter/>
         <Footer />
+
       </div>
+      
     </Provider>
   )
 }

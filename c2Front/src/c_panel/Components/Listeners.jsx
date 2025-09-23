@@ -160,7 +160,7 @@ export const Listeners = () => {
             }
 
         } catch (error) {
-            console.log(error);
+            
 
             toast.error("Listener couldn't be created (Server error)")
         }
@@ -234,7 +234,7 @@ export const Listeners = () => {
    
 
         } catch (error) {
-            console.log(error);
+            
         }
 
         setImplantPanel(false);
@@ -278,9 +278,13 @@ export const Listeners = () => {
             const data = await req.json();
             
             if (data.ok) {
-                setSessionKeys(data.session_keys)
+                setSessionKeys(data.session_keys);
+                setFormData({
+                    ...formData,
+                    sess_key: data.session_keys[0]
+                })
             } else {
-                toast.error(data.msg)
+                toast.error(data.msg);
             }
 
         } catch (error) {
@@ -293,11 +297,6 @@ export const Listeners = () => {
         getListeners()
         getSessionKeys()
     }, [])
-/*     useEffect(() => {
-        console.log(listeners);
-
-    }, [listeners])
- */
 
 
 
@@ -356,7 +355,7 @@ export const Listeners = () => {
             }
 
         } catch (error) {
-            console.log(error);
+            
 
             toast.error("Listener couldn't be deleted (Server error)")
         }
@@ -386,7 +385,7 @@ export const Listeners = () => {
             }
 
         } catch (error) {
-            console.log(error);
+            
 
             toast.error("Listener couldn't be deleted (Server error)")
         }
@@ -583,6 +582,18 @@ export const Listeners = () => {
                     </div>
                 }
 
+            <ToastContainer
+            style={{backgroundColor:"transparent"}}
+            position="top-center"
+            autoClose={4000}
+            hideProgressBar={true}
+            newestOnTop={false}
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+            />    
 
             <AlertModal
                 visible={alert}

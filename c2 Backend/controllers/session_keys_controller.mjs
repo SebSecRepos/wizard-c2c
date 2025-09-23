@@ -25,7 +25,7 @@ const get_session_keys=async(req,res=response)=>{
         })
         
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok: false,
             msg:"Error fetching session keys"
@@ -60,7 +60,7 @@ const delete_session_key=async(req,res=response)=>{
         })
         
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({
             ok:false,
             msg:"Error deleting session key"

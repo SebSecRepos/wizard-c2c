@@ -66,12 +66,12 @@ const delete_artifact = async(req,res=response) => {
                 await unlink(filepath);
                 return res.status(200).json({ok:true, msg:'Deleted'});
             } catch (error) {
-                console.log(error);
+                
                 return res.status(400).json({ok:false, msg:'Error deleting'});
             }
 
     } catch (error) {
-        console.log(error);
+        
         return res.status(400).json({msg:"Upload error"})
     }
 

@@ -14,17 +14,21 @@ export const ListenersGuide = () => {
             <div className="guide-text-block">
                 <h3>Create listener</h3>
                 <img src={panel} alt="panel" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
             </div>
             <div className="guide-text-block">
                 <h3>Data</h3>
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
+                <p>Listener form, only x64 architectures are available for now, you should specify: </p>
+                <ul>
+                    <li>Your c2c domain</li>
+                    <li>Interface bind address</li>
+                    <li>Port</li>
+                    <li>If you want an ssl conection you must upload cert.pem and key.pem</li>
+                </ul>
                 <img src={data} alt="attacks" srcset="" />
             </div>
             <div className="guide-text-block">
                 <h3>SSL</h3>
                 <img src={ssl} alt="" srcset="" />
-                <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, quisquam! Blanditiis nihil, sapiente itaque quia explicabo saepe laudantium eveniet quis culpa dicta! Explicabo reiciendis blanditiis quia eaque! Officia, alias quis?</p>
             </div>
 
         </div>

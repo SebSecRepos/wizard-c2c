@@ -83,7 +83,7 @@ const create_implant = async( body ) => {
             return {errors, jwt:""};
             
         } else {
-            console.log(error);
+            
             errors.push("server error");
             return {errors};
         }

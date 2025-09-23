@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { response } from 'express'
 import { configDotenv } from 'dotenv';
 import authRouter from '../routes/auth_routes.mjs';
 import { syntax_errors, type_errors } from '../middlewares/json_errors.mjs';
@@ -37,7 +37,10 @@ const team_app_launcher=async(attacks_running, agents, status_connections={statu
     app.use(helmet());
     app.use(express.json())
     app.use(express.urlencoded({ extended: true })); // Para formularios HTML
+
+    const staticPath = path.join(__dirname, '..', 'client', 'dist')
     
+    app.use(express.static(staticPath));
     app.use(type_errors);
     app.use(syntax_errors);
     app.use('/api/auth', sanitize, authRouter)
@@ -47,6 +50,9 @@ const team_app_launcher=async(attacks_running, agents, status_connections={statu
     app.use('/api/sources/', validate_jwt, express.static(path.join(__dirname, '../public/Sources/') ));
     app.use('/api/sessKeys/', sanitize, session_keys_router(attacks_running, agents, status_connections, listeners));
     
+    app.get(/(.*)/, (req,res=response)=>{
+        res.sendFile(path.join(staticPath, 'index.html'))
+    })
     //------Type errors-----
 
     const team_server = http.createServer(app);

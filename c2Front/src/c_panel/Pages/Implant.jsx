@@ -56,7 +56,6 @@ export const Implant = () => {
 
   
       socket.onclose = () => {
-        console.log('WebSocket cerrado');
       };
   
       return () => {
@@ -119,8 +118,19 @@ export const Implant = () => {
     }
    </div>
    </div>
-
-      
+    
+    <ToastContainer
+      style={{backgroundColor:"transparent"}}
+      position="top-center"
+      autoClose={4000}
+      hideProgressBar={true}
+      newestOnTop={false}
+      closeOnClick
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+    />  
    </>
   
 };
